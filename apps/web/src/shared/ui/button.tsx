@@ -4,13 +4,13 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/shared/lib/cn";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-full text-sm font-medium transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center gap-2 rounded-full text-sm font-medium transition-[background-color,border-color,color,box-shadow,transform] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow-[0_12px_28px_hsl(var(--primary)/0.22)] hover:bg-primary/90 hover:-translate-y-0.5",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-muted hover:-translate-y-0.5",
-        outline: "border border-border/80 bg-card/70 text-foreground hover:bg-surface-elevated hover:-translate-y-0.5",
+        default: "bg-primary text-primary-foreground shadow-[0_12px_28px_hsl(var(--primary)/0.18)] hover:bg-primary/90 hover:shadow-[0_14px_34px_hsl(var(--primary)/0.18)]",
+        secondary: "bg-secondary text-secondary-foreground hover:bg-muted hover:shadow-panel",
+        outline: "border border-border/80 bg-card/70 text-foreground hover:bg-surface-elevated hover:shadow-panel",
         ghost: "text-muted-foreground hover:bg-muted hover:text-foreground",
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
       },

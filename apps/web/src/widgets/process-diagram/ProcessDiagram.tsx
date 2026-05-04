@@ -87,7 +87,7 @@ function EquipmentNode({ node }: { node: ProcessNode }) {
   return (
     <div
       className={cn(
-        "group min-h-[156px] rounded-2xl border p-4 transition duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lift",
+        "group min-h-[156px] rounded-2xl border p-4 transition-[background-color,border-color,box-shadow,transform] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:shadow-panel",
         statusClasses[node.status],
       )}
     >
@@ -161,7 +161,7 @@ function SensorBadge({
   value: string;
 }) {
   return (
-    <div className="rounded-2xl border border-border/70 bg-surface-elevated/70 p-4 transition duration-300 hover:-translate-y-0.5 hover:shadow-panel">
+    <div className="rounded-2xl border border-border/70 bg-surface-elevated/70 p-4 transition-[background-color,border-color,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-surface-elevated/90 hover:shadow-panel">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="font-mono text-xs text-muted-foreground">{tag}</p>

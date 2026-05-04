@@ -50,7 +50,7 @@ export function AppSidebar() {
               to={item.path}
               className={({ isActive }) =>
                 cn(
-                  "group relative flex items-center gap-3 rounded-2xl px-3 py-3 text-sm text-muted-foreground transition duration-200 ease-out hover:bg-muted/60 hover:text-foreground",
+                  "group relative flex items-center gap-3 rounded-2xl px-3 py-3 text-sm text-muted-foreground transition-[background-color,color,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-muted/60 hover:text-foreground",
                   isActive &&
                     "bg-primary/10 text-foreground shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.18)]",
                 )

@@ -110,7 +110,7 @@ function LatestEvents() {
         {mockEvents.map((event) => (
           <div
             key={event.id}
-            className="rounded-2xl border border-border/70 bg-surface-elevated/60 p-4 transition duration-300 hover:-translate-y-0.5 hover:shadow-panel"
+            className="rounded-2xl border border-border/70 bg-surface-elevated/60 p-4 transition-[background-color,border-color,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-surface-elevated/80 hover:shadow-panel"
           >
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-mono text-xs text-muted-foreground">
@@ -154,7 +154,7 @@ function MvpScope() {
           {scopeItems.map((scope) => (
             <div
               key={scope}
-              className="group flex items-center justify-between gap-3 rounded-2xl border border-border/70 bg-surface-elevated/60 p-4 text-sm text-foreground transition duration-300 hover:-translate-y-0.5 hover:shadow-panel"
+              className="group flex items-center justify-between gap-3 rounded-2xl border border-border/70 bg-surface-elevated/60 p-4 text-sm text-foreground transition-[background-color,border-color,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-surface-elevated/80 hover:shadow-panel"
             >
               <span className="flex items-center gap-3">
                 <FileText className="h-4 w-4 text-primary" aria-hidden="true" />
