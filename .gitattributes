@@ -1,0 +1,46 @@
+# Normalize text files across operating systems.
+* text=auto
+
+# Keep project metadata and source-like files with LF endings.
+*.md text eol=lf
+*.txt text eol=lf
+*.json text eol=lf
+*.jsonc text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.toml text eol=lf
+*.ini text eol=lf
+*.env.example text eol=lf
+*.sh text eol=lf
+*.bash text eol=lf
+*.zsh text eol=lf
+*.ps1 text eol=lf
+*.go text eol=lf
+*.py text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.css text eol=lf
+*.scss text eol=lf
+*.html text eol=lf
+*.sql text eol=lf
+Makefile text eol=lf
+Dockerfile text eol=lf
+
+# Keep generated/binary assets untouched.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.xlsx binary
+*.xls binary
+*.pptx binary
+*.docx binary
+*.zip binary
+*.gz binary
+*.tgz binary
+*.7z binary
