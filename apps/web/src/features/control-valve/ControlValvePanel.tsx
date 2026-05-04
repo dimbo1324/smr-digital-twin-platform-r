@@ -18,19 +18,31 @@ export function ControlValvePanel() {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="rounded-2xl border border-warning/25 bg-gradient-to-br from-warning/10 to-warning/5 p-5">
+        <div className="rounded-2xl border border-warning/25 bg-gradient-to-br from-warning/10 to-card p-5">
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-sm text-muted-foreground">Mock position</p>
               <p className="mt-1 text-4xl font-semibold text-foreground">64%</p>
             </div>
-            <div className="rounded-2xl border border-warning/25 bg-warning/10 p-3 text-warning">
+            <div className="rounded-2xl border border-border/70 bg-card/80 p-3 text-foreground shadow-[0_14px_34px_hsl(var(--foreground)/0.08)]">
               <SlidersHorizontal className="h-6 w-6" aria-hidden="true" />
             </div>
           </div>
-          <div className="mt-5 h-2.5 rounded-full bg-background/50">
-            <div className="h-2.5 w-[64%] rounded-full bg-warning shadow-[0_0_22px_hsl(var(--warning)/0.32)]" />
+
+          <div className="mt-5 space-y-2">
+            <div className="flex items-center justify-between gap-3 text-xs">
+              <span className="text-muted-foreground">Valve opening</span>
+              <span className="font-mono font-medium text-foreground">64% open</span>
+            </div>
+            <div className="relative h-3 overflow-hidden rounded-full border border-border/70 bg-background/70 shadow-inner">
+              <div className="absolute inset-y-0 left-0 w-[64%] rounded-full bg-gradient-to-r from-primary via-mock to-warning shadow-[0_0_18px_hsl(var(--primary)/0.24)]" />
+              <div className="absolute inset-y-0 left-[64%] w-1 -translate-x-1/2 rounded-full bg-foreground/70" />
+              <div className="absolute inset-y-0 left-1/4 w-px bg-border/70" />
+              <div className="absolute inset-y-0 left-1/2 w-px bg-border/70" />
+              <div className="absolute inset-y-0 left-3/4 w-px bg-border/70" />
+            </div>
           </div>
+
           <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
             <LockKeyhole className="h-3.5 w-3.5" aria-hidden="true" />
             No simulated command channel connected.

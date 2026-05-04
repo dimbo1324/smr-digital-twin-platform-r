@@ -106,12 +106,13 @@ function EquipmentNode({ node }: { node: ProcessNode }) {
 
 function ProcessPipe() {
   return (
-    <div className="hidden items-center justify-center xl:flex" aria-hidden="true">
-      <div className="relative h-px w-full overflow-hidden rounded-full bg-border">
-        <div className="absolute inset-y-0 left-0 w-1/2 rounded-full bg-primary/70 animate-[flow_1.8s_linear_infinite]" />
-      </div>
-      <div className="-ml-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/20 bg-primary/10 text-primary">
-        <ArrowRight className="h-4 w-4" />
+    <div className="hidden items-center justify-center px-1 xl:flex" aria-hidden="true">
+      <div className="flex w-full min-w-12 items-center">
+        <div className="h-px flex-1 rounded-full bg-gradient-to-r from-transparent via-primary/30 to-primary/60" />
+        <div className="relative -ml-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full border border-primary/30 bg-card text-primary shadow-[0_10px_26px_hsl(var(--primary)/0.16)]">
+          <div className="absolute h-5 w-5 rounded-full bg-primary/10" />
+          <ArrowRight className="relative h-4 w-4" />
+        </div>
       </div>
     </div>
   );
