@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 10% 6%;
+    --foreground: 0 0% 96%;
+    --card: 240 7% 10%;
+    --card-foreground: 0 0% 96%;
+    --popover: 240 7% 10%;
+    --popover-foreground: 0 0% 96%;
+    --primary: 181 74% 38%;
+    --primary-foreground: 185 90% 9%;
+    --secondary: 37 74% 47%;
+    --secondary-foreground: 38 90% 8%;
+    --muted: 240 6% 15%;
+    --muted-foreground: 240 6% 70%;
+    --accent: 154 54% 34%;
+    --accent-foreground: 148 60% 94%;
+    --destructive: 0 70% 48%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 6% 20%;
+    --input: 240 6% 18%;
+    --ring: 181 74% 38%;
+    --radius: 0.5rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    margin: 0;
+    min-width: 320px;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+}
+
+@layer utilities {
+  .panel-border {
+    @apply border border-white/10;
+  }
+
+  .industrial-panel {
+    @apply panel-border bg-card/80 shadow-panel backdrop-blur;
+  }
+}
