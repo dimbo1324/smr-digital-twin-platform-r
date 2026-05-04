@@ -8,6 +8,7 @@ import {
   YAxis,
 } from "recharts";
 import { mockTrendSamples } from "@/entities/telemetry/model/mockTelemetry";
+import { chartTheme } from "@/shared/config/chartTheme";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 
 export function TrendPreview() {
@@ -20,53 +21,54 @@ export function TrendPreview() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="h-[280px]">
+        <div className="h-[300px] rounded-2xl border border-border/60 bg-surface-subtle/60 p-3">
           <ResponsiveContainer width="100%" height="100%">
             <RechartsLineChart data={mockTrendSamples} margin={{ left: 0, right: 16 }}>
-              <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
+              <CartesianGrid stroke={chartTheme.grid} vertical={false} />
               <XAxis
                 dataKey="time"
-                stroke="rgba(212,212,216,0.7)"
+                stroke={chartTheme.axis}
                 tickLine={false}
                 axisLine={false}
                 tickMargin={10}
               />
               <YAxis
-                stroke="rgba(212,212,216,0.7)"
+                stroke={chartTheme.axis}
                 tickLine={false}
                 axisLine={false}
                 tickMargin={10}
               />
               <Tooltip
                 contentStyle={{
-                  background: "rgba(24, 24, 27, 0.96)",
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  borderRadius: "8px",
-                  color: "#fafafa",
+                  background: chartTheme.tooltipBackground,
+                  border: `1px solid ${chartTheme.tooltipBorder}`,
+                  borderRadius: "14px",
+                  color: chartTheme.tooltipText,
+                  boxShadow: "var(--shadow-panel)",
                 }}
               />
               <Line
                 type="monotone"
                 dataKey="temperature"
                 name="TT-101 C"
-                stroke="#22d3ee"
-                strokeWidth={2}
+                stroke={chartTheme.temperature}
+                strokeWidth={2.5}
                 dot={false}
               />
               <Line
                 type="monotone"
                 dataKey="pressure"
                 name="PT-101 MPa"
-                stroke="#fbbf24"
-                strokeWidth={2}
+                stroke={chartTheme.pressure}
+                strokeWidth={2.5}
                 dot={false}
               />
               <Line
                 type="monotone"
                 dataKey="flow"
                 name="FT-101 kg/s"
-                stroke="#34d399"
-                strokeWidth={2}
+                stroke={chartTheme.flow}
+                strokeWidth={2.5}
                 dot={false}
               />
             </RechartsLineChart>

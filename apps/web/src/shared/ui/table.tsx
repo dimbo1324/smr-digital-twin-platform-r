@@ -3,7 +3,7 @@ import { cn } from "@/shared/lib/cn";
 
 export function Table({ className, ...props }: HTMLAttributes<HTMLTableElement>) {
   return (
-    <div className="w-full overflow-auto">
+    <div className="w-full overflow-auto rounded-xl border border-border/60">
       <table className={cn("w-full caption-bottom text-sm", className)} {...props} />
     </div>
   );
@@ -13,7 +13,7 @@ export function TableHeader({
   className,
   ...props
 }: HTMLAttributes<HTMLTableSectionElement>) {
-  return <thead className={cn("border-b border-white/10", className)} {...props} />;
+  return <thead className={cn("border-b border-border/70 bg-muted/40", className)} {...props} />;
 }
 
 export function TableBody({
@@ -29,7 +29,7 @@ export function TableRow({
 }: HTMLAttributes<HTMLTableRowElement>) {
   return (
     <tr
-      className={cn("border-b border-white/10 transition-colors hover:bg-white/5", className)}
+      className={cn("border-b border-border/50 transition-colors hover:bg-muted/40", className)}
       {...props}
     />
   );

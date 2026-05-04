@@ -5,5 +5,5 @@ export function Separator({
   className,
   ...props
 }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("h-px w-full bg-white/10", className)} {...props} />;
+  return <div className={cn("h-px w-full bg-border/70", className)} {...props} />;
 }

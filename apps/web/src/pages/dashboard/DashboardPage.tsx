@@ -1,4 +1,4 @@
-import { FileText } from "lucide-react";
+import { ArrowUpRight, FileText, ShieldCheck } from "lucide-react";
 import { historicalAlarms } from "@/entities/alarms/model/mockAlarms";
 import { mockEvents } from "@/entities/events/model/mockEvents";
 import { AlarmList } from "@/widgets/alarm-list/AlarmList";
@@ -6,91 +6,57 @@ import { StatusSummary } from "@/widgets/status-summary/StatusSummary";
 import { TrendPreview } from "@/widgets/trend-preview/TrendPreview";
 import { Badge } from "@/shared/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
+import { PageShell } from "@/shared/ui/page-shell";
 
 export function DashboardPage() {
   return (
-    <>
+    <PageShell>
+      <section className="overflow-hidden rounded-3xl border border-border/70 bg-gradient-to-br from-card via-surface-elevated to-primary/10 p-6 shadow-panel lg:p-8">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
+          <div>
+            <Badge variant="mock">MVP shell / mock telemetry</Badge>
+            <h1 className="mt-5 max-w-4xl text-3xl font-semibold leading-tight text-foreground sm:text-4xl">
+              Industrial digital twin cockpit for a simulation-only SMR energy loop.
+            </h1>
+            <p className="mt-4 max-w-3xl text-base leading-7 text-muted-foreground">
+              A premium shell for process visualization, alarms, trends, and
+              engineering workflows before the backend, MQTT broker, and simulator
+              are connected.
+            </p>
+          </div>
+
+          <div className="rounded-3xl border border-border/70 bg-background/40 p-5">
+            <div className="flex items-center gap-3">
+              <div className="rounded-2xl bg-success/10 p-3 text-success">
+                <ShieldCheck className="h-6 w-6" aria-hidden="true" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-foreground">
+                  Simulation boundary intact
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  No live plant control, no physical actuator commands.
+                </p>
+              </div>
+            </div>
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <Metric label="Latency target" value="< 1s" />
+              <Metric label="Demo tags" value="6" />
+            </div>
+          </div>
+        </div>
+      </section>
+
       <StatusSummary />
 
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(360px,0.55fr)]">
         <TrendPreview />
-
-        <Card>
-          <CardHeader>
-            <CardTitle>System Overview</CardTitle>
-            <CardDescription>
-              Current shell state before backend, MQTT, and simulator integration.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <OverviewRow label="Mode" value="Demo Environment" tone="default" />
-            <OverviewRow label="Data source" value="Offline Mock Data" tone="warning" />
-            <OverviewRow label="Control boundary" value="No Live Control" tone="warning" />
-            <OverviewRow label="Backend API" value="Not Connected" tone="outline" />
-            <OverviewRow label="MQTT broker" value="Not Connected" tone="outline" />
-          </CardContent>
-        </Card>
+        <SystemOverview />
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-        <Card>
-          <CardHeader>
-            <CardTitle>Latest Mock Events</CardTitle>
-            <CardDescription>
-              Event-log shape for future platform and simulation events.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {mockEvents.map((event) => (
-              <div
-                key={event.id}
-                className="rounded-lg border border-white/10 bg-white/[0.04] p-4"
-              >
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-mono text-xs text-muted-foreground">
-                    {event.timestamp}
-                  </span>
-                  <Badge variant={event.severity === "WARNING" ? "warning" : "secondary"}>
-                    {event.severity}
-                  </Badge>
-                  <span className="font-mono text-xs text-zinc-400">
-                    {event.source}
-                  </span>
-                </div>
-                <p className="mt-2 text-sm text-zinc-200">{event.message}</p>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>MVP Scope</CardTitle>
-            <CardDescription>
-              Frontend shell boundaries for the current milestone.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {[
-                "Industrial HMI shell",
-                "Static process mnemonic",
-                "Mock telemetry cards",
-                "Alarm lifecycle placeholders",
-                "Trend chart workspace",
-                "Disabled simulation settings",
-              ].map((scope) => (
-                <div
-                  key={scope}
-                  className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/[0.04] p-3 text-sm text-zinc-200"
-                >
-                  <FileText className="h-4 w-4 text-cyan-200" aria-hidden="true" />
-                  {scope}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <LatestEvents />
+        <MvpScope />
       </section>
 
       <AlarmList
@@ -98,7 +64,108 @@ export function DashboardPage() {
         description="Historical mock alarms; there are no active alarms in this shell."
         alarms={historicalAlarms.slice(0, 2)}
       />
-    </>
+    </PageShell>
+  );
+}
+
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-border/60 bg-surface-elevated/70 p-4">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="mt-1 text-xl font-semibold text-foreground">{value}</p>
+    </div>
+  );
+}
+
+function SystemOverview() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>System Overview</CardTitle>
+        <CardDescription>
+          Current shell state before backend, MQTT, and simulator integration.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <OverviewRow label="Mode" value="Demo Environment" tone="mock" />
+        <OverviewRow label="Data source" value="Offline Mock Data" tone="offline" />
+        <OverviewRow label="Control boundary" value="No Live Control" tone="warning" />
+        <OverviewRow label="Backend API" value="Not Connected" tone="offline" />
+        <OverviewRow label="MQTT broker" value="Not Connected" tone="offline" />
+      </CardContent>
+    </Card>
+  );
+}
+
+function LatestEvents() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Latest Mock Events</CardTitle>
+        <CardDescription>
+          Event-log shape for future platform and simulation events.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {mockEvents.map((event) => (
+          <div
+            key={event.id}
+            className="rounded-2xl border border-border/70 bg-surface-elevated/60 p-4 transition duration-300 hover:-translate-y-0.5 hover:shadow-panel"
+          >
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-mono text-xs text-muted-foreground">
+                {event.timestamp}
+              </span>
+              <Badge variant={event.severity === "WARNING" ? "warning" : "secondary"}>
+                {event.severity}
+              </Badge>
+              <span className="font-mono text-xs text-muted-foreground">
+                {event.source}
+              </span>
+            </div>
+            <p className="mt-3 text-sm leading-6 text-foreground/80">{event.message}</p>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+function MvpScope() {
+  const scopeItems = [
+    "Industrial HMI shell",
+    "Static process mnemonic",
+    "Mock telemetry cards",
+    "Alarm lifecycle placeholders",
+    "Trend chart workspace",
+    "Disabled simulation settings",
+  ];
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>MVP Scope</CardTitle>
+        <CardDescription>
+          Frontend shell boundaries for the current milestone.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {scopeItems.map((scope) => (
+            <div
+              key={scope}
+              className="group flex items-center justify-between gap-3 rounded-2xl border border-border/70 bg-surface-elevated/60 p-4 text-sm text-foreground transition duration-300 hover:-translate-y-0.5 hover:shadow-panel"
+            >
+              <span className="flex items-center gap-3">
+                <FileText className="h-4 w-4 text-primary" aria-hidden="true" />
+                {scope}
+              </span>
+              <ArrowUpRight className="h-4 w-4 text-muted-foreground transition group-hover:text-primary" aria-hidden="true" />
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -109,10 +176,10 @@ function OverviewRow({
 }: {
   label: string;
   value: string;
-  tone: "default" | "warning" | "outline";
+  tone: "mock" | "warning" | "offline";
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2">
+    <div className="flex items-center justify-between gap-3 rounded-2xl border border-border/70 bg-surface-elevated/60 px-4 py-3">
       <span className="text-sm text-muted-foreground">{label}</span>
       <Badge variant={tone}>{value}</Badge>
     </div>

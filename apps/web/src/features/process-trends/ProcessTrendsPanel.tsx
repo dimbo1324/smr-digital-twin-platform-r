@@ -9,6 +9,7 @@ import {
   YAxis,
 } from "recharts";
 import { mockTrendSamples } from "@/entities/telemetry/model/mockTelemetry";
+import { chartTheme } from "@/shared/config/chartTheme";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 
@@ -19,28 +20,28 @@ const tags: Array<{
   label: string;
   tag: string;
   unit: string;
-  color: string;
+  color: keyof Pick<typeof chartTheme, "temperature" | "pressure" | "flow">;
 }> = [
   {
     id: "temperature",
     label: "Temperature",
     tag: "TT-101",
     unit: "C",
-    color: "#22d3ee",
+    color: "temperature",
   },
   {
     id: "pressure",
     label: "Pressure",
     tag: "PT-101",
     unit: "MPa",
-    color: "#fbbf24",
+    color: "pressure",
   },
   {
     id: "flow",
     label: "Flow",
     tag: "FT-101",
     unit: "kg/s",
-    color: "#34d399",
+    color: "flow",
   },
 ];
 
@@ -60,51 +61,53 @@ export function ProcessTrendsPanel() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="mb-5 flex flex-wrap gap-2">
+        <div className="mb-5 flex flex-wrap gap-2 rounded-full border border-border/70 bg-muted/40 p-1">
           {tags.map((tag) => (
             <Button
               key={tag.id}
               variant={tag.id === activeTag ? "default" : "outline"}
               size="sm"
               onClick={() => setActiveTag(tag.id)}
+              className="flex-1 sm:flex-none"
             >
               {tag.tag} {tag.label}
             </Button>
           ))}
         </div>
 
-        <div className="h-[360px]">
+        <div className="h-[380px] rounded-2xl border border-border/60 bg-surface-subtle/60 p-3">
           <ResponsiveContainer width="100%" height="100%">
             <RechartsLineChart data={mockTrendSamples} margin={{ left: 0, right: 16 }}>
-              <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
+              <CartesianGrid stroke={chartTheme.grid} vertical={false} />
               <XAxis
                 dataKey="time"
-                stroke="rgba(212,212,216,0.7)"
+                stroke={chartTheme.axis}
                 tickLine={false}
                 axisLine={false}
                 tickMargin={10}
               />
               <YAxis
-                stroke="rgba(212,212,216,0.7)"
+                stroke={chartTheme.axis}
                 tickLine={false}
                 axisLine={false}
                 tickMargin={10}
               />
               <Tooltip
                 contentStyle={{
-                  background: "rgba(24, 24, 27, 0.96)",
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  borderRadius: "8px",
-                  color: "#fafafa",
+                  background: chartTheme.tooltipBackground,
+                  border: `1px solid ${chartTheme.tooltipBorder}`,
+                  borderRadius: "14px",
+                  color: chartTheme.tooltipText,
+                  boxShadow: "var(--shadow-panel)",
                 }}
               />
               <Line
                 type="monotone"
                 dataKey={selectedTag.id}
                 name={`${selectedTag.tag} ${selectedTag.unit}`}
-                stroke={selectedTag.color}
-                strokeWidth={2.5}
-                dot={{ r: 3 }}
+                stroke={chartTheme[selectedTag.color]}
+                strokeWidth={3}
+                dot={{ r: 3, fill: chartTheme[selectedTag.color] }}
                 activeDot={{ r: 5 }}
               />
             </RechartsLineChart>

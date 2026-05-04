@@ -22,10 +22,10 @@ const severityVariant: Record<
 
 const statusVariant: Record<
   AlarmStatus,
-  "default" | "secondary" | "success" | "warning"
+  "mock" | "secondary" | "success" | "warning"
 > = {
   ACTIVE: "warning",
-  ACKNOWLEDGED: "default",
+  ACKNOWLEDGED: "mock",
   CLEARED: "success",
 };
 
@@ -60,7 +60,7 @@ export function AlarmList({
           <TableBody>
             {alarms.map((alarm) => (
               <TableRow key={alarm.id}>
-                <TableCell className="font-mono text-xs text-zinc-200">
+                <TableCell className="font-mono text-xs text-foreground">
                   {alarm.tag}
                 </TableCell>
                 <TableCell>
@@ -71,7 +71,7 @@ export function AlarmList({
                 <TableCell>
                   <Badge variant={statusVariant[alarm.status]}>{alarm.status}</Badge>
                 </TableCell>
-                <TableCell className="min-w-[260px] text-zinc-300">
+                <TableCell className="min-w-[260px] text-foreground/80">
                   {alarm.message}
                 </TableCell>
                 <TableCell className="whitespace-nowrap text-muted-foreground">

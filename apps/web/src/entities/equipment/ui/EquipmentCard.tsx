@@ -6,10 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 
 const statusVariant: Record<
   EquipmentStatus,
-  "outline" | "default" | "warning" | "success"
+  "offline" | "mock" | "warning" | "success"
 > = {
-  offline: "outline",
-  mock: "default",
+  offline: "offline",
+  mock: "mock",
   warning: "warning",
   normal: "success",
 };
@@ -31,10 +31,10 @@ export function EquipmentCard({ equipment }: EquipmentCardProps) {
   const Icon = equipmentIcon[equipment.type];
 
   return (
-    <Card className="transition-colors hover:border-white/20">
+    <Card className="transition-colors">
       <CardHeader className="flex-row items-start justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="rounded-md border border-white/10 bg-white/5 p-2 text-cyan-200">
+          <div className="rounded-2xl border border-border/70 bg-primary/10 p-2.5 text-primary">
             <Icon className="h-4 w-4" aria-hidden="true" />
           </div>
           <div>
@@ -45,7 +45,7 @@ export function EquipmentCard({ equipment }: EquipmentCardProps) {
         <Badge variant={statusVariant[equipment.status]}>{equipment.status}</Badge>
       </CardHeader>
       <CardContent>
-        <p className="text-sm leading-6 text-zinc-300">{equipment.description}</p>
+        <p className="text-sm leading-6 text-foreground/80">{equipment.description}</p>
         <p className="mt-3 text-xs text-muted-foreground">{equipment.location}</p>
       </CardContent>
     </Card>
