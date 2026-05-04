@@ -1,4 +1,5 @@
 import { Activity, Bell, Database, Server } from "lucide-react";
+import { mockTelemetrySummary } from "@/entities/telemetry/model/mockTelemetry";
 import { Badge } from "@/shared/ui/badge";
 import { Card, CardContent } from "@/shared/ui/card";
 
@@ -38,7 +39,7 @@ const items: SummaryItem[] = [
   },
   {
     label: "Telemetry Points",
-    value: "6",
+    value: String(mockTelemetrySummary.totalPoints),
     detail: "TT, PT, FT, LT, valve, pump",
     icon: Database,
     variant: "warning",

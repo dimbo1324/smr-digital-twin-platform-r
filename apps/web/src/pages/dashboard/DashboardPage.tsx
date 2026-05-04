@@ -1,6 +1,7 @@
 import { ArrowUpRight, FileText, ShieldCheck } from "lucide-react";
 import { historicalAlarms } from "@/entities/alarms/model/mockAlarms";
 import { mockEvents } from "@/entities/events/model/mockEvents";
+import { mockTelemetrySummary } from "@/entities/telemetry/model/mockTelemetry";
 import { AlarmList } from "@/widgets/alarm-list/AlarmList";
 import { StatusSummary } from "@/widgets/status-summary/StatusSummary";
 import { TrendPreview } from "@/widgets/trend-preview/TrendPreview";
@@ -41,7 +42,7 @@ export function DashboardPage() {
             </div>
             <div className="mt-5 grid grid-cols-2 gap-3">
               <Metric label="Latency target" value="< 1s" />
-              <Metric label="Demo tags" value="6" />
+              <Metric label="Demo tags" value={String(mockTelemetrySummary.totalPoints)} />
             </div>
           </div>
         </div>

@@ -16,15 +16,56 @@ function getInitialTheme(): Theme {
     return "dark";
   }
 
-  const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+  const storedTheme = readStoredTheme();
   if (storedTheme === "light" || storedTheme === "dark") {
     return storedTheme;
   }
 
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  return getSystemTheme();
+}
+
+function readStoredTheme(): Theme | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+    return storedTheme === "light" || storedTheme === "dark" ? storedTheme : null;
+  } catch {
+    return null;
+  }
+}
+
+function persistTheme(theme: Theme) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+  } catch {
+    // Storage can be disabled in private, embedded, or locked-down browser modes.
+  }
+}
+
+function getSystemTheme(): Theme {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+    return "dark";
+  }
+
+  try {
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  } catch {
+    return "dark";
+  }
 }
 
 function applyTheme(theme: Theme) {
+  if (typeof document === "undefined") {
+    return;
+  }
+
   document.documentElement.classList.toggle("dark", theme === "dark");
   document.documentElement.style.colorScheme = theme;
 }
@@ -34,7 +75,7 @@ export function ThemeProvider({ children }: PropsWithChildren) {
 
   useEffect(() => {
     applyTheme(theme);
-    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+    persistTheme(theme);
   }, [theme]);
 
   const setTheme = useCallback((nextTheme: Theme) => {

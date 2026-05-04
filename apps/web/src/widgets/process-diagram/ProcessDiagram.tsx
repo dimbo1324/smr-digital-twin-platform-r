@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import {
+  ArrowDown,
   ArrowRight,
   Box,
   Cpu,
@@ -9,6 +10,10 @@ import {
   Thermometer,
 } from "lucide-react";
 import type { EquipmentStatus } from "@/entities/equipment/model/types";
+import {
+  formatTelemetryValue,
+  getMockTelemetryPoint,
+} from "@/entities/telemetry/model/mockTelemetry";
 import { Badge } from "@/shared/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { cn } from "@/shared/lib/cn";
@@ -26,21 +31,21 @@ const nodes: ProcessNode[] = [
     tag: "T-101",
     label: "Tank",
     status: "mock",
-    value: "Level 72%",
+    value: `Level ${formatTelemetryValue(getMockTelemetryPoint("LT-101"))}`,
     icon: Box,
   },
   {
     tag: "P-101",
     label: "Pump",
     status: "offline",
-    value: "Offline",
+    value: formatTelemetryValue(getMockTelemetryPoint("P-101.STATE")),
     icon: Gauge,
   },
   {
     tag: "V-101",
     label: "Valve",
     status: "warning",
-    value: "64% open",
+    value: `${formatTelemetryValue(getMockTelemetryPoint("V-101.POS"))} open`,
     icon: SlidersHorizontal,
   },
   {
@@ -106,7 +111,7 @@ function EquipmentNode({ node }: { node: ProcessNode }) {
 
 function ProcessPipe() {
   return (
-    <div className="hidden items-center justify-center px-1 xl:flex" aria-hidden="true">
+    <div className="flex items-center justify-center px-1" aria-hidden="true">
       <div className="flex w-full min-w-12 items-center">
         <div className="h-px flex-1 rounded-full bg-gradient-to-r from-transparent via-primary/30 to-primary/60" />
         <div className="relative -ml-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full border border-primary/30 bg-card text-primary shadow-[0_10px_26px_hsl(var(--primary)/0.16)]">
@@ -114,6 +119,18 @@ function ProcessPipe() {
           <ArrowRight className="relative h-4 w-4" />
         </div>
       </div>
+    </div>
+  );
+}
+
+function CompactProcessPipe() {
+  return (
+    <div className="flex items-center gap-3 px-5 py-1 text-primary/80" aria-hidden="true">
+      <div className="h-px flex-1 rounded-full bg-gradient-to-r from-transparent via-primary/25 to-primary/40" />
+      <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-primary/25 bg-card text-primary shadow-[0_10px_24px_hsl(var(--primary)/0.14)]">
+        <ArrowDown className="h-4 w-4" />
+      </div>
+      <div className="h-px flex-1 rounded-full bg-gradient-to-r from-primary/40 via-primary/25 to-transparent" />
     </div>
   );
 }
@@ -132,7 +149,16 @@ export function ProcessDiagram() {
       </CardHeader>
       <CardContent>
         <div className="rounded-3xl border border-border/70 bg-surface-subtle/60 p-4">
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1fr_48px_1fr_48px_1fr_48px_1fr_48px_1fr_48px_1fr]">
+          <div className="grid gap-3 xl:hidden">
+            {nodes.map((node, index) => (
+              <div key={node.tag} className="grid gap-3">
+                <EquipmentNode node={node} />
+                {index < nodes.length - 1 ? <CompactProcessPipe /> : null}
+              </div>
+            ))}
+          </div>
+
+          <div className="hidden gap-3 xl:grid xl:grid-cols-[1fr_48px_1fr_48px_1fr_48px_1fr_48px_1fr_48px_1fr]">
             {nodes.map((node, index) => (
               <div key={node.tag} className="contents">
                 <EquipmentNode node={node} />
@@ -143,9 +169,21 @@ export function ProcessDiagram() {
         </div>
 
         <div className="mt-5 grid gap-3 md:grid-cols-3">
-          <SensorBadge tag="TT-101" label="Temperature" value="286.4 C" />
-          <SensorBadge tag="PT-101" label="Pressure" value="15.1 MPa" />
-          <SensorBadge tag="FT-101" label="Flow" value="118 kg/s" />
+          <SensorBadge
+            tag="TT-101"
+            label="Temperature"
+            value={formatTelemetryValue(getMockTelemetryPoint("TT-101"))}
+          />
+          <SensorBadge
+            tag="PT-101"
+            label="Pressure"
+            value={formatTelemetryValue(getMockTelemetryPoint("PT-101"))}
+          />
+          <SensorBadge
+            tag="FT-101"
+            label="Flow"
+            value={formatTelemetryValue(getMockTelemetryPoint("FT-101"))}
+          />
         </div>
       </CardContent>
     </Card>

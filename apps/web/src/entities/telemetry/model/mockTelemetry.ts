@@ -65,6 +65,31 @@ export const mockTelemetryPoints: TelemetryPoint[] = [
   },
 ];
 
+export function getMockTelemetryPoint(tag: string): TelemetryPoint | undefined {
+  return mockTelemetryPoints.find((point) => point.tag === tag);
+}
+
+export function formatTelemetryValue(point: TelemetryPoint | undefined): string {
+  if (!point) {
+    return "N/A";
+  }
+
+  if (point.unit === "%") {
+    return `${point.value}%`;
+  }
+
+  return point.unit ? `${point.value} ${point.unit}` : String(point.value);
+}
+
+export function getNumericTelemetryValue(tag: string, fallback = 0): number {
+  const value = getMockTelemetryPoint(tag)?.value;
+  return typeof value === "number" ? value : fallback;
+}
+
+export const mockTelemetrySummary = {
+  totalPoints: mockTelemetryPoints.length,
+};
+
 export const mockTrendSamples: TrendSample[] = [
   { time: "09:34", temperature: 281.4, pressure: 14.8, flow: 111, level: 76 },
   { time: "09:35", temperature: 282.1, pressure: 14.9, flow: 113, level: 75 },
