@@ -11,9 +11,8 @@ export function AppSidebar() {
       <div className="flex h-full flex-col gap-5 p-4 lg:sticky lg:top-0 lg:min-h-screen lg:p-5">
         <div className="rounded-2xl border border-border/70 bg-surface-elevated/70 p-4 shadow-panel">
           <div className="flex items-center gap-3">
-            <div className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
               <Radio className="h-5 w-5" aria-hidden="true" />
-              <span className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-card bg-warning animate-soft-pulse" />
             </div>
             <div className="min-w-0">
               <h1 className="truncate text-base font-semibold text-foreground">
@@ -61,7 +60,7 @@ export function AppSidebar() {
                   <span
                     className={cn(
                       "flex h-8 w-8 items-center justify-center rounded-xl border border-border/70 bg-surface-elevated text-muted-foreground transition-colors group-hover:text-primary",
-                    isActive && "border-primary/25 bg-primary/10 text-primary",
+                      isActive && "border-primary/25 bg-primary/10 text-primary",
                     )}
                   >
                     <item.icon className="h-4 w-4" aria-hidden="true" />
