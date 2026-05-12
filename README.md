@@ -18,9 +18,9 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 flowchart LR
     Operator["Operator / Engineer"] --> Frontend["Frontend / HMI<br/>React + TypeScript"]
     Frontend --> API["API / Backend Core<br/>Go"]
-    API --> MQTT["MQTT Broker<br/>Mosquitto / EMQX"]
-    MQTT --> Simulation["Simulation Engine<br/>Python / Go"]
-    Simulation --> MQTT
+    API --> Simulation["Simulation Engine<br/>Go synthetic telemetry"]
+    API --> MQTT["Future MQTT Broker<br/>Mosquitto / EMQX"]
+    Simulation --> API
     API --> TSDB["Time-Series Storage<br/>PostgreSQL + TimescaleDB"]
     API --> Events["Events / Alarms / Audit<br/>PostgreSQL"]
     API --> Cache["Redis"]
@@ -34,8 +34,11 @@ The repository starts as a modular monorepo. The backend can be implemented as a
 
 - Industrial HMI shell with dashboard, process, alarms, trends, events, scenarios, and settings areas.
 - Static process mnemonic for a simplified thermal-hydraulic loop.
-- Mock telemetry with temperature, pressure, flow, level, valve position, and pump state.
+- Live synthetic telemetry from a simulation-only engine with fallback mock state.
 - Backend API skeleton with health, status, assets, and latest telemetry endpoints.
+- Simulation engine MVP with scenarios, active alarms, and in-memory history.
+- Process domain topology endpoint that maps synthetic telemetry and alarms into live mnemonic nodes and edges.
+- Alarm lifecycle MVP with acknowledgement metadata and in-memory simulation event log.
 - MQTT-based telemetry path for simulated equipment.
 - Valve and pump state-machine simulators.
 - Simple process model for flow, pressure, temperature, and level.
@@ -70,7 +73,7 @@ The repository starts as a modular monorepo. The backend can be implemented as a
 apps/
   web/          React HMI and engineering UI
   api/          Go backend core
-  simulation/   Python or Go simulation service
+  simulation/   Go simulation-only telemetry engine
 services/
   telemetry/    future telemetry ingestion service
   historian/    future time-series query service
@@ -92,12 +95,13 @@ scripts/        automation and helper scripts
 2. Frontend shell with industrial cockpit navigation.
 3. Backend skeleton with health and read APIs.
 4. Static process diagram and mock telemetry.
-5. MQTT broker and telemetry ingestion path.
-6. Valve and pump simulators.
-7. Real-time UI via WebSocket or SSE.
-8. Historian trends and time-series storage.
-9. PID control, alarms, scenarios, reports.
-10. Auth/RBAC, audit log, observability, tests, CI.
+5. Simulation engine MVP with live synthetic telemetry, scenarios, alarms, and history.
+6. Process domain model and live process mnemonic integration.
+7. Alarm lifecycle MVP with acknowledgement workflow and in-memory event log.
+8. MQTT broker and telemetry ingestion path.
+9. Valve and pump simulators.
+10. Real-time UI via WebSocket or SSE.
+11. Historian trends, PID control, reports, auth/RBAC, audit log, observability, tests, CI.
 
 ## Screenshots
 
@@ -128,6 +132,30 @@ Planned full local startup:
 docker compose up --build
 ```
 
+Current service commands:
+
+```bash
+make api-run
+make simulation-run
+make web-build
+```
+
+Simulation API examples:
+
+```bash
+curl http://localhost:8081/api/v1/simulation/telemetry/latest
+curl http://localhost:8080/api/v1/process/topology
+curl http://localhost:8080/api/v1/alarms/events
+curl "http://localhost:8080/api/v1/telemetry/history?window=15m"
+curl -X POST http://localhost:8080/api/v1/simulation/scenarios/high_temperature/start
+```
+
+The Process page now receives live topology from the backend API. The backend aggregates synthetic telemetry, active alarms, simulation status, node definitions, and flow edges into a single `GET /api/v1/process/topology` response.
+
+The Alarms page uses the backend gateway for lifecycle state: `ACTIVE`, `ACKNOWLEDGED`, and `CLEARED`. Alarm acknowledgement is stored only in the in-memory synthetic simulation lifecycle and is not a real operational acknowledgement or real plant alarm handling.
+
 ## Documentation
 
 - [Project Vision](docs/project-vision.md)
+- [Architecture Notes](docs/architecture.md)
+- [Safety Boundary](docs/safety-boundary.md)

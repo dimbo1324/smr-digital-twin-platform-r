@@ -1,0 +1,218 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 42 30% 96%;
+    --foreground: 224 32% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 224 32% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 32% 11%;
+    --primary: 198 84% 42%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 24% 94%;
+    --secondary-foreground: 224 28% 16%;
+    --muted: 220 22% 92%;
+    --muted-foreground: 224 12% 42%;
+    --accent: 189 76% 42%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 66% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 151 55% 36%;
+    --success-foreground: 152 65% 96%;
+    --warning: 38 92% 48%;
+    --warning-foreground: 38 88% 10%;
+    --danger: 0 66% 50%;
+    --danger-foreground: 0 0% 100%;
+    --info: 205 84% 46%;
+    --info-foreground: 210 90% 98%;
+    --mock: 190 72% 42%;
+    --mock-foreground: 190 90% 98%;
+    --offline: 222 10% 46%;
+    --offline-foreground: 220 18% 96%;
+    --border: 220 18% 84%;
+    --input: 220 18% 88%;
+    --ring: 198 84% 42%;
+    --surface: 0 0% 100%;
+    --surface-elevated: 216 42% 98%;
+    --surface-subtle: 220 38% 96%;
+    --chart-grid: 220 18% 84%;
+    --chart-axis: 224 12% 42%;
+    --chart-temperature: 190 80% 42%;
+    --chart-pressure: 38 90% 48%;
+    --chart-flow: 151 60% 38%;
+    --radius: 0.75rem;
+    --shadow-panel: 0 22px 70px rgba(30, 41, 59, 0.10);
+    --shadow-lift: 0 28px 80px rgba(30, 41, 59, 0.16);
+  }
+
+  .dark {
+    --background: 225 14% 7%;
+    --foreground: 210 28% 96%;
+    --card: 225 13% 12%;
+    --card-foreground: 210 28% 96%;
+    --popover: 225 13% 12%;
+    --popover-foreground: 210 28% 96%;
+    --primary: 190 82% 52%;
+    --primary-foreground: 194 86% 9%;
+    --secondary: 225 12% 16%;
+    --secondary-foreground: 210 22% 92%;
+    --muted: 225 11% 17%;
+    --muted-foreground: 220 9% 70%;
+    --accent: 186 72% 46%;
+    --accent-foreground: 190 90% 96%;
+    --destructive: 0 65% 55%;
+    --destructive-foreground: 0 0% 98%;
+    --success: 151 58% 45%;
+    --success-foreground: 152 72% 95%;
+    --warning: 39 88% 58%;
+    --warning-foreground: 39 90% 10%;
+    --danger: 0 64% 58%;
+    --danger-foreground: 0 0% 98%;
+    --info: 202 88% 60%;
+    --info-foreground: 210 90% 98%;
+    --mock: 190 82% 54%;
+    --mock-foreground: 190 90% 96%;
+    --offline: 225 9% 58%;
+    --offline-foreground: 220 18% 96%;
+    --border: 225 12% 22%;
+    --input: 225 12% 20%;
+    --ring: 190 82% 52%;
+    --surface: 225 13% 12%;
+    --surface-elevated: 225 12% 15%;
+    --surface-subtle: 225 12% 10%;
+    --chart-grid: 225 12% 24%;
+    --chart-axis: 220 9% 68%;
+    --chart-temperature: 190 82% 58%;
+    --chart-pressure: 39 90% 62%;
+    --chart-flow: 151 60% 52%;
+    --shadow-panel: 0 24px 80px rgba(0, 0, 0, 0.34);
+    --shadow-lift: 0 34px 100px rgba(0, 0, 0, 0.42);
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    color-scheme: light;
+    scroll-behavior: smooth;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    margin: 0;
+    min-width: 320px;
+    min-height: 100vh;
+    text-rendering: geometricPrecision;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.22);
+  }
+}
+
+@layer components {
+  .app-background {
+    background:
+      linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--surface-subtle)) 100%),
+      linear-gradient(115deg, hsl(var(--primary) / 0.08), transparent 40%),
+      linear-gradient(245deg, hsl(var(--warning) / 0.08), transparent 42%);
+  }
+
+  .premium-panel {
+    @apply border border-border/70 bg-card/90 text-card-foreground shadow-panel backdrop-blur-xl;
+  }
+
+  .premium-card {
+    @apply premium-panel rounded-xl;
+    transition:
+      transform 520ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 520ms cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 520ms cubic-bezier(0.22, 1, 0.36, 1),
+      background-color 520ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .premium-card:hover {
+    transform: translateY(-0.0625rem);
+    box-shadow: var(--shadow-lift);
+  }
+
+  .subtle-surface {
+    @apply border border-border/70 bg-surface-elevated/70;
+  }
+
+  .status-dot {
+    @apply h-2 w-2 rounded-full;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .animate-enter {
+    animation: enter 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .animate-soft-pulse {
+    animation: soft-pulse 2.8s ease-in-out infinite;
+  }
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes soft-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes flow {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(220%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 1ms !important;
+  }
+}

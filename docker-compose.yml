@@ -1,3 +1,47 @@
 name: smr-digital-twin-platform
 
-services: {}
+services:
+  web:
+    image: node:24-alpine
+    working_dir: /workspace/apps/web
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    environment:
+      VITE_API_BASE_URL: http://localhost:8080
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/workspace
+      - web_node_modules:/workspace/apps/web/node_modules
+    depends_on:
+      - api
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      API_HTTP_HOST: 0.0.0.0
+      API_HTTP_PORT: 8080
+      SIMULATION_ENABLED: "true"
+      SIMULATION_BASE_URL: http://simulation:8081
+      SIMULATION_TIMEOUT_MS: "1500"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - simulation
+
+  simulation:
+    build:
+      context: .
+      dockerfile: apps/simulation/Dockerfile
+    environment:
+      SIM_PORT: 8081
+      SIM_TICK_MS: 1000
+      SIM_HISTORY_SIZE: 3600
+      SIM_ALARM_EVENT_HISTORY_SIZE: 1000
+      SIM_SEED: 42
+    ports:
+      - "8081:8081"
+
+volumes:
+  web_node_modules:
