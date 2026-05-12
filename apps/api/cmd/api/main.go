@@ -12,6 +12,7 @@ import (
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/api/internal/config"
 	httpapi "github.com/dimbo1324/smr-digital-twin-platform-r/apps/api/internal/http"
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/api/internal/platform/logger"
+	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/api/internal/process"
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/api/internal/simulation"
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/api/internal/system"
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/api/internal/telemetry"
@@ -33,6 +34,7 @@ func main() {
 	})
 	simulationClient := simulation.NewClient(cfg.SimulationBaseURL, cfg.SimulationTimeout, cfg.SimulationEnabled)
 	gateway := simulation.NewGateway(simulationClient, assetService, telemetryService, systemService, log)
+	processHandler := process.NewHandler(process.NewService(simulationClient))
 
 	server := httpapi.NewServer(cfg, log, httpapi.Handlers{
 		SystemStatus:     http.HandlerFunc(gateway.SystemStatus),
@@ -40,6 +42,7 @@ func main() {
 		LatestTelemetry:  http.HandlerFunc(gateway.LatestTelemetry),
 		TelemetryHistory: http.HandlerFunc(gateway.TelemetryHistory),
 		ActiveAlarms:     http.HandlerFunc(gateway.ActiveAlarms),
+		ProcessTopology:  http.HandlerFunc(processHandler.Topology),
 		Scenarios:        http.HandlerFunc(gateway.Scenarios),
 		StartScenario:    http.HandlerFunc(gateway.StartScenario),
 		StopScenario:     http.HandlerFunc(gateway.StopScenario),

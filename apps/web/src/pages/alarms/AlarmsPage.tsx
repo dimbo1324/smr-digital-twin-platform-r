@@ -1,9 +1,11 @@
 import { BellRing, CheckCircle2 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { activeAlarms, historicalAlarms } from "@/entities/alarms/model/mockAlarms";
 import type { Alarm } from "@/entities/alarms/model/types";
 import { AlarmList } from "@/widgets/alarm-list/AlarmList";
 import { useActiveSimulationAlarms } from "@/shared/api/useSimulationTelemetry";
 import { Badge } from "@/shared/ui/badge";
+import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { PageShell } from "@/shared/ui/page-shell";
 
@@ -24,6 +26,17 @@ const lifecycleStates = [
     variant: "success",
   },
 ] as const;
+
+const nodeNames: Record<string, string> = {
+  "reactor-core": "Reactor Core",
+  "primary-loop": "Primary Loop",
+  "steam-generator": "Steam Generator",
+  turbine: "Turbine",
+  generator: "Generator",
+  condenser: "Condenser",
+  "feedwater-system": "Feedwater System",
+  "protection-system": "Protection System",
+};
 
 export function AlarmsPage() {
   const liveAlarms = useActiveSimulationAlarms();
@@ -78,7 +91,7 @@ export function AlarmsPage() {
                   >
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-mono text-xs text-muted-foreground">
-                        {alarm.tag}
+                        {nodeNames[alarm.tag] ?? alarm.tag}
                       </span>
                       <Badge variant="warning">{alarm.status}</Badge>
                       <Badge variant={alarm.severity === "CRITICAL" ? "destructive" : "warning"}>
@@ -86,7 +99,12 @@ export function AlarmsPage() {
                       </Badge>
                     </div>
                     <p className="mt-3 text-sm text-foreground">{alarm.message}</p>
-                    <p className="mt-2 text-xs text-muted-foreground">{alarm.createdAt}</p>
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                      <p className="text-xs text-muted-foreground">{alarm.createdAt}</p>
+                      <Button asChild size="sm" variant="outline">
+                        <Link to={`/process?node=${alarm.tag}`}>Open in Process</Link>
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>

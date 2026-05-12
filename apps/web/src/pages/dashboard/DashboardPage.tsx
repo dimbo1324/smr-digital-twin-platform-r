@@ -1,4 +1,5 @@
-import { ArrowUpRight, FileText, ShieldCheck } from "lucide-react";
+import { ArrowUpRight, FileText, GitBranch, ShieldCheck } from "lucide-react";
+import { Link } from "react-router-dom";
 import { historicalAlarms } from "@/entities/alarms/model/mockAlarms";
 import { mockEvents } from "@/entities/events/model/mockEvents";
 import { mockTelemetrySummary } from "@/entities/telemetry/model/mockTelemetry";
@@ -7,13 +8,16 @@ import { StatusSummary } from "@/widgets/status-summary/StatusSummary";
 import { TrendPreview } from "@/widgets/trend-preview/TrendPreview";
 import { useSystemStatus } from "@/shared/api/useSystemStatus";
 import { useLatestTelemetry } from "@/shared/api/useSimulationTelemetry";
+import { useProcessTopology } from "@/shared/api/useProcessTopology";
 import { Badge } from "@/shared/ui/badge";
+import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { PageShell } from "@/shared/ui/page-shell";
 
 export function DashboardPage() {
   const systemStatus = useSystemStatus();
   const liveTelemetry = useLatestTelemetry();
+  const processTopology = useProcessTopology(5000);
   const telemetryCount =
     liveTelemetry.points.length > 0 ? liveTelemetry.points.length : mockTelemetrySummary.totalPoints;
   const mode =
@@ -77,6 +81,8 @@ export function DashboardPage() {
         />
       </section>
 
+      <ProcessHealthSummary topologyState={processTopology} />
+
       <section className="grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         <LatestEvents />
         <MvpScope />
@@ -88,6 +94,58 @@ export function DashboardPage() {
         alarms={historicalAlarms.slice(0, 2)}
       />
     </PageShell>
+  );
+}
+
+function ProcessHealthSummary({
+  topologyState,
+}: {
+  topologyState: ReturnType<typeof useProcessTopology>;
+}) {
+  const counts = topologyState.topology.nodes.reduce(
+    (acc, node) => {
+      if (node.status === "OK") {
+        acc.ok += 1;
+      } else if (node.status === "WARNING") {
+        acc.warning += 1;
+      } else if (node.status === "ALARM") {
+        acc.alarm += 1;
+      } else if (node.status === "TRIP") {
+        acc.trip += 1;
+      } else {
+        acc.degraded += 1;
+      }
+      return acc;
+    },
+    { ok: 0, warning: 0, alarm: 0, trip: 0, degraded: 0 },
+  );
+
+  return (
+    <Card>
+      <CardHeader className="flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <CardTitle>Process Health</CardTitle>
+          <CardDescription>
+            Node-level topology summary from the backend process domain layer.
+          </CardDescription>
+        </div>
+        <Button asChild variant="outline">
+          <Link to="/process">
+            <GitBranch className="h-4 w-4" aria-hidden="true" />
+            Open Process View
+          </Link>
+        </Button>
+      </CardHeader>
+      <CardContent>
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+          <Metric label="OK nodes" value={String(counts.ok)} />
+          <Metric label="Warning nodes" value={String(counts.warning)} />
+          <Metric label="Alarm nodes" value={String(counts.alarm)} />
+          <Metric label="Trip nodes" value={String(counts.trip)} />
+          <Metric label="Degraded" value={String(counts.degraded)} />
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

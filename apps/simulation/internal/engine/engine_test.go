@@ -106,6 +106,44 @@ func TestTripScenarioSetsModeAndHealth(t *testing.T) {
 	}
 }
 
+func TestTripScenarioProducesProtectionSystemAlarm(t *testing.T) {
+	engine := newTestEngine()
+	if err := engine.SetScenario(model.ScenarioTrip); err != nil {
+		t.Fatalf("set scenario: %v", err)
+	}
+	tickMany(engine, 10)
+
+	alarms := engine.ActiveAlarms()
+	if len(alarms) == 0 {
+		t.Fatal("expected trip alarm")
+	}
+	found := false
+	for _, alarm := range alarms {
+		if alarm.AssetID == "protection-system" && alarm.Severity == model.AlarmSeverityCritical {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("expected protection-system critical alarm, got %#v", alarms)
+	}
+}
+
+func TestTelemetryFieldsRequiredByProcessTopologyArePresent(t *testing.T) {
+	engine := newTestEngine()
+	tickMany(engine, 1)
+	snapshot := engine.Snapshot()
+
+	if snapshot.Timestamp.IsZero() {
+		t.Fatal("expected timestamp")
+	}
+	if snapshot.PrimaryTemperatureC == 0 || snapshot.PrimaryPressureMPa == 0 || snapshot.CoolantFlowPct == 0 {
+		t.Fatalf("expected primary-loop telemetry fields: %#v", snapshot)
+	}
+	if snapshot.TurbineRPM == 0 || snapshot.GeneratorLoadPct == 0 {
+		t.Fatalf("expected turbine/generator telemetry fields: %#v", snapshot)
+	}
+}
+
 func TestUnknownScenarioReturnsError(t *testing.T) {
 	engine := newTestEngine()
 	if err := engine.SetScenario("unknown"); err == nil {

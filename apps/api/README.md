@@ -77,6 +77,7 @@ curl http://localhost:8080/api/v1/assets
 curl http://localhost:8080/api/v1/telemetry/latest
 curl "http://localhost:8080/api/v1/telemetry/history?window=15m"
 curl http://localhost:8080/api/v1/alarms/active
+curl http://localhost:8080/api/v1/process/topology
 curl http://localhost:8080/api/v1/simulation/scenarios
 curl -X POST http://localhost:8080/api/v1/simulation/scenarios/high_temperature/start
 curl -X POST http://localhost:8080/api/v1/simulation/scenarios/stop
@@ -131,10 +132,21 @@ The frontend still calls only `apps/api`. The API proxies simulation state throu
 
 - `GET /api/v1/telemetry/history?window=15m`
 - `GET /api/v1/alarms/active`
+- `GET /api/v1/process/topology`
 - `GET /api/v1/simulation/scenarios`
 - `POST /api/v1/simulation/scenarios/{scenarioName}/start`
 - `POST /api/v1/simulation/scenarios/stop`
 - `POST /api/v1/simulation/reset`
+
+### `GET /api/v1/process/topology`
+
+Returns a frontend-ready process domain model:
+
+- nodes with position, zone, status, metrics, and active alarms;
+- edges with source/target, flow type, label, status, and animation hint;
+- metadata describing simulation connectivity and simulation-only boundary.
+
+If the simulation service is unavailable, the endpoint still returns a degraded topology with `meta.simulationConnected=false` and `meta.source=degraded-fallback`.
 
 ## Future Integration Points
 

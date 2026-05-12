@@ -121,6 +121,10 @@ export function SettingsPage() {
             </Button>
             <Badge variant="warning">Simulation-only controls</Badge>
           </div>
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">
+            Scenarios affect synthetic telemetry and process topology only. They do not
+            control any real system or represent operating instructions.
+          </p>
         </CardContent>
       </Card>
     </PageShell>
