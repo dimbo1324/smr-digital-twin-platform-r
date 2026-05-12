@@ -78,6 +78,9 @@ func mapTopology(input mapperInput) ProcessTopologyResponse {
 func alarmsByAsset(alarms []simulation.Alarm) map[string][]simulation.Alarm {
 	result := make(map[string][]simulation.Alarm)
 	for _, alarm := range alarms {
+		if alarm.Status == "CLEARED" {
+			continue
+		}
 		result[alarm.AssetID] = append(result[alarm.AssetID], alarm)
 		for _, nodeID := range relatedAlarmNodeIDs(alarm) {
 			if nodeID != alarm.AssetID {
@@ -121,6 +124,9 @@ func statusForNode(nodeID, globalHealth, mode string, alarms []simulation.Alarm,
 	hasAlarm := false
 	hasWarning := false
 	for _, alarm := range alarms {
+		if alarm.Status == "CLEARED" {
+			continue
+		}
 		switch alarm.Severity {
 		case "CRITICAL":
 			return StatusTrip
@@ -233,12 +239,16 @@ func toNodeAlarms(alarms []simulation.Alarm) []ProcessNodeAlarm {
 	result := make([]ProcessNodeAlarm, 0, len(alarms))
 	for _, alarm := range alarms {
 		result = append(result, ProcessNodeAlarm{
-			ID:        alarm.ID,
-			Code:      alarm.Code,
-			Severity:  alarm.Severity,
-			Title:     alarm.Title,
-			Message:   alarm.Message,
-			StartedAt: alarm.StartedAt,
+			ID:             alarm.ID,
+			Code:           alarm.Code,
+			Severity:       alarm.Severity,
+			Status:         alarm.Status,
+			Title:          alarm.Title,
+			Message:        alarm.Message,
+			StartedAt:      alarm.StartedAt,
+			AcknowledgedAt: alarm.AcknowledgedAt,
+			AcknowledgedBy: alarm.AcknowledgedBy,
+			AckNote:        alarm.AckNote,
 		})
 	}
 	return result

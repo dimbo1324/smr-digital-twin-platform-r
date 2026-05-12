@@ -54,19 +54,51 @@ type AssetMetric struct {
 }
 
 type Alarm struct {
-	ID        string     `json:"id"`
-	AssetID   string     `json:"assetId"`
-	Code      string     `json:"code"`
-	Title     string     `json:"title"`
-	Message   string     `json:"message"`
-	Severity  string     `json:"severity"`
-	Status    string     `json:"status"`
-	Value     float64    `json:"value"`
-	Threshold float64    `json:"threshold"`
-	Unit      string     `json:"unit"`
-	StartedAt time.Time  `json:"startedAt"`
-	UpdatedAt time.Time  `json:"updatedAt"`
-	ClearedAt *time.Time `json:"clearedAt,omitempty"`
+	ID              string     `json:"id"`
+	AssetID         string     `json:"assetId"`
+	NodeID          string     `json:"nodeId,omitempty"`
+	Code            string     `json:"code"`
+	Title           string     `json:"title"`
+	Message         string     `json:"message"`
+	Severity        string     `json:"severity"`
+	Status          string     `json:"status"`
+	Value           float64    `json:"value"`
+	Threshold       float64    `json:"threshold"`
+	Unit            string     `json:"unit"`
+	StartedAt       time.Time  `json:"startedAt"`
+	UpdatedAt       time.Time  `json:"updatedAt"`
+	AcknowledgedAt  *time.Time `json:"acknowledgedAt,omitempty"`
+	AcknowledgedBy  string     `json:"acknowledgedBy,omitempty"`
+	AckNote         string     `json:"ackNote,omitempty"`
+	ClearedAt       *time.Time `json:"clearedAt,omitempty"`
+	OccurrenceCount int        `json:"occurrenceCount"`
+	SimulationOnly  bool       `json:"simulationOnly"`
+}
+
+type AlarmEvent struct {
+	ID             string         `json:"id"`
+	AlarmID        string         `json:"alarmId,omitempty"`
+	Type           string         `json:"type"`
+	AssetID        string         `json:"assetId,omitempty"`
+	NodeID         string         `json:"nodeId,omitempty"`
+	Code           string         `json:"code,omitempty"`
+	Severity       string         `json:"severity,omitempty"`
+	Message        string         `json:"message"`
+	CreatedAt      time.Time      `json:"createdAt"`
+	Actor          string         `json:"actor,omitempty"`
+	Note           string         `json:"note,omitempty"`
+	Scenario       string         `json:"scenario,omitempty"`
+	SimulationOnly bool           `json:"simulationOnly"`
+	Metadata       map[string]any `json:"metadata,omitempty"`
+}
+
+type AcknowledgeAlarmRequest struct {
+	Actor string `json:"actor"`
+	Note  string `json:"note"`
+}
+
+type AcknowledgeAlarmResponse struct {
+	Alarm Alarm `json:"alarm"`
 }
 
 type ScenarioInfo struct {

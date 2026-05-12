@@ -53,9 +53,13 @@ export interface ProcessNodeAlarm {
   id: string;
   code: string;
   severity: string;
+  status: "ACTIVE" | "ACKNOWLEDGED" | "CLEARED";
   title: string;
   message: string;
   startedAt: string;
+  acknowledgedAt?: string;
+  acknowledgedBy?: string;
+  ackNote?: string;
 }
 
 export interface ProcessNodePosition {

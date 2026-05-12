@@ -52,6 +52,45 @@ func TestTopologyMapsActiveAlarmToNode(t *testing.T) {
 	}
 }
 
+func TestTopologyMapsAcknowledgedAlarmStatusToNodeAlarm(t *testing.T) {
+	fake := newFakeSimulation()
+	ackAt := time.Now().UTC()
+	fake.alarms = []simulation.Alarm{
+		{ID: "alarm-ack", AssetID: "primary-loop", NodeID: "primary-loop", Code: "COOLANT_FLOW_LOW_WARNING", Severity: "WARNING", Status: "ACKNOWLEDGED", Title: "Flow low", Message: "Synthetic low flow", StartedAt: time.Now(), AcknowledgedAt: &ackAt, AcknowledgedBy: "demo-operator", AckNote: "reviewed"},
+	}
+
+	topology := NewService(fake).Topology(context.Background())
+	node := findNode(topology, "primary-loop")
+	if node == nil || len(node.Alarms) != 1 {
+		t.Fatalf("expected primary-loop acknowledged alarm, got %#v", node)
+	}
+	if node.Alarms[0].Status != "ACKNOWLEDGED" || node.Alarms[0].AcknowledgedBy != "demo-operator" {
+		t.Fatalf("expected acknowledged metadata, got %#v", node.Alarms[0])
+	}
+	if node.Status != StatusWarning {
+		t.Fatalf("expected acknowledged warning still to affect node status, got %s", node.Status)
+	}
+}
+
+func TestTopologyIgnoresClearedAlarmsForNodeStatus(t *testing.T) {
+	fake := newFakeSimulation()
+	fake.alarms = []simulation.Alarm{
+		{ID: "alarm-cleared", AssetID: "primary-loop", NodeID: "primary-loop", Code: "COOLANT_FLOW_LOW_WARNING", Severity: "WARNING", Status: "CLEARED", Title: "Flow low", Message: "Synthetic low flow", StartedAt: time.Now()},
+	}
+
+	topology := NewService(fake).Topology(context.Background())
+	node := findNode(topology, "primary-loop")
+	if node == nil {
+		t.Fatal("primary-loop node not found")
+	}
+	if len(node.Alarms) != 0 {
+		t.Fatalf("expected cleared alarm to be hidden from active node alarms, got %#v", node.Alarms)
+	}
+	if node.Status != StatusOK {
+		t.Fatalf("expected cleared alarm not to affect node status, got %s", node.Status)
+	}
+}
+
 func TestTripAlarmSetsProtectionAndReactorTrip(t *testing.T) {
 	fake := newFakeSimulation()
 	fake.status.Health = "TRIP"

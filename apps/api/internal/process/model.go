@@ -80,12 +80,16 @@ type ProcessMetric struct {
 }
 
 type ProcessNodeAlarm struct {
-	ID        string    `json:"id"`
-	Code      string    `json:"code"`
-	Severity  string    `json:"severity"`
-	Title     string    `json:"title"`
-	Message   string    `json:"message"`
-	StartedAt time.Time `json:"startedAt"`
+	ID             string     `json:"id"`
+	Code           string     `json:"code"`
+	Severity       string     `json:"severity"`
+	Status         string     `json:"status"`
+	Title          string     `json:"title"`
+	Message        string     `json:"message"`
+	StartedAt      time.Time  `json:"startedAt"`
+	AcknowledgedAt *time.Time `json:"acknowledgedAt,omitempty"`
+	AcknowledgedBy string     `json:"acknowledgedBy,omitempty"`
+	AckNote        string     `json:"ackNote,omitempty"`
 }
 
 type ProcessNodePosition struct {

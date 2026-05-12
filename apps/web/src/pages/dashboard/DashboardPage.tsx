@@ -6,7 +6,9 @@ import { mockTelemetrySummary } from "@/entities/telemetry/model/mockTelemetry";
 import { AlarmList } from "@/widgets/alarm-list/AlarmList";
 import { StatusSummary } from "@/widgets/status-summary/StatusSummary";
 import { TrendPreview } from "@/widgets/trend-preview/TrendPreview";
+import { alarmEventTypeLabel, formatAlarmDate } from "@/entities/alarms/lib/alarmLabels";
 import { useSystemStatus } from "@/shared/api/useSystemStatus";
+import { useAlarmEvents, useAlarms } from "@/shared/api/useAlarms";
 import { useLatestTelemetry } from "@/shared/api/useSimulationTelemetry";
 import { useProcessTopology } from "@/shared/api/useProcessTopology";
 import { Badge } from "@/shared/ui/badge";
@@ -18,6 +20,8 @@ export function DashboardPage() {
   const systemStatus = useSystemStatus();
   const liveTelemetry = useLatestTelemetry();
   const processTopology = useProcessTopology(5000);
+  const alarmState = useAlarms(5000);
+  const alarmEvents = useAlarmEvents(50, 5000);
   const telemetryCount =
     liveTelemetry.points.length > 0 ? liveTelemetry.points.length : mockTelemetrySummary.totalPoints;
   const mode =
@@ -83,6 +87,8 @@ export function DashboardPage() {
 
       <ProcessHealthSummary topologyState={processTopology} />
 
+      <AlarmLifecycleSummary alarms={alarmState.data} latestEvent={alarmEvents.data[0]} />
+
       <section className="grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         <LatestEvents />
         <MvpScope />
@@ -95,6 +101,57 @@ export function DashboardPage() {
       />
     </PageShell>
   );
+}
+
+function AlarmLifecycleSummary({
+  alarms,
+  latestEvent,
+}: {
+  alarms: ReturnType<typeof useAlarms>["data"];
+  latestEvent: ReturnType<typeof useAlarmEvents>["data"][number] | undefined;
+}) {
+  const active = alarms.filter((alarm) => alarm.status === "ACTIVE" || alarm.status === "ACKNOWLEDGED");
+  const unacknowledged = active.filter((alarm) => alarm.status === "ACTIVE");
+  const acknowledged = active.filter((alarm) => alarm.status === "ACKNOWLEDGED");
+  const critical = active.filter((alarm) => alarm.severity === "CRITICAL" || alarm.severity === "ALARM");
+
+  return (
+    <Card>
+      <CardHeader className="flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <CardTitle>Alarm Lifecycle</CardTitle>
+          <CardDescription>
+            Session-only alarm status and latest lifecycle event from the simulation.
+          </CardDescription>
+        </div>
+        <Button asChild variant="outline">
+          <Link to="/alarms">
+            <BellLinkIcon />
+            Open Alarms
+          </Link>
+        </Button>
+      </CardHeader>
+      <CardContent className="grid gap-3 xl:grid-cols-[repeat(4,minmax(0,1fr))_minmax(260px,1.2fr)]">
+        <Metric label="Active" value={String(active.length)} />
+        <Metric label="Unacknowledged" value={String(unacknowledged.length)} />
+        <Metric label="Acknowledged" value={String(acknowledged.length)} />
+        <Metric label="Critical" value={String(critical.length)} />
+        <div className="rounded-2xl border border-border/60 bg-surface-elevated/70 p-4">
+          <p className="text-xs text-muted-foreground">Latest event</p>
+          <p className="mt-1 text-sm font-medium text-foreground">
+            {latestEvent ? (alarmEventTypeLabel[latestEvent.type] ?? latestEvent.type) : "No events yet"}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {latestEvent ? formatAlarmDate(latestEvent.createdAt) : "In-memory event log is empty."}
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function BellLinkIcon() {
+  return <FileText className="h-4 w-4" aria-hidden="true" />;
 }
 
 function ProcessHealthSummary({

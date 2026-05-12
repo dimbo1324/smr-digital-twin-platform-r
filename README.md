@@ -38,6 +38,7 @@ The repository starts as a modular monorepo. The backend can be implemented as a
 - Backend API skeleton with health, status, assets, and latest telemetry endpoints.
 - Simulation engine MVP with scenarios, active alarms, and in-memory history.
 - Process domain topology endpoint that maps synthetic telemetry and alarms into live mnemonic nodes and edges.
+- Alarm lifecycle MVP with acknowledgement metadata and in-memory simulation event log.
 - MQTT-based telemetry path for simulated equipment.
 - Valve and pump state-machine simulators.
 - Simple process model for flow, pressure, temperature, and level.
@@ -96,10 +97,11 @@ scripts/        automation and helper scripts
 4. Static process diagram and mock telemetry.
 5. Simulation engine MVP with live synthetic telemetry, scenarios, alarms, and history.
 6. Process domain model and live process mnemonic integration.
-7. MQTT broker and telemetry ingestion path.
-8. Valve and pump simulators.
-9. Real-time UI via WebSocket or SSE.
-10. Historian trends, PID control, reports, auth/RBAC, audit log, observability, tests, CI.
+7. Alarm lifecycle MVP with acknowledgement workflow and in-memory event log.
+8. MQTT broker and telemetry ingestion path.
+9. Valve and pump simulators.
+10. Real-time UI via WebSocket or SSE.
+11. Historian trends, PID control, reports, auth/RBAC, audit log, observability, tests, CI.
 
 ## Screenshots
 
@@ -143,11 +145,14 @@ Simulation API examples:
 ```bash
 curl http://localhost:8081/api/v1/simulation/telemetry/latest
 curl http://localhost:8080/api/v1/process/topology
+curl http://localhost:8080/api/v1/alarms/events
 curl "http://localhost:8080/api/v1/telemetry/history?window=15m"
 curl -X POST http://localhost:8080/api/v1/simulation/scenarios/high_temperature/start
 ```
 
 The Process page now receives live topology from the backend API. The backend aggregates synthetic telemetry, active alarms, simulation status, node definitions, and flow edges into a single `GET /api/v1/process/topology` response.
+
+The Alarms page uses the backend gateway for lifecycle state: `ACTIVE`, `ACKNOWLEDGED`, and `CLEARED`. Alarm acknowledgement is stored only in the in-memory synthetic simulation lifecycle and is not a real operational acknowledgement or real plant alarm handling.
 
 ## Documentation
 

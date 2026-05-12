@@ -11,7 +11,7 @@ Current milestone:
 - in-memory asset registry mock data
 - in-memory latest telemetry mock data
 - optional simulation service gateway integration
-- telemetry history, alarms, and scenario proxy endpoints
+- telemetry history, alarm lifecycle, event log, and scenario proxy endpoints
 - structured request logging
 - CORS for the Vite frontend dev server
 - graceful HTTP shutdown
@@ -76,7 +76,13 @@ curl http://localhost:8080/api/v1/system/status
 curl http://localhost:8080/api/v1/assets
 curl http://localhost:8080/api/v1/telemetry/latest
 curl "http://localhost:8080/api/v1/telemetry/history?window=15m"
+curl http://localhost:8080/api/v1/alarms
 curl http://localhost:8080/api/v1/alarms/active
+curl http://localhost:8080/api/v1/alarms/events
+curl http://localhost:8080/api/v1/alarms/alarm-PRIMARY_TEMPERATURE_HIGH_WARNING
+curl -X POST http://localhost:8080/api/v1/alarms/alarm-PRIMARY_TEMPERATURE_HIGH_WARNING/acknowledge \
+  -H "Content-Type: application/json" \
+  -d '{"actor":"demo-operator","note":"Acknowledged during simulation review"}'
 curl http://localhost:8080/api/v1/process/topology
 curl http://localhost:8080/api/v1/simulation/scenarios
 curl -X POST http://localhost:8080/api/v1/simulation/scenarios/high_temperature/start
@@ -131,7 +137,11 @@ Returns simulation telemetry when `apps/simulation` is reachable. If the simulat
 The frontend still calls only `apps/api`. The API proxies simulation state through:
 
 - `GET /api/v1/telemetry/history?window=15m`
+- `GET /api/v1/alarms`
 - `GET /api/v1/alarms/active`
+- `GET /api/v1/alarms/events`
+- `GET /api/v1/alarms/{alarmId}`
+- `POST /api/v1/alarms/{alarmId}/acknowledge`
 - `GET /api/v1/process/topology`
 - `GET /api/v1/simulation/scenarios`
 - `POST /api/v1/simulation/scenarios/{scenarioName}/start`
@@ -147,6 +157,12 @@ Returns a frontend-ready process domain model:
 - metadata describing simulation connectivity and simulation-only boundary.
 
 If the simulation service is unavailable, the endpoint still returns a degraded topology with `meta.simulationConnected=false` and `meta.source=degraded-fallback`.
+
+### Alarm Lifecycle Gateway
+
+Alarm lifecycle endpoints proxy `apps/simulation` and preserve a consistent API envelope. Supported statuses are `ACTIVE`, `ACKNOWLEDGED`, and `CLEARED`; supported event types include alarm raised, acknowledged, cleared, reactivated, scenario started/stopped, and simulation reset.
+
+Acknowledgement is simulation-only. It stores demo actor/note metadata in memory and does not represent real plant alarm handling or any real safety action.
 
 ## Future Integration Points
 

@@ -128,6 +128,35 @@ func TestTripScenarioProducesProtectionSystemAlarm(t *testing.T) {
 	}
 }
 
+func TestScenarioStartStopAndResetCreateAlarmEvents(t *testing.T) {
+	engine := newTestEngine()
+	if err := engine.SetScenario(model.ScenarioHighTemperature); err != nil {
+		t.Fatalf("set scenario: %v", err)
+	}
+	if err := engine.ClearScenario(); err != nil {
+		t.Fatalf("clear scenario: %v", err)
+	}
+	engine.Reset()
+
+	events := engine.AlarmEvents(10)
+	for _, eventType := range []model.AlarmEventType{
+		model.EventScenarioStarted,
+		model.EventScenarioStopped,
+		model.EventSimulationReset,
+	} {
+		found := false
+		for _, event := range events {
+			if event.Type == eventType {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Fatalf("expected event %s in %#v", eventType, events)
+		}
+	}
+}
+
 func TestTelemetryFieldsRequiredByProcessTopologyArePresent(t *testing.T) {
 	engine := newTestEngine()
 	tickMany(engine, 1)

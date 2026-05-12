@@ -1,6 +1,9 @@
 package simulation
 
 import (
+	"encoding/json"
+	"errors"
+	"io"
 	"log/slog"
 	"net/http"
 	"time"
@@ -84,10 +87,76 @@ func (g *Gateway) TelemetryHistory(w http.ResponseWriter, r *http.Request) {
 func (g *Gateway) ActiveAlarms(w http.ResponseWriter, r *http.Request) {
 	alarms, err := g.client.ActiveAlarms(r.Context())
 	if err != nil {
+		g.logger.Warn("simulation_active_alarms_unavailable", slog.Any("error", err))
 		httpapi.WriteData(w, r, http.StatusOK, []Alarm{}, httpapi.MetaOptions{Count: 0, Source: "memory", Degraded: true})
 		return
 	}
 	httpapi.WriteData(w, r, http.StatusOK, alarms, httpapi.MetaOptions{Count: len(alarms), Source: "simulation"})
+}
+
+func (g *Gateway) Alarms(w http.ResponseWriter, r *http.Request) {
+	alarms, err := g.client.Alarms(r.Context())
+	if err != nil {
+		g.logger.Warn("simulation_alarms_unavailable", slog.Any("error", err))
+		httpapi.WriteData(w, r, http.StatusOK, []Alarm{}, httpapi.MetaOptions{Count: 0, Source: "memory", Degraded: true})
+		return
+	}
+	httpapi.WriteData(w, r, http.StatusOK, alarms, httpapi.MetaOptions{Count: len(alarms), Source: "simulation"})
+}
+
+func (g *Gateway) AlarmEvents(w http.ResponseWriter, r *http.Request) {
+	events, err := g.client.AlarmEvents(r.Context(), r.URL.Query().Get("limit"))
+	if err != nil {
+		g.logger.Warn("simulation_alarm_events_unavailable", slog.Any("error", err))
+		httpapi.WriteData(w, r, http.StatusOK, []AlarmEvent{}, httpapi.MetaOptions{Count: 0, Source: "memory", Degraded: true})
+		return
+	}
+	httpapi.WriteData(w, r, http.StatusOK, events, httpapi.MetaOptions{Count: len(events), Source: "simulation"})
+}
+
+func (g *Gateway) AlarmDetails(w http.ResponseWriter, r *http.Request) {
+	alarm, err := g.client.Alarm(r.Context(), r.PathValue("alarmId"))
+	if err != nil {
+		g.logger.Warn("simulation_alarm_detail_failed", slog.Any("error", err), slog.String("alarm_id", r.PathValue("alarmId")))
+		writeSimulationError(w, r, err, http.StatusNotFound, "ALARM_NOT_FOUND", "Alarm not found")
+		return
+	}
+	httpapi.WriteData(w, r, http.StatusOK, alarm, httpapi.MetaOptions{Source: "simulation"})
+}
+
+func (g *Gateway) AcknowledgeAlarm(w http.ResponseWriter, r *http.Request) {
+	var request AcknowledgeAlarmRequest
+	if r.Body != nil {
+		defer r.Body.Close()
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil && !errors.Is(err, io.EOF) {
+			httpapi.WriteError(w, r, http.StatusBadRequest, "INVALID_ACKNOWLEDGEMENT", "Invalid acknowledgement request")
+			return
+		}
+	}
+	if request.Actor == "" {
+		request.Actor = "demo-operator"
+	}
+
+	response, err := g.client.AcknowledgeAlarm(r.Context(), r.PathValue("alarmId"), request)
+	if err != nil {
+		g.logger.Warn("simulation_alarm_acknowledge_failed", slog.Any("error", err), slog.String("alarm_id", r.PathValue("alarmId")))
+		writeSimulationError(w, r, err, http.StatusBadGateway, "ALARM_ACKNOWLEDGE_FAILED", "Failed to acknowledge alarm")
+		return
+	}
+	httpapi.WriteData(w, r, http.StatusOK, response, httpapi.MetaOptions{Source: "simulation"})
+}
+
+func writeSimulationError(w http.ResponseWriter, r *http.Request, err error, fallbackStatus int, fallbackCode, fallbackMessage string) {
+	var remote *RemoteError
+	if errors.As(err, &remote) && remote.Code != "" {
+		message := remote.Message
+		if message == "" {
+			message = fallbackMessage
+		}
+		httpapi.WriteError(w, r, remote.Status, remote.Code, message)
+		return
+	}
+	httpapi.WriteError(w, r, fallbackStatus, fallbackCode, fallbackMessage)
 }
 
 func (g *Gateway) Scenarios(w http.ResponseWriter, r *http.Request) {

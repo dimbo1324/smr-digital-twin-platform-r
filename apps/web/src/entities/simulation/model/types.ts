@@ -30,21 +30,7 @@ export interface SimulationScenario {
   simulationOnly: boolean;
 }
 
-export interface SimulationAlarm {
-  id: string;
-  assetId: string;
-  code: string;
-  title: string;
-  message: string;
-  severity: "INFO" | "WARNING" | "ALARM" | "CRITICAL";
-  status: "ACTIVE" | "ACKNOWLEDGED" | "CLEARED";
-  value: number;
-  threshold: number;
-  unit: string;
-  startedAt: string;
-  updatedAt: string;
-  clearedAt?: string;
-}
+export type SimulationAlarm = Alarm;
 
 export interface SimulationStatus {
   running: boolean;
@@ -57,3 +43,4 @@ export interface SimulationStatus {
   lastSimulationTimestamp: string;
   simulationOnly: boolean;
 }
+import type { Alarm } from "@/entities/alarms/model/types";

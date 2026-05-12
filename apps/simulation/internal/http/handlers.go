@@ -3,9 +3,12 @@ package httpapi
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
+	"strconv"
 	"time"
 
+	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/alarms"
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/config"
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/engine"
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/model"
@@ -79,6 +82,56 @@ func (h *Handler) ActiveAlarms(w http.ResponseWriter, _ *http.Request) {
 	writeData(w, alarms, len(alarms))
 }
 
+func (h *Handler) Alarms(w http.ResponseWriter, _ *http.Request) {
+	alarms := h.engine.Alarms()
+	writeData(w, alarms, len(alarms))
+}
+
+func (h *Handler) AlarmEvents(w http.ResponseWriter, r *http.Request) {
+	limit := parseLimit(r.URL.Query().Get("limit"), 100)
+	events := h.engine.AlarmEvents(limit)
+	writeData(w, events, len(events))
+}
+
+func (h *Handler) Alarm(w http.ResponseWriter, r *http.Request) {
+	alarm, ok := h.engine.Alarm(r.PathValue("alarmId"))
+	if !ok {
+		writeError(w, http.StatusNotFound, "ALARM_NOT_FOUND", "Alarm not found")
+		return
+	}
+	writeData(w, alarm, 1)
+}
+
+func (h *Handler) AcknowledgeAlarm(w http.ResponseWriter, r *http.Request) {
+	var request struct {
+		Actor string `json:"actor"`
+		Note  string `json:"note"`
+	}
+	if r.Body != nil {
+		defer r.Body.Close()
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil && !errors.Is(err, io.EOF) {
+			writeError(w, http.StatusBadRequest, "INVALID_ACKNOWLEDGEMENT", "Invalid acknowledgement request")
+			return
+		}
+	}
+
+	alarm, err := h.engine.AcknowledgeAlarm(r.PathValue("alarmId"), request.Actor, request.Note)
+	if err != nil {
+		switch {
+		case errors.Is(err, alarms.ErrAlarmNotFound):
+			writeError(w, http.StatusNotFound, "ALARM_NOT_FOUND", "Alarm not found")
+		case errors.Is(err, alarms.ErrAlarmAlreadyCleared):
+			writeError(w, http.StatusConflict, "ALARM_ALREADY_CLEARED", "Cleared alarm cannot be acknowledged")
+		case errors.Is(err, alarms.ErrInvalidAcknowledgement):
+			writeError(w, http.StatusBadRequest, "INVALID_ACKNOWLEDGEMENT", "Acknowledgement note is too long")
+		default:
+			writeError(w, http.StatusInternalServerError, "ALARM_ACKNOWLEDGE_FAILED", "Failed to acknowledge alarm")
+		}
+		return
+	}
+	writeData(w, map[string]model.Alarm{"alarm": alarm}, 1)
+}
+
 func (h *Handler) Scenarios(w http.ResponseWriter, _ *http.Request) {
 	scenarios := h.engine.Scenarios()
 	writeData(w, scenarios, len(scenarios))
@@ -123,6 +176,20 @@ func parseWindow(raw string) (time.Duration, error) {
 	default:
 		return 0, errors.New("invalid window")
 	}
+}
+
+func parseLimit(raw string, fallback int) int {
+	if raw == "" {
+		return fallback
+	}
+	value, err := strconv.Atoi(raw)
+	if err != nil || value <= 0 {
+		return fallback
+	}
+	if value > 1000 {
+		return 1000
+	}
+	return value
 }
 
 func writeData(w http.ResponseWriter, data any, count int) {

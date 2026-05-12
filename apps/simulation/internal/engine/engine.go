@@ -15,20 +15,21 @@ import (
 )
 
 type Config struct {
-	TickInterval time.Duration
-	HistorySize  int
-	Seed         int64
+	TickInterval          time.Duration
+	HistorySize           int
+	AlarmEventHistorySize int
+	Seed                  int64
 }
 
 type Engine struct {
-	mu        sync.RWMutex
-	cfg       Config
-	logger    *slog.Logger
-	state     state
-	history   *history.RingBuffer
-	evaluator *alarms.Evaluator
-	random    *rand.Rand
-	cancel    context.CancelFunc
+	mu      sync.RWMutex
+	cfg     Config
+	logger  *slog.Logger
+	state   state
+	history *history.RingBuffer
+	alarms  *alarms.Manager
+	random  *rand.Rand
+	cancel  context.CancelFunc
 }
 
 func New(cfg Config, logger *slog.Logger) *Engine {
@@ -45,12 +46,12 @@ func New(cfg Config, logger *slog.Logger) *Engine {
 	ring.Add(initial.snapshot)
 
 	return &Engine{
-		cfg:       cfg,
-		logger:    logger,
-		state:     initial,
-		history:   ring,
-		evaluator: alarms.NewEvaluator(),
-		random:    rand.New(rand.NewSource(cfg.Seed)),
+		cfg:     cfg,
+		logger:  logger,
+		state:   initial,
+		history: ring,
+		alarms:  alarms.NewManager(cfg.AlarmEventHistorySize, logger),
+		random:  rand.New(rand.NewSource(cfg.Seed)),
 	}
 }
 
@@ -104,6 +105,13 @@ func (e *Engine) SetScenario(scenario model.ScenarioName) error {
 	defer e.mu.Unlock()
 	e.state.activeScenario = scenario
 	e.state.snapshot.Scenario = string(scenario)
+	e.alarms.AddEvent(model.AlarmEvent{
+		Type:           model.EventScenarioStarted,
+		Message:        "Synthetic simulation scenario started.",
+		CreatedAt:      time.Now().UTC(),
+		Scenario:       string(scenario),
+		SimulationOnly: true,
+	})
 	e.logger.Info("simulation_scenario_started", slog.String("scenario", string(scenario)))
 	return nil
 }
@@ -113,6 +121,13 @@ func (e *Engine) ClearScenario() error {
 	defer e.mu.Unlock()
 	e.state.activeScenario = model.ScenarioNormal
 	e.state.snapshot.Scenario = string(model.ScenarioNormal)
+	e.alarms.AddEvent(model.AlarmEvent{
+		Type:           model.EventScenarioStopped,
+		Message:        "Synthetic simulation scenario stopped.",
+		CreatedAt:      time.Now().UTC(),
+		Scenario:       string(model.ScenarioNormal),
+		SimulationOnly: true,
+	})
 	e.logger.Info("simulation_scenario_stopped")
 	return nil
 }
@@ -124,7 +139,7 @@ func (e *Engine) Reset() {
 	e.state = initialState(now)
 	e.state.running = true
 	e.history = history.NewRingBuffer(e.cfg.HistorySize)
-	e.evaluator.Reset()
+	e.alarms.Reset()
 	e.tickLocked(now)
 	e.logger.Info("simulation_reset_executed")
 }
@@ -146,9 +161,23 @@ func (e *Engine) Status() model.SimulationStatus {
 }
 
 func (e *Engine) ActiveAlarms() []model.Alarm {
-	e.mu.RLock()
-	defer e.mu.RUnlock()
-	return e.evaluator.Active()
+	return e.alarms.ActiveAlarms()
+}
+
+func (e *Engine) Alarms() []model.Alarm {
+	return e.alarms.AllAlarms()
+}
+
+func (e *Engine) Alarm(id string) (model.Alarm, bool) {
+	return e.alarms.Alarm(id)
+}
+
+func (e *Engine) AlarmEvents(limit int) []model.AlarmEvent {
+	return e.alarms.Events(limit)
+}
+
+func (e *Engine) AcknowledgeAlarm(alarmID, actor, note string) (model.Alarm, error) {
+	return e.alarms.Acknowledge(alarmID, actor, note)
 }
 
 func (e *Engine) Scenarios() []model.ScenarioInfo {
@@ -191,7 +220,7 @@ func (e *Engine) tickLocked(now time.Time) {
 	e.state.tickCount++
 	snapshot := e.tick(now)
 	e.state.snapshot = snapshot
-	e.evaluator.Evaluate(snapshot)
+	e.alarms.Evaluate(snapshot)
 	e.history.Add(snapshot)
 }
 

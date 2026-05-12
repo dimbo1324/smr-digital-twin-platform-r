@@ -23,6 +23,8 @@ export function ProcessNodeCard({
   onSelect: (node: ProcessNode) => void;
 }) {
   const primaryMetrics = node.metrics.slice(0, 2);
+  const unacknowledged = node.alarms.filter((alarm) => alarm.status === "ACTIVE").length;
+  const acknowledged = node.alarms.filter((alarm) => alarm.status === "ACKNOWLEDGED").length;
 
   return (
     <button
@@ -59,10 +61,16 @@ export function ProcessNodeCard({
           <p className="text-xs text-muted-foreground">No live metrics</p>
         )}
       </div>
-      {node.alarms.length > 0 ? (
-        <div className="mt-3 flex items-center gap-2 rounded-full border border-warning/30 bg-warning/10 px-2.5 py-1 text-xs text-warning">
+      {unacknowledged > 0 ? (
+        <div className="mt-3 flex items-center gap-2 rounded-full border border-danger/30 bg-danger/10 px-2.5 py-1 text-xs text-danger">
           <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
-          {node.alarms.length} alarm{node.alarms.length > 1 ? "s" : ""}
+          {unacknowledged} unacknowledged
+        </div>
+      ) : null}
+      {acknowledged > 0 ? (
+        <div className="mt-3 flex items-center gap-2 rounded-full border border-info/30 bg-info/10 px-2.5 py-1 text-xs text-info">
+          <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
+          {acknowledged} acknowledged
         </div>
       ) : null}
     </button>

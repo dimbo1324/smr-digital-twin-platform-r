@@ -43,12 +43,18 @@ export async function apiGet<T>(path: string, signal?: AbortSignal): Promise<Api
   return response.json() as Promise<ApiEnvelope<T>>;
 }
 
-export async function apiPost<T>(path: string, signal?: AbortSignal): Promise<ApiEnvelope<T>> {
+export async function apiPost<T>(
+  path: string,
+  body?: unknown,
+  signal?: AbortSignal,
+): Promise<ApiEnvelope<T>> {
   const response = await fetch(`${getApiBaseUrl()}${path}`, {
     method: "POST",
     headers: {
       Accept: "application/json",
+      "Content-Type": "application/json",
     },
+    body: body === undefined ? undefined : JSON.stringify(body),
     signal,
   });
 

@@ -7,6 +7,7 @@ import type {
   SimulationTelemetrySnapshot,
 } from "@/entities/simulation/model/types";
 import { apiGet, apiPost } from "@/shared/api/client";
+import { invalidateAlarmData } from "@/shared/api/useAlarms";
 
 interface ApiTelemetryPoint {
   tag: string;
@@ -145,16 +146,19 @@ export function useSimulationScenarios() {
       start: (name: string) =>
         apiPost<SimulationStatus>(`/api/v1/simulation/scenarios/${name}/start`).then((response) => {
           setStatus(response.data);
+          invalidateAlarmData();
           return response.data;
         }),
       stop: () =>
         apiPost<SimulationStatus>("/api/v1/simulation/scenarios/stop").then((response) => {
           setStatus(response.data);
+          invalidateAlarmData();
           return response.data;
         }),
       reset: () =>
         apiPost<SimulationStatus>("/api/v1/simulation/reset").then((response) => {
           setStatus(response.data);
+          invalidateAlarmData();
           return response.data;
         }),
     }),

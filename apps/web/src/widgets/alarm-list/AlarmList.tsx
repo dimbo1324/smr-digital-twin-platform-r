@@ -1,4 +1,11 @@
-import type { Alarm, AlarmSeverity, AlarmStatus } from "@/entities/alarms/model/types";
+import {
+  alarmSeverityTone,
+  alarmStatusLabel,
+  alarmStatusTone,
+  assetDisplayName,
+  formatAlarmDate,
+} from "@/entities/alarms/lib/alarmLabels";
+import type { Alarm } from "@/entities/alarms/model/types";
 import { Badge } from "@/shared/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import {
@@ -9,28 +16,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/shared/ui/table";
-
-const severityVariant: Record<
-  AlarmSeverity,
-  "outline" | "warning" | "destructive"
-> = {
-  LOW: "outline",
-  INFO: "outline",
-  MEDIUM: "warning",
-  WARNING: "warning",
-  HIGH: "destructive",
-  ALARM: "destructive",
-  CRITICAL: "destructive",
-};
-
-const statusVariant: Record<
-  AlarmStatus,
-  "mock" | "secondary" | "success" | "warning"
-> = {
-  ACTIVE: "warning",
-  ACKNOWLEDGED: "mock",
-  CLEARED: "success",
-};
 
 export interface AlarmListProps {
   title?: string;
@@ -53,7 +38,7 @@ export function AlarmList({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Tag</TableHead>
+              <TableHead>Node</TableHead>
               <TableHead>Severity</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Message</TableHead>
@@ -64,21 +49,23 @@ export function AlarmList({
             {alarms.map((alarm) => (
               <TableRow key={alarm.id}>
                 <TableCell className="font-mono text-xs text-foreground">
-                  {alarm.tag}
+                  {assetDisplayName(alarm.nodeId || alarm.assetId || alarm.tag)}
                 </TableCell>
                 <TableCell>
-                  <Badge variant={severityVariant[alarm.severity]}>
+                  <Badge variant={alarmSeverityTone(alarm.severity)}>
                     {alarm.severity}
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <Badge variant={statusVariant[alarm.status]}>{alarm.status}</Badge>
+                  <Badge variant={alarmStatusTone(alarm.status)}>
+                    {alarmStatusLabel[alarm.status]}
+                  </Badge>
                 </TableCell>
                 <TableCell className="min-w-[260px] text-foreground/80">
                   {alarm.message}
                 </TableCell>
                 <TableCell className="whitespace-nowrap text-muted-foreground">
-                  {alarm.createdAt}
+                  {formatAlarmDate(alarm.createdAt ?? alarm.startedAt)}
                 </TableCell>
               </TableRow>
             ))}

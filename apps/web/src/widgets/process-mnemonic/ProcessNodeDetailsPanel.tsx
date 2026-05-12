@@ -1,8 +1,11 @@
 import { Clock3, ShieldCheck } from "lucide-react";
+import { Link } from "react-router-dom";
+import { alarmSeverityTone, alarmStatusLabel, alarmStatusTone } from "@/entities/alarms/lib/alarmLabels";
 import type { ProcessNode } from "@/entities/process/model/types";
 import { ProcessMetricBadge } from "@/widgets/process-mnemonic/ProcessMetricBadge";
 import { ProcessStatusBadge } from "@/widgets/process-mnemonic/ProcessStatusBadge";
 import { Badge } from "@/shared/ui/badge";
+import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 
 export function ProcessNodeDetailsPanel({ node }: { node?: ProcessNode }) {
@@ -21,6 +24,9 @@ export function ProcessNodeDetailsPanel({ node }: { node?: ProcessNode }) {
       </Card>
     );
   }
+
+  const unacknowledged = node.alarms.filter((alarm) => alarm.status === "ACTIVE");
+  const acknowledged = node.alarms.filter((alarm) => alarm.status === "ACKNOWLEDGED");
 
   return (
     <Card>
@@ -55,26 +61,16 @@ export function ProcessNodeDetailsPanel({ node }: { node?: ProcessNode }) {
         </div>
 
         <div>
-          <p className="mb-3 text-sm font-medium text-foreground">Active Alarms</p>
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <p className="text-sm font-medium text-foreground">Alarm Lifecycle</p>
+            <Button asChild size="sm" variant="outline">
+              <Link to={`/alarms?node=${node.id}`}>View in Alarms</Link>
+            </Button>
+          </div>
           {node.alarms.length > 0 ? (
-            <div className="space-y-2">
-              {node.alarms.map((alarm) => (
-                <div
-                  key={alarm.id}
-                  className="rounded-2xl border border-warning/30 bg-warning/10 p-3"
-                >
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant={alarm.severity === "CRITICAL" ? "destructive" : "warning"}>
-                      {alarm.severity}
-                    </Badge>
-                    <span className="font-mono text-xs text-muted-foreground">
-                      {alarm.code}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-sm text-foreground">{alarm.title}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{alarm.message}</p>
-                </div>
-              ))}
+            <div className="space-y-3">
+              <AlarmGroup title="Unacknowledged" alarms={unacknowledged} />
+              <AlarmGroup title="Acknowledged" alarms={acknowledged} />
             </div>
           ) : (
             <p className="rounded-2xl border border-border/70 bg-surface-elevated/70 p-3 text-sm text-muted-foreground">
@@ -95,6 +91,52 @@ export function ProcessNodeDetailsPanel({ node }: { node?: ProcessNode }) {
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function AlarmGroup({
+  title,
+  alarms,
+}: {
+  title: string;
+  alarms: ProcessNode["alarms"];
+}) {
+  if (alarms.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="space-y-2">
+      <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+        {title}
+      </p>
+      {alarms.map((alarm) => (
+        <div
+          key={alarm.id}
+          className={
+            alarm.status === "ACKNOWLEDGED"
+              ? "rounded-2xl border border-info/25 bg-info/10 p-3"
+              : "rounded-2xl border border-warning/30 bg-warning/10 p-3"
+          }
+        >
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant={alarmSeverityTone(alarm.severity)}>{alarm.severity}</Badge>
+            <Badge variant={alarmStatusTone(alarm.status)}>
+              {alarmStatusLabel[alarm.status]}
+            </Badge>
+            <span className="font-mono text-xs text-muted-foreground">{alarm.code}</span>
+          </div>
+          <p className="mt-2 text-sm text-foreground">{alarm.title}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{alarm.message}</p>
+          {alarm.acknowledgedBy ? (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Acknowledged by {alarm.acknowledgedBy}
+              {alarm.ackNote ? `: ${alarm.ackNote}` : ""}
+            </p>
+          ) : null}
+        </div>
+      ))}
+    </div>
   );
 }
 

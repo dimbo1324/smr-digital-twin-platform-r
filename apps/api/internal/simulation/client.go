@@ -5,7 +5,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -14,6 +16,19 @@ type Client struct {
 	baseURL string
 	http    *http.Client
 	enabled bool
+}
+
+type RemoteError struct {
+	Status  int
+	Code    string
+	Message string
+}
+
+func (e *RemoteError) Error() string {
+	if e.Code != "" {
+		return fmt.Sprintf("simulation response status %d: %s", e.Status, e.Code)
+	}
+	return fmt.Sprintf("simulation response status %d", e.Status)
 }
 
 func NewClient(baseURL string, timeout time.Duration, enabled bool) *Client {
@@ -51,6 +66,25 @@ func (c *Client) ActiveAlarms(ctx context.Context) ([]Alarm, error) {
 	return get[[]Alarm](ctx, c, "/api/v1/simulation/alarms/active")
 }
 
+func (c *Client) Alarms(ctx context.Context) ([]Alarm, error) {
+	return get[[]Alarm](ctx, c, "/api/v1/simulation/alarms")
+}
+
+func (c *Client) AlarmEvents(ctx context.Context, limit string) ([]AlarmEvent, error) {
+	if limit == "" {
+		limit = "100"
+	}
+	return get[[]AlarmEvent](ctx, c, "/api/v1/simulation/alarms/events?limit="+url.QueryEscape(limit))
+}
+
+func (c *Client) Alarm(ctx context.Context, alarmID string) (Alarm, error) {
+	return get[Alarm](ctx, c, "/api/v1/simulation/alarms/"+url.PathEscape(alarmID))
+}
+
+func (c *Client) AcknowledgeAlarm(ctx context.Context, alarmID string, request AcknowledgeAlarmRequest) (AcknowledgeAlarmResponse, error) {
+	return postJSON[AcknowledgeAlarmResponse](ctx, c, "/api/v1/simulation/alarms/"+url.PathEscape(alarmID)+"/acknowledge", request)
+}
+
 func (c *Client) Scenarios(ctx context.Context) ([]ScenarioInfo, error) {
 	return get[[]ScenarioInfo](ctx, c, "/api/v1/simulation/scenarios")
 }
@@ -68,23 +102,38 @@ func (c *Client) Reset(ctx context.Context) (Status, error) {
 }
 
 func get[T any](ctx context.Context, c *Client, path string) (T, error) {
-	return do[T](ctx, c, http.MethodGet, path)
+	return doRequest[T](ctx, c, http.MethodGet, path, nil)
 }
 
 func post[T any](ctx context.Context, c *Client, path string) (T, error) {
-	return do[T](ctx, c, http.MethodPost, path)
+	return doRequest[T](ctx, c, http.MethodPost, path, nil)
 }
 
-func do[T any](ctx context.Context, c *Client, method, path string) (T, error) {
+func postJSON[T any](ctx context.Context, c *Client, path string, payload any) (T, error) {
+	var body bytes.Buffer
+	if err := json.NewEncoder(&body).Encode(payload); err != nil {
+		var zero T
+		return zero, err
+	}
+	return doRequest[T](ctx, c, http.MethodPost, path, &body)
+}
+
+func doRequest[T any](ctx context.Context, c *Client, method, path string, body io.Reader) (T, error) {
 	var zero T
 	if !c.enabled {
 		return zero, ErrDisabled
 	}
-	request, err := http.NewRequestWithContext(ctx, method, c.baseURL+path, bytes.NewReader(nil))
+	if body == nil {
+		body = bytes.NewReader(nil)
+	}
+	request, err := http.NewRequestWithContext(ctx, method, c.baseURL+path, body)
 	if err != nil {
 		return zero, err
 	}
 	request.Header.Set("Accept", "application/json")
+	if method == http.MethodPost {
+		request.Header.Set("Content-Type", "application/json")
+	}
 
 	response, err := c.http.Do(request)
 	if err != nil {
@@ -93,7 +142,14 @@ func do[T any](ctx context.Context, c *Client, method, path string) (T, error) {
 	defer response.Body.Close()
 
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
-		return zero, fmt.Errorf("simulation response status %d", response.StatusCode)
+		var payload struct {
+			Error struct {
+				Code    string `json:"code"`
+				Message string `json:"message"`
+			} `json:"error"`
+		}
+		_ = json.NewDecoder(response.Body).Decode(&payload)
+		return zero, &RemoteError{Status: response.StatusCode, Code: payload.Error.Code, Message: payload.Error.Message}
 	}
 
 	var payload envelope[T]

@@ -14,3 +14,11 @@ The simulation engine:
 Scenario controls in the UI start and stop demonstration states inside `apps/simulation`. They are not real control commands and must not be interpreted as operating instructions.
 
 The process mnemonic is a portfolio visualization of synthetic process topology. It is not an operator HMI for a real plant, does not include real procedures, and must not be used to infer real safety behavior or operating limits.
+
+Alarm lifecycle features are also simulation-only:
+
+- acknowledging an alarm is a demo UI/backend state transition;
+- acknowledgement is not a real operational acknowledgement;
+- the event log is an in-memory session log, not a compliance or plant record;
+- alarm rules and thresholds are synthetic and must not be interpreted as real safety limits;
+- no alarm event triggers a real safety response, actuator command, or plant procedure.
