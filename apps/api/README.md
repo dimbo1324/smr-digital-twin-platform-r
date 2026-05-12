@@ -10,6 +10,8 @@ Current milestone:
 - platform status endpoint
 - in-memory asset registry mock data
 - in-memory latest telemetry mock data
+- optional simulation service gateway integration
+- telemetry history, alarms, and scenario proxy endpoints
 - structured request logging
 - CORS for the Vite frontend dev server
 - graceful HTTP shutdown
@@ -62,6 +64,9 @@ make api-build
 | `API_LOG_LEVEL` | `info` |
 | `API_ALLOWED_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` |
 | `API_VERSION` | `0.1.0` |
+| `SIMULATION_ENABLED` | `true` |
+| `SIMULATION_BASE_URL` | `http://localhost:8081` |
+| `SIMULATION_TIMEOUT_MS` | `1500` |
 
 ## Endpoints
 
@@ -70,6 +75,12 @@ curl http://localhost:8080/health
 curl http://localhost:8080/api/v1/system/status
 curl http://localhost:8080/api/v1/assets
 curl http://localhost:8080/api/v1/telemetry/latest
+curl "http://localhost:8080/api/v1/telemetry/history?window=15m"
+curl http://localhost:8080/api/v1/alarms/active
+curl http://localhost:8080/api/v1/simulation/scenarios
+curl -X POST http://localhost:8080/api/v1/simulation/scenarios/high_temperature/start
+curl -X POST http://localhost:8080/api/v1/simulation/scenarios/stop
+curl -X POST http://localhost:8080/api/v1/simulation/reset
 ```
 
 ### `GET /health`
@@ -112,7 +123,18 @@ Returns the MVP process-loop assets:
 
 ### `GET /api/v1/telemetry/latest`
 
-Returns mock telemetry values with dynamic response timestamps. Numeric points use `value`; discrete points use `valueText`.
+Returns simulation telemetry when `apps/simulation` is reachable. If the simulation service is unavailable, the API returns fallback mock telemetry with `meta.degraded=true`.
+
+### Simulation Proxy Endpoints
+
+The frontend still calls only `apps/api`. The API proxies simulation state through:
+
+- `GET /api/v1/telemetry/history?window=15m`
+- `GET /api/v1/alarms/active`
+- `GET /api/v1/simulation/scenarios`
+- `POST /api/v1/simulation/scenarios/{scenarioName}/start`
+- `POST /api/v1/simulation/scenarios/stop`
+- `POST /api/v1/simulation/reset`
 
 ## Future Integration Points
 

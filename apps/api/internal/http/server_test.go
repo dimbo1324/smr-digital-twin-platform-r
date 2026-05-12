@@ -148,12 +148,24 @@ func newTestRouter() http.Handler {
 	})
 
 	server := httpapi.NewServer(cfg, logger, httpapi.Handlers{
-		SystemStatus:    system.NewHandler(systemService, logger),
-		Assets:          assets.NewHandler(assetService, logger),
-		LatestTelemetry: telemetry.NewHandler(telemetryService, logger),
+		SystemStatus:     system.NewHandler(systemService, logger),
+		Assets:           assets.NewHandler(assetService, logger),
+		LatestTelemetry:  telemetry.NewHandler(telemetryService, logger),
+		TelemetryHistory: emptyOKHandler(),
+		ActiveAlarms:     emptyOKHandler(),
+		Scenarios:        emptyOKHandler(),
+		StartScenario:    emptyOKHandler(),
+		StopScenario:     emptyOKHandler(),
+		ResetSimulation:  emptyOKHandler(),
 	})
 
 	return server.Router()
+}
+
+func emptyOKHandler() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
 }
 
 func decodeEnvelope(t *testing.T, data []byte) map[string]any {

@@ -1,13 +1,18 @@
+import { useState } from "react";
 import { mockTelemetryPoints } from "@/entities/telemetry/model/mockTelemetry";
 import { TelemetryValue } from "@/entities/telemetry/ui/TelemetryValue";
 import { ProcessTrendsPanel } from "@/features/process-trends/ProcessTrendsPanel";
+import { useTelemetryHistory } from "@/shared/api/useSimulationTelemetry";
 import { Badge } from "@/shared/ui/badge";
+import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { PageShell } from "@/shared/ui/page-shell";
 
 const primaryTrendTags = ["TT-101", "PT-101", "FT-101"];
 
 export function TrendsPage() {
+  const [windowValue, setWindowValue] = useState("15m");
+  const { history, state } = useTelemetryHistory(windowValue);
   const trendPoints = mockTelemetryPoints.filter((point) =>
     primaryTrendTags.includes(point.tag),
   );
@@ -20,7 +25,35 @@ export function TrendsPage() {
         ))}
       </section>
 
-      <ProcessTrendsPanel />
+      <Card>
+        <CardHeader className="flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <CardTitle>History Window</CardTitle>
+            <CardDescription>
+              Synthetic telemetry history from backend API, with static fallback if unavailable.
+            </CardDescription>
+          </div>
+          <Badge variant={state === "connected" ? "success" : "warning"}>
+            {state === "connected" ? "simulation history" : "fallback"}
+          </Badge>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            {["5m", "15m", "30m", "1h"].map((windowOption) => (
+              <Button
+                key={windowOption}
+                size="sm"
+                variant={windowOption === windowValue ? "default" : "outline"}
+                onClick={() => setWindowValue(windowOption)}
+              >
+                {windowOption}
+              </Button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <ProcessTrendsPanel history={history} />
 
       <Card>
         <CardHeader className="flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log/slog"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -11,6 +12,7 @@ import (
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/api/internal/config"
 	httpapi "github.com/dimbo1324/smr-digital-twin-platform-r/apps/api/internal/http"
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/api/internal/platform/logger"
+	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/api/internal/simulation"
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/api/internal/system"
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/api/internal/telemetry"
 )
@@ -21,22 +23,27 @@ func main() {
 
 	assetRepository := assets.NewMemoryRepository()
 	assetService := assets.NewService(assetRepository)
-	assetHandler := assets.NewHandler(assetService, log)
 
 	telemetryRepository := telemetry.NewMemoryRepository()
 	telemetryService := telemetry.NewService(telemetryRepository)
-	telemetryHandler := telemetry.NewHandler(telemetryService, log)
 
 	systemService := system.NewService(system.ServiceConfig{
 		Environment: cfg.Environment,
 		Version:     cfg.Version,
 	})
-	systemHandler := system.NewHandler(systemService, log)
+	simulationClient := simulation.NewClient(cfg.SimulationBaseURL, cfg.SimulationTimeout, cfg.SimulationEnabled)
+	gateway := simulation.NewGateway(simulationClient, assetService, telemetryService, systemService, log)
 
 	server := httpapi.NewServer(cfg, log, httpapi.Handlers{
-		SystemStatus:    systemHandler,
-		Assets:          assetHandler,
-		LatestTelemetry: telemetryHandler,
+		SystemStatus:     http.HandlerFunc(gateway.SystemStatus),
+		Assets:           http.HandlerFunc(gateway.Assets),
+		LatestTelemetry:  http.HandlerFunc(gateway.LatestTelemetry),
+		TelemetryHistory: http.HandlerFunc(gateway.TelemetryHistory),
+		ActiveAlarms:     http.HandlerFunc(gateway.ActiveAlarms),
+		Scenarios:        http.HandlerFunc(gateway.Scenarios),
+		StartScenario:    http.HandlerFunc(gateway.StartScenario),
+		StopScenario:     http.HandlerFunc(gateway.StopScenario),
+		ResetSimulation:  http.HandlerFunc(gateway.Reset),
 	})
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)

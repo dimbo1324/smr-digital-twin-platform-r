@@ -1,4 +1,4 @@
-export type AlarmSeverity = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+export type AlarmSeverity = "LOW" | "MEDIUM" | "HIGH" | "ALARM" | "WARNING" | "INFO" | "CRITICAL";
 
 export type AlarmStatus = "ACTIVE" | "ACKNOWLEDGED" | "CLEARED";
 

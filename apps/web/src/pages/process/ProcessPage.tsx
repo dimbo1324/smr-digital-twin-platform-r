@@ -4,29 +4,36 @@ import { mockTelemetryPoints } from "@/entities/telemetry/model/mockTelemetry";
 import { TelemetryValue } from "@/entities/telemetry/ui/TelemetryValue";
 import { ControlValvePanel } from "@/features/control-valve/ControlValvePanel";
 import { ProcessDiagram } from "@/widgets/process-diagram/ProcessDiagram";
+import { useLatestTelemetry } from "@/shared/api/useSimulationTelemetry";
 import { Badge } from "@/shared/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { PageShell } from "@/shared/ui/page-shell";
 
 export function ProcessPage() {
+  const liveTelemetry = useLatestTelemetry();
+  const telemetryPoints =
+    liveTelemetry.points.length > 0 ? liveTelemetry.points : mockTelemetryPoints;
+
   return (
     <PageShell>
       <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="rounded-3xl border border-border/70 bg-card/80 p-6 shadow-panel">
-          <Badge variant="mock">Mock process loop</Badge>
+          <Badge variant={liveTelemetry.state === "connected" ? "success" : "mock"}>
+            {liveTelemetry.state === "connected" ? "Live synthetic telemetry" : "Mock process loop"}
+          </Badge>
           <h1 className="mt-4 text-3xl font-semibold leading-tight text-foreground">
             Clean process overview for equipment, flow direction, and telemetry quality.
           </h1>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">
-            The mnemonic remains static for this milestone, but each equipment node is
-            componentized for future WebSocket telemetry and command state binding.
+            The mnemonic remains simulation-only, with live synthetic telemetry routed through
+            the backend API when the simulation service is available.
           </p>
         </div>
 
         <div className="grid gap-3 rounded-3xl border border-border/70 bg-surface-elevated/70 p-5">
-          <ProcessFact label="Loop" value="Tank -> Pump -> Valve -> HX" />
-          <ProcessFact label="Command state" value="Disabled" />
-          <ProcessFact label="Telemetry quality" value="Mock / Good" />
+          <ProcessFact label="Loop" value="SMR synthetic energy loop" />
+          <ProcessFact label="Command state" value="Scenario simulation only" />
+          <ProcessFact label="Telemetry source" value={liveTelemetry.state === "connected" ? "Backend -> Simulation" : "Local fallback"} />
         </div>
       </section>
 
@@ -42,7 +49,7 @@ export function ProcessPage() {
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {mockTelemetryPoints.map((point) => (
+              {telemetryPoints.slice(0, 9).map((point) => (
                 <TelemetryValue key={point.tag} point={point} />
               ))}
             </div>

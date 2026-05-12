@@ -27,6 +27,11 @@ const telemetryRanges: Record<string, { min: number; max: number; label: string 
   C: { min: 250, max: 330, label: "250-330 C mock operating band" },
   MPa: { min: 0, max: 20, label: "0-20 MPa mock operating band" },
   "kg/s": { min: 0, max: 160, label: "0-160 kg/s mock operating band" },
+  MW: { min: 0, max: 320, label: "0-320 MW synthetic band" },
+  rpm: { min: 0, max: 3800, label: "0-3800 rpm synthetic band" },
+  kPa: { min: 0, max: 100, label: "0-100 kPa synthetic band" },
+  "mm/s": { min: 0, max: 8, label: "0-8 mm/s synthetic band" },
+  "uSv/h": { min: 0, max: 2, label: "0-2 uSv/h synthetic demo band" },
 };
 
 function clampPercent(value: number) {

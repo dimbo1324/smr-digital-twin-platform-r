@@ -13,6 +13,10 @@ export interface SystemStatus {
   mqttBroker: ComponentStatus;
   simulationService: ComponentStatus;
   historian: ComponentStatus;
+  simulationConnected: boolean;
+  simulationMode?: string;
+  simulationHealth?: string;
+  lastSimulationTimestamp?: string;
   safetyDisclaimer: string;
   version: string;
   timestamp: string;

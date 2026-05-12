@@ -1,11 +1,14 @@
 import { useTheme } from "@/app/providers/theme/themeContext";
+import { useSimulationScenarios } from "@/shared/api/useSimulationTelemetry";
 import { Badge } from "@/shared/ui/badge";
+import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { PageShell } from "@/shared/ui/page-shell";
 import { ThemeToggle } from "@/shared/ui/theme-toggle";
 
 export function SettingsPage() {
   const { theme } = useTheme();
+  const simulation = useSimulationScenarios();
 
   return (
     <PageShell>
@@ -23,12 +26,12 @@ export function SettingsPage() {
 
         <SettingsPanel
           title="Simulation Settings"
-          description="Disabled placeholders for future simulation runtime controls."
+          description="Simulation-only runtime controls for synthetic demo scenarios."
           rows={[
-            ["Simulation tick rate", "1 Hz"],
-            ["Telemetry refresh interval", "1000 ms"],
-            ["Scenario execution", "Disabled"],
-            ["Command arbitration", "USER / PID / SCENARIO / SAFETY_LIMITER"],
+            ["Simulation tick rate", simulation.status ? `${simulation.status.tickMs} ms` : "1000 ms"],
+            ["Connection", simulation.state === "connected" ? "Connected" : "Fallback / unavailable"],
+            ["Active scenario", simulation.status?.activeScenario ?? "normal"],
+            ["Boundary", "Simulation-only, no live control"],
           ]}
         />
 
@@ -87,6 +90,39 @@ export function SettingsPage() {
           </CardContent>
         </Card>
       </section>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Simulation Scenario Controls</CardTitle>
+          <CardDescription>
+            Starts synthetic demo scenarios through the backend API. These controls never
+            target real equipment.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {simulation.scenarios.map((scenario) => (
+              <Button
+                key={scenario.name}
+                variant="outline"
+                onClick={() => void simulation.actions.start(scenario.name)}
+                className="justify-start"
+              >
+                {scenario.title}
+              </Button>
+            ))}
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button variant="outline" onClick={() => void simulation.actions.stop()}>
+              Stop scenario
+            </Button>
+            <Button variant="outline" onClick={() => void simulation.actions.reset()}>
+              Reset simulation
+            </Button>
+            <Badge variant="warning">Simulation-only controls</Badge>
+          </div>
+        </CardContent>
+      </Card>
     </PageShell>
   );
 }

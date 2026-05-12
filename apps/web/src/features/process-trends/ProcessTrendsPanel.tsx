@@ -9,6 +9,7 @@ import {
   YAxis,
 } from "recharts";
 import { mockTrendSamples } from "@/entities/telemetry/model/mockTelemetry";
+import type { SimulationTelemetrySnapshot } from "@/entities/simulation/model/types";
 import { chartTheme } from "@/shared/config/chartTheme";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
@@ -45,19 +46,39 @@ const tags: Array<{
   },
 ];
 
-export function ProcessTrendsPanel() {
+export interface ProcessTrendsPanelProps {
+  history?: SimulationTelemetrySnapshot[];
+}
+
+export function ProcessTrendsPanel({ history }: ProcessTrendsPanelProps) {
   const [activeTag, setActiveTag] = useState<TrendTag>("temperature");
   const selectedTag = useMemo(
     () => tags.find((tag) => tag.id === activeTag) ?? tags[0],
     [activeTag],
   );
 
+  const chartData = useMemo(() => {
+    if (!history || history.length === 0) {
+      return mockTrendSamples;
+    }
+    return history.map((sample) => ({
+      time: new Date(sample.timestamp).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      }),
+      temperature: sample.primaryTemperatureC,
+      pressure: sample.primaryPressureMPa,
+      flow: sample.coolantFlowPct,
+    }));
+  }, [history]);
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Trend Workspace</CardTitle>
         <CardDescription>
-          Mock historian view for selected process telemetry.
+          Historian-style view backed by live synthetic simulation history when available.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -77,7 +98,7 @@ export function ProcessTrendsPanel() {
 
         <div className="h-[380px] rounded-2xl border border-border/60 bg-surface-subtle/60 p-3">
           <ResponsiveContainer width="100%" height="100%">
-            <RechartsLineChart data={mockTrendSamples} margin={{ left: 0, right: 16 }}>
+            <RechartsLineChart data={chartData} margin={{ left: 0, right: 16 }}>
               <CartesianGrid stroke={chartTheme.grid} vertical={false} />
               <XAxis
                 dataKey="time"

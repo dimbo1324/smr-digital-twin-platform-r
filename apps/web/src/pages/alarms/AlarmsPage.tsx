@@ -1,6 +1,8 @@
 import { BellRing, CheckCircle2 } from "lucide-react";
 import { activeAlarms, historicalAlarms } from "@/entities/alarms/model/mockAlarms";
+import type { Alarm } from "@/entities/alarms/model/types";
 import { AlarmList } from "@/widgets/alarm-list/AlarmList";
+import { useActiveSimulationAlarms } from "@/shared/api/useSimulationTelemetry";
 import { Badge } from "@/shared/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { PageShell } from "@/shared/ui/page-shell";
@@ -24,6 +26,18 @@ const lifecycleStates = [
 ] as const;
 
 export function AlarmsPage() {
+  const liveAlarms = useActiveSimulationAlarms();
+  const mappedActiveAlarms: Alarm[] = liveAlarms.alarms.map((alarm) => ({
+    id: alarm.id,
+    tag: alarm.assetId,
+    severity: alarm.severity,
+    status: alarm.status,
+    message: alarm.message,
+    createdAt: new Date(alarm.startedAt).toLocaleString(),
+    clearedAt: alarm.clearedAt,
+  }));
+  const displayedActiveAlarms = mappedActiveAlarms.length > 0 ? mappedActiveAlarms : activeAlarms;
+
   return (
     <PageShell>
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
@@ -36,11 +50,13 @@ export function AlarmsPage() {
                   Alarm lifecycle shell for future rule evaluation and acknowledgement.
                 </CardDescription>
               </div>
-              <Badge variant="success">0 active</Badge>
+              <Badge variant={displayedActiveAlarms.length > 0 ? "warning" : "success"}>
+                {displayedActiveAlarms.length} active
+              </Badge>
             </div>
           </CardHeader>
           <CardContent>
-            {activeAlarms.length === 0 ? (
+            {displayedActiveAlarms.length === 0 ? (
               <div className="flex min-h-[260px] flex-col items-center justify-center rounded-3xl border border-success/20 bg-gradient-to-br from-success/10 via-card to-card p-8 text-center">
                 <div className="rounded-full border border-success/25 bg-success/10 p-4 text-success shadow-[0_0_40px_hsl(var(--success)/0.18)]">
                   <CheckCircle2 className="h-10 w-10" aria-hidden="true" />
@@ -49,12 +65,32 @@ export function AlarmsPage() {
                   No active alarms
                 </h3>
                 <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
-                  The MVP shell is running on mock data only. Alarm rules, shelving,
-                  acknowledgement, and live lifecycle transitions will be connected in
-                  a later step.
+                  No active synthetic alarms are reported by the backend API. Scenario-driven
+                  alarms remain simulation-only and never represent a real plant condition.
                 </p>
               </div>
-            ) : null}
+            ) : (
+              <div className="space-y-3">
+                {displayedActiveAlarms.map((alarm) => (
+                  <div
+                    key={alarm.id}
+                    className="rounded-2xl border border-warning/30 bg-warning/10 p-4"
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-mono text-xs text-muted-foreground">
+                        {alarm.tag}
+                      </span>
+                      <Badge variant="warning">{alarm.status}</Badge>
+                      <Badge variant={alarm.severity === "CRITICAL" ? "destructive" : "warning"}>
+                        {alarm.severity}
+                      </Badge>
+                    </div>
+                    <p className="mt-3 text-sm text-foreground">{alarm.message}</p>
+                    <p className="mt-2 text-xs text-muted-foreground">{alarm.createdAt}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 

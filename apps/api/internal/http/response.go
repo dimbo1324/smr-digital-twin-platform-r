@@ -11,6 +11,7 @@ type ResponseMeta struct {
 	Timestamp time.Time `json:"timestamp"`
 	Count     int       `json:"count,omitempty"`
 	Source    string    `json:"source,omitempty"`
+	Degraded  bool      `json:"degraded,omitempty"`
 }
 
 type Response struct {
@@ -29,8 +30,9 @@ type ErrorResponse struct {
 }
 
 type MetaOptions struct {
-	Count  int
-	Source string
+	Count    int
+	Source   string
+	Degraded bool
 }
 
 func WriteData(w http.ResponseWriter, r *http.Request, status int, data any, options MetaOptions) {
@@ -41,6 +43,7 @@ func WriteData(w http.ResponseWriter, r *http.Request, status int, data any, opt
 			Timestamp: time.Now().UTC(),
 			Count:     options.Count,
 			Source:    options.Source,
+			Degraded:  options.Degraded,
 		},
 	})
 }

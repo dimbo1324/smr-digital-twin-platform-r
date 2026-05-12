@@ -11,9 +11,15 @@ import (
 )
 
 type Handlers struct {
-	SystemStatus    http.Handler
-	Assets          http.Handler
-	LatestTelemetry http.Handler
+	SystemStatus     http.Handler
+	Assets           http.Handler
+	LatestTelemetry  http.Handler
+	TelemetryHistory http.Handler
+	ActiveAlarms     http.Handler
+	Scenarios        http.Handler
+	StartScenario    http.Handler
+	StopScenario     http.Handler
+	ResetSimulation  http.Handler
 }
 
 type Server struct {
