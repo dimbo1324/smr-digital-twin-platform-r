@@ -16,9 +16,9 @@ import (
 func main() {
 	cfg := config.Load()
 	logger := logging.New(cfg)
-	logger.Info("simulation_config_loaded", slog.Int("tick_ms", cfg.TickMS), slog.Int("history_size", cfg.HistorySize), slog.Int("alarm_event_history_size", cfg.AlarmEventHistorySize), slog.Int64("seed", cfg.Seed))
+	logger.Info("simulation_config_loaded", slog.Int("tick_ms", cfg.TickMS), slog.Int("history_size", cfg.HistorySize), slog.Int64("seed", cfg.Seed))
 
-	simEngine := engine.New(engine.Config{TickInterval: cfg.TickInterval(), HistorySize: cfg.HistorySize, AlarmEventHistorySize: cfg.AlarmEventHistorySize, Seed: cfg.Seed}, logger)
+	simEngine := engine.New(engine.Config{TickInterval: cfg.TickInterval(), HistorySize: cfg.HistorySize, Seed: cfg.Seed}, logger)
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 

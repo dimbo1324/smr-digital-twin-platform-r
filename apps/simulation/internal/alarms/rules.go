@@ -79,17 +79,3 @@ func defaultRules() []rule {
 		},
 	}
 }
-
-func (r rule) isActive(value float64) bool {
-	if r.high {
-		return value >= r.threshold
-	}
-	return value <= r.threshold
-}
-
-func (r rule) isCleared(value float64) bool {
-	if r.high {
-		return value <= r.clearThreshold
-	}
-	return value >= r.clearThreshold
-}

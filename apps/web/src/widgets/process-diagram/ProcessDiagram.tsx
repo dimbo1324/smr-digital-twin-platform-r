@@ -9,69 +9,35 @@ import {
   SlidersHorizontal,
   Thermometer,
 } from "lucide-react";
-import type { EquipmentStatus } from "@/entities/equipment/model/types";
+import type { TelemetryPoint, TelemetryStatus } from "@/entities/telemetry/model/types";
 import {
+  findTelemetryByTag,
   formatTelemetryValue,
-  getMockTelemetryPoint,
-} from "@/entities/telemetry/model/mockTelemetry";
+  telemetrySourceLabel,
+} from "@/entities/telemetry/lib/selectors";
 import { Badge } from "@/shared/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { cn } from "@/shared/lib/cn";
 
+type SourceVariant = "success" | "mock" | "warning" | "offline";
+type DataState = "loading" | "connected" | "degraded";
+
 interface ProcessNode {
   tag: string;
   label: string;
-  status: EquipmentStatus;
-  value?: string;
+  status: TelemetryStatus;
+  value: string;
   icon: LucideIcon;
+  source: string;
+  sourceVariant: SourceVariant;
 }
 
-const nodes: ProcessNode[] = [
-  {
-    tag: "T-101",
-    label: "Tank",
-    status: "mock",
-    value: `Level ${formatTelemetryValue(getMockTelemetryPoint("LT-101"))}`,
-    icon: Box,
-  },
-  {
-    tag: "P-101",
-    label: "Pump",
-    status: "offline",
-    value: formatTelemetryValue(getMockTelemetryPoint("P-101.STATE")),
-    icon: Gauge,
-  },
-  {
-    tag: "V-101",
-    label: "Valve",
-    status: "warning",
-    value: `${formatTelemetryValue(getMockTelemetryPoint("V-101.POS"))} open`,
-    icon: SlidersHorizontal,
-  },
-  {
-    tag: "HX-101",
-    label: "Heat Exchanger",
-    status: "mock",
-    value: "Mock duty",
-    icon: Factory,
-  },
-  {
-    tag: "Sensors",
-    label: "TT / PT / FT",
-    status: "normal",
-    value: "Good quality",
-    icon: Thermometer,
-  },
-  {
-    tag: "TIC-101",
-    label: "PID Controller",
-    status: "normal",
-    value: "Auto disabled",
-    icon: Cpu,
-  },
-];
+export interface ProcessDiagramProps {
+  telemetryPoints: TelemetryPoint[];
+  dataState: DataState;
+}
 
-const statusClasses: Record<EquipmentStatus, string> = {
+const statusClasses: Record<TelemetryStatus, string> = {
   offline: "border-offline/25 bg-offline/10 text-offline",
   mock: "border-mock/25 bg-mock/10 text-mock",
   warning: "border-warning/30 bg-warning/10 text-warning",
@@ -79,7 +45,7 @@ const statusClasses: Record<EquipmentStatus, string> = {
 };
 
 const statusBadgeVariant: Record<
-  EquipmentStatus,
+  TelemetryStatus,
   "offline" | "mock" | "warning" | "success"
 > = {
   offline: "offline",
@@ -88,11 +54,95 @@ const statusBadgeVariant: Record<
   normal: "success",
 };
 
+function pointStatus(point: TelemetryPoint | undefined, fallback: TelemetryStatus): TelemetryStatus {
+  return point?.status ?? fallback;
+}
+
+function pointSourceVariant(point: TelemetryPoint | undefined): SourceVariant {
+  if (!point) {
+    return "offline";
+  }
+
+  if (point.source === "simulation") {
+    return "success";
+  }
+
+  return point.source?.includes("mock") ? "mock" : "warning";
+}
+
+function buildNodes(telemetryPoints: TelemetryPoint[]): ProcessNode[] {
+  const tankLevel = findTelemetryByTag(telemetryPoints, "LT-101");
+  const pumpState = findTelemetryByTag(telemetryPoints, "P-101.STATE");
+  const valvePosition = findTelemetryByTag(telemetryPoints, "V-101.POS");
+  const heatExchangerState = findTelemetryByTag(telemetryPoints, "HX-101.STATE");
+  const temperature = findTelemetryByTag(telemetryPoints, "TT-101");
+  const pressure = findTelemetryByTag(telemetryPoints, "PT-101");
+  const flow = findTelemetryByTag(telemetryPoints, "FT-101");
+  const controllerMode = findTelemetryByTag(telemetryPoints, "TIC-101.MODE");
+
+  return [
+    {
+      tag: "T-101",
+      label: "Tank",
+      status: pointStatus(tankLevel, "offline"),
+      value: `Level ${formatTelemetryValue(tankLevel)}`,
+      icon: Box,
+      source: telemetrySourceLabel(tankLevel),
+      sourceVariant: pointSourceVariant(tankLevel),
+    },
+    {
+      tag: "P-101",
+      label: "Pump",
+      status: pointStatus(pumpState, "offline"),
+      value: formatTelemetryValue(pumpState),
+      icon: Gauge,
+      source: telemetrySourceLabel(pumpState),
+      sourceVariant: pointSourceVariant(pumpState),
+    },
+    {
+      tag: "V-101",
+      label: "Valve",
+      status: pointStatus(valvePosition, "warning"),
+      value: `${formatTelemetryValue(valvePosition)} open`,
+      icon: SlidersHorizontal,
+      source: telemetrySourceLabel(valvePosition),
+      sourceVariant: pointSourceVariant(valvePosition),
+    },
+    {
+      tag: "HX-101",
+      label: "Heat Exchanger",
+      status: pointStatus(heatExchangerState, "warning"),
+      value: formatTelemetryValue(heatExchangerState),
+      icon: Factory,
+      source: telemetrySourceLabel(heatExchangerState),
+      sourceVariant: pointSourceVariant(heatExchangerState),
+    },
+    {
+      tag: "Sensors",
+      label: "TT / PT / FT",
+      status: pointStatus(temperature ?? pressure ?? flow, "offline"),
+      value: `${formatTelemetryValue(temperature)} / ${formatTelemetryValue(pressure)} / ${formatTelemetryValue(flow)}`,
+      icon: Thermometer,
+      source: telemetrySourceLabel(temperature ?? pressure ?? flow),
+      sourceVariant: pointSourceVariant(temperature ?? pressure ?? flow),
+    },
+    {
+      tag: "TIC-101",
+      label: "PID Controller",
+      status: pointStatus(controllerMode, "warning"),
+      value: formatTelemetryValue(controllerMode),
+      icon: Cpu,
+      source: telemetrySourceLabel(controllerMode),
+      sourceVariant: pointSourceVariant(controllerMode),
+    },
+  ];
+}
+
 function EquipmentNode({ node }: { node: ProcessNode }) {
   return (
     <div
       className={cn(
-        "group min-h-[156px] rounded-2xl border p-4 transition-[background-color,border-color,box-shadow,transform] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:shadow-panel",
+        "group min-h-[168px] rounded-2xl border p-4 transition-[background-color,border-color,box-shadow,transform] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:shadow-panel",
         statusClasses[node.status],
       )}
     >
@@ -100,11 +150,14 @@ function EquipmentNode({ node }: { node: ProcessNode }) {
         <div className="rounded-2xl border border-current/20 bg-background/40 p-2.5">
           <node.icon className="h-5 w-5" aria-hidden="true" />
         </div>
-        <Badge variant={statusBadgeVariant[node.status]}>{node.status}</Badge>
+        <div className="flex flex-col items-end gap-2">
+          <Badge variant={statusBadgeVariant[node.status]}>{node.status}</Badge>
+          <Badge variant={node.sourceVariant}>{node.source}</Badge>
+        </div>
       </div>
       <p className="mt-5 font-mono text-xs text-muted-foreground">{node.tag}</p>
       <h3 className="mt-1 text-base font-semibold text-foreground">{node.label}</h3>
-      {node.value ? <p className="mt-2 text-sm text-muted-foreground">{node.value}</p> : null}
+      <p className="mt-2 text-sm text-muted-foreground">{node.value}</p>
     </div>
   );
 }
@@ -135,17 +188,28 @@ function CompactProcessPipe() {
   );
 }
 
-export function ProcessDiagram() {
+export function ProcessDiagram({ telemetryPoints, dataState }: ProcessDiagramProps) {
+  const nodes = buildNodes(telemetryPoints);
+  const sourceLabel =
+    dataState === "connected"
+      ? "Live API telemetry"
+      : dataState === "loading"
+        ? "Loading telemetry"
+        : "Fallback telemetry";
+
   return (
     <Card className="overflow-hidden">
       <CardHeader className="flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <CardTitle>Process Mnemonic</CardTitle>
           <CardDescription>
-            Static HMI-like process view prepared for real-time telemetry binding.
+            HMI-like process view bound to backend telemetry when available.
           </CardDescription>
         </div>
-        <Badge variant="mock">{"Tank -> Pump -> Valve -> HX -> Sensors -> PID"}</Badge>
+        <div className="flex flex-wrap gap-2">
+          <Badge variant={dataState === "connected" ? "success" : "warning"}>{sourceLabel}</Badge>
+          <Badge variant="mock">{"Tank -> Pump -> Valve -> HX -> Sensors -> PID"}</Badge>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="rounded-3xl border border-border/70 bg-surface-subtle/60 p-4">
@@ -169,21 +233,9 @@ export function ProcessDiagram() {
         </div>
 
         <div className="mt-5 grid gap-3 md:grid-cols-3">
-          <SensorBadge
-            tag="TT-101"
-            label="Temperature"
-            value={formatTelemetryValue(getMockTelemetryPoint("TT-101"))}
-          />
-          <SensorBadge
-            tag="PT-101"
-            label="Pressure"
-            value={formatTelemetryValue(getMockTelemetryPoint("PT-101"))}
-          />
-          <SensorBadge
-            tag="FT-101"
-            label="Flow"
-            value={formatTelemetryValue(getMockTelemetryPoint("FT-101"))}
-          />
+          <SensorBadge telemetryPoints={telemetryPoints} tag="TT-101" label="Temperature" />
+          <SensorBadge telemetryPoints={telemetryPoints} tag="PT-101" label="Pressure" />
+          <SensorBadge telemetryPoints={telemetryPoints} tag="FT-101" label="Flow" />
         </div>
       </CardContent>
     </Card>
@@ -191,14 +243,17 @@ export function ProcessDiagram() {
 }
 
 function SensorBadge({
+  telemetryPoints,
   tag,
   label,
-  value,
 }: {
+  telemetryPoints: TelemetryPoint[];
   tag: string;
   label: string;
-  value: string;
 }) {
+  const point = findTelemetryByTag(telemetryPoints, tag);
+  const status = pointStatus(point, "offline");
+
   return (
     <div className="rounded-2xl border border-border/70 bg-surface-elevated/70 p-4 transition-[background-color,border-color,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-surface-elevated/90 hover:shadow-panel">
       <div className="flex items-start justify-between gap-3">
@@ -206,9 +261,19 @@ function SensorBadge({
           <p className="font-mono text-xs text-muted-foreground">{tag}</p>
           <p className="mt-1 text-sm text-foreground">{label}</p>
         </div>
-        <span className="status-dot bg-success animate-soft-pulse" />
+        <span
+          className={cn(
+            "status-dot",
+            status === "normal" ? "bg-success animate-soft-pulse" : null,
+            status === "warning" || status === "mock" ? "bg-warning" : null,
+            status === "offline" ? "bg-offline" : null,
+          )}
+        />
       </div>
-      <p className="mt-3 text-xl font-semibold text-foreground">{value}</p>
+      <p className="mt-3 text-xl font-semibold text-foreground">{formatTelemetryValue(point)}</p>
+      <Badge variant={pointSourceVariant(point)} className="mt-3">
+        {telemetrySourceLabel(point)}
+      </Badge>
     </div>
   );
 }

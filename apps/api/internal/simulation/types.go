@@ -30,6 +30,14 @@ type TelemetrySnapshot struct {
 	RadiationLevelUSvH     float64   `json:"radiationLevelUSvH"`
 	AvailabilityPct        float64   `json:"availabilityPct"`
 	EfficiencyPct          float64   `json:"efficiencyPct"`
+	LoopTemperatureC       float64   `json:"loopTemperatureC"`
+	LoopPressureMPa        float64   `json:"loopPressureMPa"`
+	LoopFlowKGS            float64   `json:"loopFlowKgS"`
+	TankLevelPct           float64   `json:"tankLevelPct"`
+	ValvePositionPct       float64   `json:"valvePositionPct"`
+	PumpState              string    `json:"pumpState"`
+	HeatExchangerState     string    `json:"heatExchangerState"`
+	PIDControllerMode      string    `json:"pidControllerMode"`
 	Timestamp              time.Time `json:"timestamp"`
 	Mode                   string    `json:"mode"`
 	Health                 string    `json:"health"`
@@ -39,10 +47,14 @@ type TelemetrySnapshot struct {
 
 type Asset struct {
 	ID          string        `json:"id"`
+	Tag         string        `json:"tag,omitempty"`
 	Name        string        `json:"name"`
 	Type        string        `json:"type"`
+	Area        string        `json:"area,omitempty"`
+	Unit        string        `json:"unit,omitempty"`
 	SafetyClass string        `json:"safetyClass"`
 	Status      string        `json:"status"`
+	Description string        `json:"description,omitempty"`
 	KeyMetrics  []AssetMetric `json:"keyMetrics"`
 	UpdatedAt   time.Time     `json:"updatedAt"`
 }
@@ -54,51 +66,19 @@ type AssetMetric struct {
 }
 
 type Alarm struct {
-	ID              string     `json:"id"`
-	AssetID         string     `json:"assetId"`
-	NodeID          string     `json:"nodeId,omitempty"`
-	Code            string     `json:"code"`
-	Title           string     `json:"title"`
-	Message         string     `json:"message"`
-	Severity        string     `json:"severity"`
-	Status          string     `json:"status"`
-	Value           float64    `json:"value"`
-	Threshold       float64    `json:"threshold"`
-	Unit            string     `json:"unit"`
-	StartedAt       time.Time  `json:"startedAt"`
-	UpdatedAt       time.Time  `json:"updatedAt"`
-	AcknowledgedAt  *time.Time `json:"acknowledgedAt,omitempty"`
-	AcknowledgedBy  string     `json:"acknowledgedBy,omitempty"`
-	AckNote         string     `json:"ackNote,omitempty"`
-	ClearedAt       *time.Time `json:"clearedAt,omitempty"`
-	OccurrenceCount int        `json:"occurrenceCount"`
-	SimulationOnly  bool       `json:"simulationOnly"`
-}
-
-type AlarmEvent struct {
-	ID             string         `json:"id"`
-	AlarmID        string         `json:"alarmId,omitempty"`
-	Type           string         `json:"type"`
-	AssetID        string         `json:"assetId,omitempty"`
-	NodeID         string         `json:"nodeId,omitempty"`
-	Code           string         `json:"code,omitempty"`
-	Severity       string         `json:"severity,omitempty"`
-	Message        string         `json:"message"`
-	CreatedAt      time.Time      `json:"createdAt"`
-	Actor          string         `json:"actor,omitempty"`
-	Note           string         `json:"note,omitempty"`
-	Scenario       string         `json:"scenario,omitempty"`
-	SimulationOnly bool           `json:"simulationOnly"`
-	Metadata       map[string]any `json:"metadata,omitempty"`
-}
-
-type AcknowledgeAlarmRequest struct {
-	Actor string `json:"actor"`
-	Note  string `json:"note"`
-}
-
-type AcknowledgeAlarmResponse struct {
-	Alarm Alarm `json:"alarm"`
+	ID        string     `json:"id"`
+	AssetID   string     `json:"assetId"`
+	Code      string     `json:"code"`
+	Title     string     `json:"title"`
+	Message   string     `json:"message"`
+	Severity  string     `json:"severity"`
+	Status    string     `json:"status"`
+	Value     float64    `json:"value"`
+	Threshold float64    `json:"threshold"`
+	Unit      string     `json:"unit"`
+	StartedAt time.Time  `json:"startedAt"`
+	UpdatedAt time.Time  `json:"updatedAt"`
+	ClearedAt *time.Time `json:"clearedAt,omitempty"`
 }
 
 type ScenarioInfo struct {

@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 	"time"
 
@@ -31,6 +30,13 @@ func TestLatestTelemetryReturnsSimulationDataWhenClientSucceeds(t *testing.T) {
 	meta := payload["meta"].(map[string]any)
 	if meta["source"] != "simulation" {
 		t.Fatalf("expected simulation source, got %v", meta["source"])
+	}
+	data := payload["data"].([]any)
+	if !containsTelemetryTag(data, "TT-101") {
+		t.Fatal("expected process-loop telemetry tag TT-101")
+	}
+	if !containsTelemetryTag(data, "SMR-POWER") {
+		t.Fatal("expected unit overview telemetry tag SMR-POWER")
 	}
 }
 
@@ -83,106 +89,6 @@ func TestActiveAlarmsProxiesSimulationAlarms(t *testing.T) {
 	}
 }
 
-func TestAlarmsReturnsProxiedLifecycleAlarms(t *testing.T) {
-	server := fakeSimulationServer()
-	defer server.Close()
-	gateway := newTestGateway(server.URL, true)
-
-	recorder := httptest.NewRecorder()
-	request := httptest.NewRequest(http.MethodGet, "/api/v1/alarms", nil)
-	gateway.Alarms(recorder, request)
-
-	if recorder.Code != http.StatusOK {
-		t.Fatalf("expected status 200, got %d", recorder.Code)
-	}
-	payload := decodeMap(t, recorder.Body.Bytes())
-	data := payload["data"].([]any)
-	if len(data) != 2 {
-		t.Fatalf("expected 2 alarms, got %d", len(data))
-	}
-}
-
-func TestAlarmEventsReturnsProxiedEventLog(t *testing.T) {
-	server := fakeSimulationServer()
-	defer server.Close()
-	gateway := newTestGateway(server.URL, true)
-
-	recorder := httptest.NewRecorder()
-	request := httptest.NewRequest(http.MethodGet, "/api/v1/alarms/events?limit=50", nil)
-	gateway.AlarmEvents(recorder, request)
-
-	if recorder.Code != http.StatusOK {
-		t.Fatalf("expected status 200, got %d", recorder.Code)
-	}
-	payload := decodeMap(t, recorder.Body.Bytes())
-	data := payload["data"].([]any)
-	if len(data) != 1 {
-		t.Fatalf("expected 1 event, got %d", len(data))
-	}
-}
-
-func TestAlarmDetailsReturnsProxiedAlarm(t *testing.T) {
-	server := fakeSimulationServer()
-	defer server.Close()
-	gateway := newTestGateway(server.URL, true)
-
-	recorder := httptest.NewRecorder()
-	request := httptest.NewRequest(http.MethodGet, "/api/v1/alarms/alarm-1", nil)
-	request.SetPathValue("alarmId", "alarm-1")
-	gateway.AlarmDetails(recorder, request)
-
-	if recorder.Code != http.StatusOK {
-		t.Fatalf("expected status 200, got %d", recorder.Code)
-	}
-	payload := decodeMap(t, recorder.Body.Bytes())
-	data := payload["data"].(map[string]any)
-	if data["id"] != "alarm-1" {
-		t.Fatalf("expected alarm-1, got %v", data["id"])
-	}
-}
-
-func TestAcknowledgeAlarmProxiesRequest(t *testing.T) {
-	server := fakeSimulationServer()
-	defer server.Close()
-	gateway := newTestGateway(server.URL, true)
-
-	body := strings.NewReader(`{"actor":"demo-operator","note":"reviewed"}`)
-	recorder := httptest.NewRecorder()
-	request := httptest.NewRequest(http.MethodPost, "/api/v1/alarms/alarm-1/acknowledge", body)
-	request.SetPathValue("alarmId", "alarm-1")
-	gateway.AcknowledgeAlarm(recorder, request)
-
-	if recorder.Code != http.StatusOK {
-		t.Fatalf("expected status 200, got %d body=%s", recorder.Code, recorder.Body.String())
-	}
-	payload := decodeMap(t, recorder.Body.Bytes())
-	data := payload["data"].(map[string]any)
-	alarm := data["alarm"].(map[string]any)
-	if alarm["status"] != "ACKNOWLEDGED" {
-		t.Fatalf("expected acknowledged alarm, got %v", alarm["status"])
-	}
-}
-
-func TestAcknowledgeUnknownAlarmMapsRemoteError(t *testing.T) {
-	server := fakeSimulationServer()
-	defer server.Close()
-	gateway := newTestGateway(server.URL, true)
-
-	recorder := httptest.NewRecorder()
-	request := httptest.NewRequest(http.MethodPost, "/api/v1/alarms/missing/acknowledge", strings.NewReader(`{}`))
-	request.SetPathValue("alarmId", "missing")
-	gateway.AcknowledgeAlarm(recorder, request)
-
-	if recorder.Code != http.StatusNotFound {
-		t.Fatalf("expected status 404, got %d body=%s", recorder.Code, recorder.Body.String())
-	}
-	payload := decodeMap(t, recorder.Body.Bytes())
-	errorPayload := payload["error"].(map[string]any)
-	if errorPayload["code"] != "ALARM_NOT_FOUND" {
-		t.Fatalf("expected ALARM_NOT_FOUND, got %v", errorPayload["code"])
-	}
-}
-
 func TestScenarioStartEndpointProxiesRequest(t *testing.T) {
 	server := fakeSimulationServer()
 	defer server.Close()
@@ -221,20 +127,9 @@ func fakeSimulationServer() *httptest.Server {
 		case r.URL.Path == "/api/v1/simulation/status":
 			_, _ = w.Write([]byte(`{"data":{"running":true,"mode":"NORMAL","health":"OK","activeScenario":"normal","tickMs":1000,"historySize":3600,"snapshotCount":1,"lastSimulationTimestamp":"2026-05-12T12:00:00Z","simulationOnly":true},"meta":{"timestamp":"2026-05-12T12:00:00Z","source":"simulation","simulationOnly":true}}`))
 		case r.URL.Path == "/api/v1/simulation/telemetry/latest":
-			_, _ = w.Write([]byte(`{"data":{"reactorPowerPct":72,"thermalPowerMw":216,"electricPowerMw":76,"primaryTemperatureC":286,"secondaryTemperatureC":222,"primaryPressureMPa":15.1,"secondaryPressureMPa":6.2,"coolantFlowPct":88,"steamGeneratorLevelPct":62,"turbineRpm":3600,"generatorLoadPct":71,"condenserVacuumKPa":88,"feedwaterFlowPct":76,"vibrationMmS":2.1,"radiationLevelUSvH":0.18,"availabilityPct":99,"efficiencyPct":35,"timestamp":"2026-05-12T12:00:00Z","mode":"NORMAL","health":"OK","simulationOnly":true,"scenario":"normal"},"meta":{"timestamp":"2026-05-12T12:00:00Z","source":"simulation","simulationOnly":true}}`))
+			_, _ = w.Write([]byte(`{"data":{"reactorPowerPct":72,"thermalPowerMw":216,"electricPowerMw":76,"primaryTemperatureC":286,"secondaryTemperatureC":222,"primaryPressureMPa":15.1,"secondaryPressureMPa":6.2,"coolantFlowPct":88,"steamGeneratorLevelPct":62,"turbineRpm":3600,"generatorLoadPct":71,"condenserVacuumKPa":88,"feedwaterFlowPct":76,"vibrationMmS":2.1,"radiationLevelUSvH":0.18,"availabilityPct":99,"efficiencyPct":35,"loopTemperatureC":286.4,"loopPressureMPa":15.1,"loopFlowKgS":118,"tankLevelPct":72,"valvePositionPct":64,"pumpState":"Running","heatExchangerState":"Online","pidControllerMode":"Disabled","timestamp":"2026-05-12T12:00:00Z","mode":"NORMAL","health":"OK","simulationOnly":true,"scenario":"normal"},"meta":{"timestamp":"2026-05-12T12:00:00Z","source":"simulation","simulationOnly":true}}`))
 		case r.URL.Path == "/api/v1/simulation/alarms/active":
-			_, _ = w.Write([]byte(`{"data":[{"id":"alarm-1","assetId":"primary-loop","nodeId":"primary-loop","code":"TEST","title":"Test","message":"Synthetic alarm","severity":"WARNING","status":"ACTIVE","value":1,"threshold":1,"unit":"%","startedAt":"2026-05-12T12:00:00Z","updatedAt":"2026-05-12T12:00:00Z","occurrenceCount":1,"simulationOnly":true}],"meta":{"timestamp":"2026-05-12T12:00:00Z","source":"simulation","simulationOnly":true,"count":1}}`))
-		case r.URL.Path == "/api/v1/simulation/alarms":
-			_, _ = w.Write([]byte(`{"data":[{"id":"alarm-1","assetId":"primary-loop","nodeId":"primary-loop","code":"TEST","title":"Test","message":"Synthetic alarm","severity":"WARNING","status":"ACTIVE","value":1,"threshold":1,"unit":"%","startedAt":"2026-05-12T12:00:00Z","updatedAt":"2026-05-12T12:00:00Z","occurrenceCount":1,"simulationOnly":true},{"id":"alarm-2","assetId":"primary-loop","nodeId":"primary-loop","code":"CLEARED","title":"Cleared","message":"Cleared synthetic alarm","severity":"INFO","status":"CLEARED","value":0,"threshold":1,"unit":"%","startedAt":"2026-05-12T11:00:00Z","updatedAt":"2026-05-12T11:10:00Z","clearedAt":"2026-05-12T11:10:00Z","occurrenceCount":1,"simulationOnly":true}],"meta":{"timestamp":"2026-05-12T12:00:00Z","source":"simulation","simulationOnly":true,"count":2}}`))
-		case r.URL.Path == "/api/v1/simulation/alarms/events":
-			_, _ = w.Write([]byte(`{"data":[{"id":"event-1","alarmId":"alarm-1","type":"ALARM_RAISED","assetId":"primary-loop","nodeId":"primary-loop","code":"TEST","severity":"WARNING","message":"Synthetic alarm","createdAt":"2026-05-12T12:00:00Z","simulationOnly":true}],"meta":{"timestamp":"2026-05-12T12:00:00Z","source":"simulation","simulationOnly":true,"count":1}}`))
-		case r.URL.Path == "/api/v1/simulation/alarms/alarm-1":
-			_, _ = w.Write([]byte(`{"data":{"id":"alarm-1","assetId":"primary-loop","nodeId":"primary-loop","code":"TEST","title":"Test","message":"Synthetic alarm","severity":"WARNING","status":"ACTIVE","value":1,"threshold":1,"unit":"%","startedAt":"2026-05-12T12:00:00Z","updatedAt":"2026-05-12T12:00:00Z","occurrenceCount":1,"simulationOnly":true},"meta":{"timestamp":"2026-05-12T12:00:00Z","source":"simulation","simulationOnly":true}}`))
-		case r.URL.Path == "/api/v1/simulation/alarms/alarm-1/acknowledge":
-			_, _ = w.Write([]byte(`{"data":{"alarm":{"id":"alarm-1","assetId":"primary-loop","nodeId":"primary-loop","code":"TEST","title":"Test","message":"Synthetic alarm","severity":"WARNING","status":"ACKNOWLEDGED","value":1,"threshold":1,"unit":"%","startedAt":"2026-05-12T12:00:00Z","updatedAt":"2026-05-12T12:01:00Z","acknowledgedAt":"2026-05-12T12:01:00Z","acknowledgedBy":"demo-operator","ackNote":"reviewed","occurrenceCount":1,"simulationOnly":true}},"meta":{"timestamp":"2026-05-12T12:01:00Z","source":"simulation","simulationOnly":true}}`))
-		case r.URL.Path == "/api/v1/simulation/alarms/missing/acknowledge":
-			w.WriteHeader(http.StatusNotFound)
-			_, _ = w.Write([]byte(`{"error":{"code":"ALARM_NOT_FOUND","message":"Alarm not found"},"meta":{"timestamp":"2026-05-12T12:00:00Z","source":"simulation","simulationOnly":true}}`))
+			_, _ = w.Write([]byte(`{"data":[{"id":"alarm-1","assetId":"primary-loop","code":"TEST","title":"Test","message":"Synthetic alarm","severity":"WARNING","status":"ACTIVE","value":1,"threshold":1,"unit":"%","startedAt":"2026-05-12T12:00:00Z","updatedAt":"2026-05-12T12:00:00Z"}],"meta":{"timestamp":"2026-05-12T12:00:00Z","source":"simulation","simulationOnly":true,"count":1}}`))
 		case r.URL.Path == "/api/v1/simulation/scenarios/trip/start":
 			_, _ = w.Write([]byte(`{"data":{"running":true,"mode":"TRIP","health":"TRIP","activeScenario":"trip","tickMs":1000,"historySize":3600,"snapshotCount":1,"lastSimulationTimestamp":"2026-05-12T12:00:00Z","simulationOnly":true},"meta":{"timestamp":"2026-05-12T12:00:00Z","source":"simulation","simulationOnly":true}}`))
 		default:
@@ -250,4 +145,15 @@ func decodeMap(t *testing.T, data []byte) map[string]any {
 		t.Fatalf("decode response: %v", err)
 	}
 	return payload
+}
+
+func containsTelemetryTag(items []any, tag string) bool {
+	for _, item := range items {
+		point, ok := item.(map[string]any)
+		if ok && point["tag"] == tag {
+			return true
+		}
+	}
+
+	return false
 }

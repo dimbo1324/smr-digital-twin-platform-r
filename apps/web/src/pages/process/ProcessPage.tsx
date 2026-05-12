@@ -1,101 +1,92 @@
-import { useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import type { ProcessNode } from "@/entities/process/model/types";
-import { ProcessLegend } from "@/widgets/process-mnemonic/ProcessLegend";
-import { ProcessMnemonic } from "@/widgets/process-mnemonic/ProcessMnemonic";
-import { ProcessNodeDetailsPanel } from "@/widgets/process-mnemonic/ProcessNodeDetailsPanel";
-import { ProcessSimulationBanner } from "@/widgets/process-mnemonic/ProcessSimulationBanner";
-import { useProcessTopology } from "@/shared/api/useProcessTopology";
+import { mockEquipment } from "@/entities/equipment/model/mockEquipment";
+import { EquipmentCard } from "@/entities/equipment/ui/EquipmentCard";
+import { mockTelemetryPoints } from "@/entities/telemetry/model/mockTelemetry";
+import { findTelemetryByTag } from "@/entities/telemetry/lib/selectors";
+import { TelemetryValue } from "@/entities/telemetry/ui/TelemetryValue";
+import { ControlValvePanel } from "@/features/control-valve/ControlValvePanel";
+import { ProcessDiagram } from "@/widgets/process-diagram/ProcessDiagram";
+import { useLatestTelemetry } from "@/shared/api/useSimulationTelemetry";
+import { Badge } from "@/shared/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { PageShell } from "@/shared/ui/page-shell";
 
 export function ProcessPage() {
-  const { topology, state } = useProcessTopology();
-  const [searchParams] = useSearchParams();
-  const [selectedNodeId, setSelectedNodeId] = useState<string | undefined>(
-    searchParams.get("node") ?? undefined,
-  );
-  const selectedNode = useMemo(
-    () =>
-      topology.nodes.find((node) => node.id === selectedNodeId) ??
-      topology.nodes[0],
-    [selectedNodeId, topology.nodes],
-  );
+  const liveTelemetry = useLatestTelemetry();
+  const telemetryPoints =
+    liveTelemetry.points.length > 0 ? liveTelemetry.points : mockTelemetryPoints;
+  const processTelemetryTags = [
+    "TT-101",
+    "PT-101",
+    "FT-101",
+    "LT-101",
+    "V-101.POS",
+    "P-101.STATE",
+    "HX-101.STATE",
+    "TIC-101.MODE",
+  ];
+  const processTelemetryPoints = processTelemetryTags
+    .map((tag) => findTelemetryByTag(telemetryPoints, tag))
+    .filter((point) => point !== undefined);
 
   return (
     <PageShell>
-      <ProcessSimulationBanner meta={topology.meta} />
+      <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="rounded-3xl border border-border/70 bg-card/80 p-6 shadow-panel">
+          <Badge variant={liveTelemetry.state === "connected" ? "success" : "mock"}>
+            {liveTelemetry.state === "connected" ? "Live synthetic telemetry" : "Mock process loop"}
+          </Badge>
+          <h1 className="mt-4 text-3xl font-semibold leading-tight text-foreground">
+            Clean process overview for equipment, flow direction, and telemetry quality.
+          </h1>
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">
+            The mnemonic remains simulation-only, with live synthetic telemetry routed through
+            the backend API when the simulation service is available.
+          </p>
+        </div>
 
-      {state === "degraded" ? (
-        <Card className="border-warning/30 bg-warning/10">
+        <div className="grid gap-3 rounded-3xl border border-border/70 bg-surface-elevated/70 p-5">
+          <ProcessFact label="Loop" value="SMR synthetic energy loop" />
+          <ProcessFact label="Command state" value="Scenario simulation only" />
+          <ProcessFact label="Telemetry source" value={liveTelemetry.state === "connected" ? "Backend -> Simulation" : "Local fallback"} />
+        </div>
+      </section>
+
+      <ProcessDiagram telemetryPoints={telemetryPoints} dataState={liveTelemetry.state} />
+
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+        <Card>
           <CardHeader>
-            <CardTitle>Degraded Process Topology</CardTitle>
+            <CardTitle>Telemetry Snapshot</CardTitle>
             <CardDescription>
-              The backend or simulation service is unavailable. The process view remains
-              safe and visible, but live metrics may be missing.
+              Process-loop and unit overview values from the backend API, with mock fallback when unavailable.
             </CardDescription>
           </CardHeader>
-        </Card>
-      ) : null}
-
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_390px]">
-        <Card>
-          <CardHeader className="flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <CardTitle>Process Mnemonic</CardTitle>
-              <CardDescription>
-                Live process topology mapped in the backend from synthetic telemetry and alarms.
-              </CardDescription>
-            </div>
-            <ProcessLegend />
-          </CardHeader>
           <CardContent>
-            {topology.nodes.length > 0 ? (
-              <ProcessMnemonic
-                topology={topology}
-                selectedNodeId={selectedNode?.id}
-                onSelectNode={(node: ProcessNode) => setSelectedNodeId(node.id)}
-              />
-            ) : (
-              <div className="rounded-3xl border border-border/70 bg-surface-subtle/70 p-10 text-center text-sm text-muted-foreground">
-                Process topology is not available yet.
-              </div>
-            )}
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {processTelemetryPoints.map((point) => (
+                <TelemetryValue key={point.tag} point={point} />
+              ))}
+            </div>
           </CardContent>
         </Card>
 
-        <ProcessNodeDetailsPanel node={selectedNode} />
+        <ControlValvePanel telemetryPoints={telemetryPoints} dataState={liveTelemetry.state} />
       </section>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Topology Contract</CardTitle>
-          <CardDescription>
-            Frontend receives node positions, metrics, alarms, status, and edge flow
-            definitions from `GET /api/v1/process/topology`.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <ProcessFact label="Nodes" value={String(topology.nodes.length)} />
-            <ProcessFact label="Edges" value={String(topology.edges.length)} />
-            <ProcessFact label="Source" value={topology.meta.source} />
-            <ProcessFact
-              label="Simulation"
-              value={topology.meta.simulationConnected ? "Connected" : "Degraded"}
-            />
-          </div>
-        </CardContent>
-      </Card>
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {mockEquipment.map((equipment) => (
+          <EquipmentCard key={equipment.id} equipment={equipment} />
+        ))}
+      </section>
     </PageShell>
   );
 }
 
 function ProcessFact({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-border/60 bg-surface-elevated/70 px-4 py-3">
-      <span className="text-xs text-muted-foreground">{label}</span>
-      <p className="mt-1 text-sm font-medium text-foreground">{value}</p>
+    <div className="flex items-center justify-between rounded-2xl border border-border/60 bg-background/40 px-4 py-3">
+      <span className="text-sm text-muted-foreground">{label}</span>
+      <span className="text-sm font-medium text-foreground">{value}</span>
     </div>
   );
 }

@@ -55,6 +55,14 @@ func (e *Engine) tick(now time.Time) model.TelemetrySnapshot {
 	if current.Mode == model.ModeTrip {
 		current.Health = model.HealthTrip
 	}
+	current.LoopTemperatureC = round(approach(current.LoopTemperatureC, current.PrimaryTemperatureC+0.4, 0.16))
+	current.LoopPressureMPa = round(approach(current.LoopPressureMPa, current.PrimaryPressureMPa, 0.18))
+	current.LoopFlowKGS = round(approach(current.LoopFlowKGS, clamp(current.CoolantFlowPct*1.34, 0, 150), 0.16))
+	current.TankLevelPct = round(approach(current.TankLevelPct, clamp(54+current.SteamGeneratorLevelPct*0.28, 0, 100), 0.10))
+	current.ValvePositionPct = round(approach(current.ValvePositionPct, e.valveTargetForScenario(), 0.10))
+	current.PumpState = pumpStateForSnapshot(current)
+	current.HeatExchangerState = heatExchangerStateForSnapshot(current)
+	current.PIDControllerMode = "Disabled"
 	current.Timestamp = now
 	current.SimulationOnly = true
 	current.Scenario = string(e.state.activeScenario)
@@ -122,6 +130,39 @@ func deriveHealth(snapshot model.TelemetrySnapshot) model.Health {
 		return model.HealthWarning
 	}
 	return model.HealthOK
+}
+
+func (e *Engine) valveTargetForScenario() float64 {
+	switch e.state.activeScenario {
+	case model.ScenarioPumpDegradation:
+		return 58
+	case model.ScenarioHighTemperature, model.ScenarioPressureDeviation:
+		return 72
+	case model.ScenarioTrip:
+		return 18
+	default:
+		return 64
+	}
+}
+
+func pumpStateForSnapshot(snapshot model.TelemetrySnapshot) string {
+	if snapshot.Mode == model.ModeTrip || snapshot.CoolantFlowPct <= 10 {
+		return "Offline"
+	}
+	if snapshot.Health == model.HealthAlarm || snapshot.Health == model.HealthWarning {
+		return "Running"
+	}
+	return "Running"
+}
+
+func heatExchangerStateForSnapshot(snapshot model.TelemetrySnapshot) string {
+	if snapshot.Mode == model.ModeTrip {
+		return "Offline"
+	}
+	if snapshot.Health == model.HealthWarning || snapshot.Health == model.HealthAlarm {
+		return "Mock Duty"
+	}
+	return "Online"
 }
 
 func approach(current, target, alpha float64) float64 {

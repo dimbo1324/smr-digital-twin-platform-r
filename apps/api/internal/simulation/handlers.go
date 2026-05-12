@@ -1,9 +1,6 @@
 package simulation
 
 import (
-	"encoding/json"
-	"errors"
-	"io"
 	"log/slog"
 	"net/http"
 	"time"
@@ -87,76 +84,10 @@ func (g *Gateway) TelemetryHistory(w http.ResponseWriter, r *http.Request) {
 func (g *Gateway) ActiveAlarms(w http.ResponseWriter, r *http.Request) {
 	alarms, err := g.client.ActiveAlarms(r.Context())
 	if err != nil {
-		g.logger.Warn("simulation_active_alarms_unavailable", slog.Any("error", err))
 		httpapi.WriteData(w, r, http.StatusOK, []Alarm{}, httpapi.MetaOptions{Count: 0, Source: "memory", Degraded: true})
 		return
 	}
 	httpapi.WriteData(w, r, http.StatusOK, alarms, httpapi.MetaOptions{Count: len(alarms), Source: "simulation"})
-}
-
-func (g *Gateway) Alarms(w http.ResponseWriter, r *http.Request) {
-	alarms, err := g.client.Alarms(r.Context())
-	if err != nil {
-		g.logger.Warn("simulation_alarms_unavailable", slog.Any("error", err))
-		httpapi.WriteData(w, r, http.StatusOK, []Alarm{}, httpapi.MetaOptions{Count: 0, Source: "memory", Degraded: true})
-		return
-	}
-	httpapi.WriteData(w, r, http.StatusOK, alarms, httpapi.MetaOptions{Count: len(alarms), Source: "simulation"})
-}
-
-func (g *Gateway) AlarmEvents(w http.ResponseWriter, r *http.Request) {
-	events, err := g.client.AlarmEvents(r.Context(), r.URL.Query().Get("limit"))
-	if err != nil {
-		g.logger.Warn("simulation_alarm_events_unavailable", slog.Any("error", err))
-		httpapi.WriteData(w, r, http.StatusOK, []AlarmEvent{}, httpapi.MetaOptions{Count: 0, Source: "memory", Degraded: true})
-		return
-	}
-	httpapi.WriteData(w, r, http.StatusOK, events, httpapi.MetaOptions{Count: len(events), Source: "simulation"})
-}
-
-func (g *Gateway) AlarmDetails(w http.ResponseWriter, r *http.Request) {
-	alarm, err := g.client.Alarm(r.Context(), r.PathValue("alarmId"))
-	if err != nil {
-		g.logger.Warn("simulation_alarm_detail_failed", slog.Any("error", err), slog.String("alarm_id", r.PathValue("alarmId")))
-		writeSimulationError(w, r, err, http.StatusNotFound, "ALARM_NOT_FOUND", "Alarm not found")
-		return
-	}
-	httpapi.WriteData(w, r, http.StatusOK, alarm, httpapi.MetaOptions{Source: "simulation"})
-}
-
-func (g *Gateway) AcknowledgeAlarm(w http.ResponseWriter, r *http.Request) {
-	var request AcknowledgeAlarmRequest
-	if r.Body != nil {
-		defer r.Body.Close()
-		if err := json.NewDecoder(r.Body).Decode(&request); err != nil && !errors.Is(err, io.EOF) {
-			httpapi.WriteError(w, r, http.StatusBadRequest, "INVALID_ACKNOWLEDGEMENT", "Invalid acknowledgement request")
-			return
-		}
-	}
-	if request.Actor == "" {
-		request.Actor = "demo-operator"
-	}
-
-	response, err := g.client.AcknowledgeAlarm(r.Context(), r.PathValue("alarmId"), request)
-	if err != nil {
-		g.logger.Warn("simulation_alarm_acknowledge_failed", slog.Any("error", err), slog.String("alarm_id", r.PathValue("alarmId")))
-		writeSimulationError(w, r, err, http.StatusBadGateway, "ALARM_ACKNOWLEDGE_FAILED", "Failed to acknowledge alarm")
-		return
-	}
-	httpapi.WriteData(w, r, http.StatusOK, response, httpapi.MetaOptions{Source: "simulation"})
-}
-
-func writeSimulationError(w http.ResponseWriter, r *http.Request, err error, fallbackStatus int, fallbackCode, fallbackMessage string) {
-	var remote *RemoteError
-	if errors.As(err, &remote) && remote.Code != "" {
-		message := remote.Message
-		if message == "" {
-			message = fallbackMessage
-		}
-		httpapi.WriteError(w, r, remote.Status, remote.Code, message)
-		return
-	}
-	httpapi.WriteError(w, r, fallbackStatus, fallbackCode, fallbackMessage)
 }
 
 func (g *Gateway) Scenarios(w http.ResponseWriter, r *http.Request) {
@@ -216,6 +147,14 @@ func telemetryPointsFromSnapshot(s TelemetrySnapshot) []telemetry.TelemetryPoint
 		numberPoint("EFFICIENCY", "Efficiency", s.EfficiencyPct, "%", s.Timestamp),
 		textPoint("SIM-MODE", "Simulation Mode", s.Mode, s.Timestamp),
 		textPoint("SIM-HEALTH", "Simulation Health", s.Health, s.Timestamp),
+		numberPoint("TT-101", "Loop Temperature", s.LoopTemperatureC, "C", s.Timestamp),
+		numberPoint("PT-101", "Loop Pressure", s.LoopPressureMPa, "MPa", s.Timestamp),
+		numberPoint("FT-101", "Loop Flow", s.LoopFlowKGS, "kg/s", s.Timestamp),
+		numberPoint("LT-101", "Tank Level", s.TankLevelPct, "%", s.Timestamp),
+		numberPoint("V-101.POS", "Valve Position", s.ValvePositionPct, "%", s.Timestamp),
+		textPointWithQuality("P-101.STATE", "Pump State", valueOrFallback(s.PumpState, "Mock"), telemetry.QualityGood, s.Timestamp),
+		textPointWithQuality("HX-101.STATE", "Heat Exchanger State", valueOrFallback(s.HeatExchangerState, "Mock Duty"), telemetry.QualityGood, s.Timestamp),
+		textPointWithQuality("TIC-101.MODE", "PID Controller Mode", valueOrFallback(s.PIDControllerMode, "Disabled"), telemetry.QualityUncertain, s.Timestamp),
 	}
 }
 
@@ -225,6 +164,18 @@ func numberPoint(tag, name string, value float64, unit string, timestamp time.Ti
 }
 
 func textPoint(tag, name, value string, timestamp time.Time) telemetry.TelemetryPoint {
+	return textPointWithQuality(tag, name, value, telemetry.QualityGood, timestamp)
+}
+
+func textPointWithQuality(tag, name, value string, quality telemetry.Quality, timestamp time.Time) telemetry.TelemetryPoint {
 	v := value
-	return telemetry.TelemetryPoint{Tag: tag, Name: name, ValueText: &v, Unit: "", Quality: telemetry.QualityGood, Timestamp: timestamp, Source: "simulation"}
+	return telemetry.TelemetryPoint{Tag: tag, Name: name, ValueText: &v, Unit: "", Quality: quality, Timestamp: timestamp, Source: "simulation"}
+}
+
+func valueOrFallback(value, fallback string) string {
+	if value == "" {
+		return fallback
+	}
+
+	return value
 }

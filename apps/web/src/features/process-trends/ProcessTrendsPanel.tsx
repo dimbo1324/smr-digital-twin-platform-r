@@ -67,9 +67,9 @@ export function ProcessTrendsPanel({ history }: ProcessTrendsPanelProps) {
         minute: "2-digit",
         second: "2-digit",
       }),
-      temperature: sample.primaryTemperatureC,
-      pressure: sample.primaryPressureMPa,
-      flow: sample.coolantFlowPct,
+      temperature: sample.loopTemperatureC ?? sample.primaryTemperatureC,
+      pressure: sample.loopPressureMPa ?? sample.primaryPressureMPa,
+      flow: sample.loopFlowKgS ?? sample.coolantFlowPct,
     }));
   }, [history]);
 

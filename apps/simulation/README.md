@@ -1,6 +1,11 @@
 # SMR Twin Simulation Service
 
-Go simulation-only telemetry engine for the SMR Twin Platform MVP. It generates deterministic synthetic telemetry, in-memory history, alarm lifecycle state, in-memory alarm events, and scenario states for the backend API.
+Go simulation-only telemetry engine for the SMR Twin Platform MVP. It generates deterministic synthetic telemetry, in-memory history, active alarms, and scenario states for the backend API.
+
+The service exposes two synthetic telemetry layers:
+
+- SMR Unit Overview for high-level unit metrics.
+- Thermal Process Loop MVP for `T-101`, `P-101`, `V-101`, `HX-101`, `TT-101`, `PT-101`, `FT-101`, `LT-101`, and `TIC-101` UI alignment.
 
 This service is not connected to real equipment. It does not implement real nuclear operating procedures, safety automation, or plant control.
 
@@ -23,7 +28,6 @@ Default port: `8081`.
 | `SIM_LOG_LEVEL` | `info` |
 | `SIM_TICK_MS` | `1000` |
 | `SIM_HISTORY_SIZE` | `3600` |
-| `SIM_ALARM_EVENT_HISTORY_SIZE` | `1000` |
 | `SIM_SEED` | `42` |
 | `SIM_VERSION` | `0.1.0` |
 
@@ -35,13 +39,7 @@ curl http://localhost:8081/api/v1/simulation/status
 curl http://localhost:8081/api/v1/simulation/assets
 curl http://localhost:8081/api/v1/simulation/telemetry/latest
 curl "http://localhost:8081/api/v1/simulation/telemetry/history?window=15m"
-curl http://localhost:8081/api/v1/simulation/alarms
 curl http://localhost:8081/api/v1/simulation/alarms/active
-curl http://localhost:8081/api/v1/simulation/alarms/events
-curl http://localhost:8081/api/v1/simulation/alarms/alarm-PRIMARY_TEMPERATURE_HIGH_WARNING
-curl -X POST http://localhost:8081/api/v1/simulation/alarms/alarm-PRIMARY_TEMPERATURE_HIGH_WARNING/acknowledge \
-  -H "Content-Type: application/json" \
-  -d '{"actor":"demo-operator","note":"Acknowledged during simulation review"}'
 curl http://localhost:8081/api/v1/simulation/scenarios
 curl -X POST http://localhost:8081/api/v1/simulation/scenarios/high_temperature/start
 curl -X POST http://localhost:8081/api/v1/simulation/scenarios/stop
@@ -60,26 +58,6 @@ curl -X POST http://localhost:8081/api/v1/simulation/reset
 - `trip`
 
 All scenarios are synthetic demonstrations for portfolio and UI validation.
-
-## Alarm Lifecycle
-
-Alarm statuses:
-
-- `ACTIVE` - synthetic condition is present and unacknowledged.
-- `ACKNOWLEDGED` - demo operator acknowledged the alarm while the synthetic condition may still be present.
-- `CLEARED` - synthetic condition returned to the configured safe band.
-
-Event types:
-
-- `ALARM_RAISED`
-- `ALARM_ACKNOWLEDGED`
-- `ALARM_CLEARED`
-- `ALARM_REACTIVATED`
-- `SCENARIO_STARTED`
-- `SCENARIO_STOPPED`
-- `SIMULATION_RESET`
-
-The event log is an in-memory ring buffer. It is intended for demo/session review only and is not a persistent operational log.
 
 ## Test
 

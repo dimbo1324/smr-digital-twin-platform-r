@@ -38,7 +38,6 @@ services:
       SIM_PORT: 8081
       SIM_TICK_MS: 1000
       SIM_HISTORY_SIZE: 3600
-      SIM_ALARM_EVENT_HISTORY_SIZE: 1000
       SIM_SEED: 42
     ports:
       - "8081:8081"

@@ -20,6 +20,14 @@ type TelemetrySnapshot struct {
 	RadiationLevelUSvH     float64   `json:"radiationLevelUSvH"`
 	AvailabilityPct        float64   `json:"availabilityPct"`
 	EfficiencyPct          float64   `json:"efficiencyPct"`
+	LoopTemperatureC       float64   `json:"loopTemperatureC"`
+	LoopPressureMPa        float64   `json:"loopPressureMPa"`
+	LoopFlowKGS            float64   `json:"loopFlowKgS"`
+	TankLevelPct           float64   `json:"tankLevelPct"`
+	ValvePositionPct       float64   `json:"valvePositionPct"`
+	PumpState              string    `json:"pumpState"`
+	HeatExchangerState     string    `json:"heatExchangerState"`
+	PIDControllerMode      string    `json:"pidControllerMode"`
 	Timestamp              time.Time `json:"timestamp"`
 	Mode                   Mode      `json:"mode"`
 	Health                 Health    `json:"health"`

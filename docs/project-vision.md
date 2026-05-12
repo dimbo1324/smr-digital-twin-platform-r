@@ -16,11 +16,18 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller
 
 The project should grow incrementally from this process loop toward a richer educational model of an SMR energy block. The first releases must stay focused on simulation, telemetry, visualization, scenarios, and reports rather than real plant control.
 
+The MVP domain is intentionally split into two layers:
+
+1. `SMR Unit Overview` — a high-level synthetic representation of unit-level performance, including aggregate power, primary-loop values, turbine/generator metrics, and overall health.
+2. `Thermal Process Loop MVP` — a lower-level training process loop for actuator, PID, telemetry, alarm, and future simulation-only command development.
+
+The current Go simulation service already provides high-level SMR unit overview telemetry. The process-loop telemetry layer is used by the HMI mnemonic and is the foundation for future `V-101` and `P-101` command work.
+
 ## MVP Goal
 
 Build a local web platform where a user can observe and interact with a simulated industrial process loop in the browser.
 
-The MVP should allow the user to:
+The MVP target should allow the user to:
 
 - view an HMI-style process mnemonic;
 - start and stop a simulated pump;
@@ -33,6 +40,8 @@ The MVP should allow the user to:
 - run predefined scenarios such as normal operation, pump failure, valve stuck, and overheating;
 - export simulation results as PDF or Excel reports.
 
+Current implementation status is tracked in `README.md` and `docs/mvp-domain-model.md`. Some target capabilities above are intentionally planned next rather than implemented now.
+
 ## MVP Scope
 
 The MVP includes:
@@ -40,16 +49,15 @@ The MVP includes:
 - React-based frontend shell for an industrial operations cockpit.
 - Static process diagram with equipment components and telemetry badges.
 - Go backend skeleton with REST endpoints and structured module boundaries.
-- Python or Go simulation service for simplified process behaviour.
-- MQTT broker for telemetry and command topics.
-- Telemetry ingestion path from simulator to backend.
-- Time-series storage for process values.
-- Alarm engine with explicit lifecycle states.
-- Event log for user actions, system events, simulation events, and alarm events.
-- Scenario engine based on declarative YAML or JSON scenario definitions.
-- Report export for simulation summaries.
+- Go simulation service for synthetic process and unit overview behaviour.
+- Polling-based live telemetry through the backend API.
+- In-memory telemetry history for local trend views.
+- Basic generated active alarms.
+- Scenario controls for predefined synthetic scenarios.
 - Docker Compose environment for local development.
-- Basic tests and CI once services are implemented.
+- Basic backend, simulation, and frontend checks.
+
+The following are planned extensions rather than current implementation: MQTT, persistent time-series storage, full alarm lifecycle, full event log service, declarative scenario definitions, report export, auth/RBAC, and WebSocket/SSE transport.
 
 ## Out of Scope
 
@@ -138,8 +146,8 @@ Core assets:
 - Temperature transmitter: `TT-101`
 - Pressure transmitter: `PT-101`
 - Flow transmitter: `FT-101`
-- Level controller: `LIC-101`
-- PID controller: `PID-101`
+- Level transmitter: `LT-101`
+- PID controller placeholder: `TIC-101`
 
 Shared model concepts:
 
@@ -155,6 +163,8 @@ Shared model concepts:
 - `Scenario`
 - `Event`
 - `AuditRecord`
+
+See `docs/mvp-domain-model.md` for the current domain contract, including the split between `SMR Unit Overview` and `Thermal Process Loop MVP`.
 
 ## Messaging Model
 

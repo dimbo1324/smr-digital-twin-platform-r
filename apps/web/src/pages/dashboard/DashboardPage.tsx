@@ -1,27 +1,19 @@
-import { ArrowUpRight, FileText, GitBranch, ShieldCheck } from "lucide-react";
-import { Link } from "react-router-dom";
+import { ArrowUpRight, FileText, ShieldCheck } from "lucide-react";
 import { historicalAlarms } from "@/entities/alarms/model/mockAlarms";
 import { mockEvents } from "@/entities/events/model/mockEvents";
 import { mockTelemetrySummary } from "@/entities/telemetry/model/mockTelemetry";
 import { AlarmList } from "@/widgets/alarm-list/AlarmList";
 import { StatusSummary } from "@/widgets/status-summary/StatusSummary";
 import { TrendPreview } from "@/widgets/trend-preview/TrendPreview";
-import { alarmEventTypeLabel, formatAlarmDate } from "@/entities/alarms/lib/alarmLabels";
 import { useSystemStatus } from "@/shared/api/useSystemStatus";
-import { useAlarmEvents, useAlarms } from "@/shared/api/useAlarms";
 import { useLatestTelemetry } from "@/shared/api/useSimulationTelemetry";
-import { useProcessTopology } from "@/shared/api/useProcessTopology";
 import { Badge } from "@/shared/ui/badge";
-import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { PageShell } from "@/shared/ui/page-shell";
 
 export function DashboardPage() {
   const systemStatus = useSystemStatus();
   const liveTelemetry = useLatestTelemetry();
-  const processTopology = useProcessTopology(5000);
-  const alarmState = useAlarms(5000);
-  const alarmEvents = useAlarmEvents(50, 5000);
   const telemetryCount =
     liveTelemetry.points.length > 0 ? liveTelemetry.points.length : mockTelemetrySummary.totalPoints;
   const mode =
@@ -85,10 +77,6 @@ export function DashboardPage() {
         />
       </section>
 
-      <ProcessHealthSummary topologyState={processTopology} />
-
-      <AlarmLifecycleSummary alarms={alarmState.data} latestEvent={alarmEvents.data[0]} />
-
       <section className="grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         <LatestEvents />
         <MvpScope />
@@ -100,109 +88,6 @@ export function DashboardPage() {
         alarms={historicalAlarms.slice(0, 2)}
       />
     </PageShell>
-  );
-}
-
-function AlarmLifecycleSummary({
-  alarms,
-  latestEvent,
-}: {
-  alarms: ReturnType<typeof useAlarms>["data"];
-  latestEvent: ReturnType<typeof useAlarmEvents>["data"][number] | undefined;
-}) {
-  const active = alarms.filter((alarm) => alarm.status === "ACTIVE" || alarm.status === "ACKNOWLEDGED");
-  const unacknowledged = active.filter((alarm) => alarm.status === "ACTIVE");
-  const acknowledged = active.filter((alarm) => alarm.status === "ACKNOWLEDGED");
-  const critical = active.filter((alarm) => alarm.severity === "CRITICAL" || alarm.severity === "ALARM");
-
-  return (
-    <Card>
-      <CardHeader className="flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <CardTitle>Alarm Lifecycle</CardTitle>
-          <CardDescription>
-            Session-only alarm status and latest lifecycle event from the simulation.
-          </CardDescription>
-        </div>
-        <Button asChild variant="outline">
-          <Link to="/alarms">
-            <BellLinkIcon />
-            Open Alarms
-          </Link>
-        </Button>
-      </CardHeader>
-      <CardContent className="grid gap-3 xl:grid-cols-[repeat(4,minmax(0,1fr))_minmax(260px,1.2fr)]">
-        <Metric label="Active" value={String(active.length)} />
-        <Metric label="Unacknowledged" value={String(unacknowledged.length)} />
-        <Metric label="Acknowledged" value={String(acknowledged.length)} />
-        <Metric label="Critical" value={String(critical.length)} />
-        <div className="rounded-2xl border border-border/60 bg-surface-elevated/70 p-4">
-          <p className="text-xs text-muted-foreground">Latest event</p>
-          <p className="mt-1 text-sm font-medium text-foreground">
-            {latestEvent ? (alarmEventTypeLabel[latestEvent.type] ?? latestEvent.type) : "No events yet"}
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {latestEvent ? formatAlarmDate(latestEvent.createdAt) : "In-memory event log is empty."}
-          </p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function BellLinkIcon() {
-  return <FileText className="h-4 w-4" aria-hidden="true" />;
-}
-
-function ProcessHealthSummary({
-  topologyState,
-}: {
-  topologyState: ReturnType<typeof useProcessTopology>;
-}) {
-  const counts = topologyState.topology.nodes.reduce(
-    (acc, node) => {
-      if (node.status === "OK") {
-        acc.ok += 1;
-      } else if (node.status === "WARNING") {
-        acc.warning += 1;
-      } else if (node.status === "ALARM") {
-        acc.alarm += 1;
-      } else if (node.status === "TRIP") {
-        acc.trip += 1;
-      } else {
-        acc.degraded += 1;
-      }
-      return acc;
-    },
-    { ok: 0, warning: 0, alarm: 0, trip: 0, degraded: 0 },
-  );
-
-  return (
-    <Card>
-      <CardHeader className="flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <CardTitle>Process Health</CardTitle>
-          <CardDescription>
-            Node-level topology summary from the backend process domain layer.
-          </CardDescription>
-        </div>
-        <Button asChild variant="outline">
-          <Link to="/process">
-            <GitBranch className="h-4 w-4" aria-hidden="true" />
-            Open Process View
-          </Link>
-        </Button>
-      </CardHeader>
-      <CardContent>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-          <Metric label="OK nodes" value={String(counts.ok)} />
-          <Metric label="Warning nodes" value={String(counts.warning)} />
-          <Metric label="Alarm nodes" value={String(counts.alarm)} />
-          <Metric label="Trip nodes" value={String(counts.trip)} />
-          <Metric label="Degraded" value={String(counts.degraded)} />
-        </div>
-      </CardContent>
-    </Card>
   );
 }
 
@@ -235,10 +120,10 @@ function SystemOverview({
       <CardContent className="space-y-3">
         <OverviewRow label="Mode" value={mode} tone="mock" />
         <OverviewRow label="Simulation health" value={health} tone={health === "OK" ? "mock" : "warning"} />
-        <OverviewRow label="Data source" value={simulationConnected ? "Backend Mock API" : "Fallback Mock Data"} tone={simulationConnected ? "mock" : "offline"} />
+        <OverviewRow label="Data source" value={simulationConnected ? "Backend API" : "Fallback Mock Data"} tone={simulationConnected ? "mock" : "offline"} />
         <OverviewRow label="Control boundary" value="No Live Control" tone="warning" />
         <OverviewRow label="Simulation service" value={simulationConnected ? "Connected" : "Not Connected"} tone={simulationConnected ? "mock" : "offline"} />
-        <OverviewRow label="MQTT broker" value="Not Connected" tone="offline" />
+        <OverviewRow label="MQTT broker" value="Not Implemented" tone="offline" />
       </CardContent>
     </Card>
   );

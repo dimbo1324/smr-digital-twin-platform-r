@@ -20,6 +20,8 @@ func (r *MemoryRepository) Latest(_ context.Context) ([]TelemetryPoint, error) {
 		numberPoint("LT-101", "Tank Level", 72, "%", QualityGood, now),
 		numberPoint("V-101.POS", "Valve Position", 64, "%", QualityUncertain, now),
 		textPoint("P-101.STATE", "Pump State", "Offline", "", QualityBad, now),
+		textPoint("HX-101.STATE", "Heat Exchanger State", "Mock Duty", "", QualityUncertain, now),
+		textPoint("TIC-101.MODE", "PID Controller Mode", "Disabled", "", QualityUncertain, now),
 	}, nil
 }
 

@@ -71,7 +71,7 @@ export function SettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {["Mock", "API", "MQTT"].map((source) => (
+            {["Mock fallback", "Backend API", "MQTT planned"].map((source) => (
               <label
                 key={source}
                 className="flex cursor-not-allowed items-center justify-between rounded-2xl border border-border/70 bg-surface-elevated/60 p-4"
@@ -79,14 +79,18 @@ export function SettingsPage() {
                 <span className="text-sm text-foreground">{source}</span>
                 <input
                   type="radio"
-                  checked={source === "Mock"}
+                  checked={
+                    simulation.state === "connected"
+                      ? source === "Backend API"
+                      : source === "Mock fallback"
+                  }
                   readOnly
                   disabled
                   className="h-4 w-4 accent-primary"
                 />
               </label>
             ))}
-            <Badge variant="warning">Data source switching disabled in shell</Badge>
+            <Badge variant="warning">MQTT and runtime source switching are not implemented yet</Badge>
           </CardContent>
         </Card>
       </section>
@@ -121,11 +125,6 @@ export function SettingsPage() {
             </Button>
             <Badge variant="warning">Simulation-only controls</Badge>
           </div>
-          <p className="mt-3 text-sm leading-6 text-muted-foreground">
-            Scenario actions affect synthetic telemetry, process topology, and the
-            in-memory alarm lifecycle only. They do not control any real system or
-            represent operating instructions.
-          </p>
         </CardContent>
       </Card>
     </PageShell>

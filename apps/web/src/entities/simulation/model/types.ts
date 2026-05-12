@@ -16,6 +16,14 @@ export interface SimulationTelemetrySnapshot {
   radiationLevelUSvH: number;
   availabilityPct: number;
   efficiencyPct: number;
+  loopTemperatureC: number;
+  loopPressureMPa: number;
+  loopFlowKgS: number;
+  tankLevelPct: number;
+  valvePositionPct: number;
+  pumpState: string;
+  heatExchangerState: string;
+  pidControllerMode: string;
   timestamp: string;
   mode: string;
   health: string;
@@ -30,7 +38,21 @@ export interface SimulationScenario {
   simulationOnly: boolean;
 }
 
-export type SimulationAlarm = Alarm;
+export interface SimulationAlarm {
+  id: string;
+  assetId: string;
+  code: string;
+  title: string;
+  message: string;
+  severity: "INFO" | "WARNING" | "ALARM" | "CRITICAL";
+  status: "ACTIVE" | "ACKNOWLEDGED" | "CLEARED";
+  value: number;
+  threshold: number;
+  unit: string;
+  startedAt: string;
+  updatedAt: string;
+  clearedAt?: string;
+}
 
 export interface SimulationStatus {
   running: boolean;
@@ -43,4 +65,3 @@ export interface SimulationStatus {
   lastSimulationTimestamp: string;
   simulationOnly: boolean;
 }
-import type { Alarm } from "@/entities/alarms/model/types";

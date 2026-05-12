@@ -19,10 +19,14 @@ type AssetMetric struct {
 
 type Asset struct {
 	ID          string        `json:"id"`
+	Tag         string        `json:"tag"`
 	Name        string        `json:"name"`
 	Type        string        `json:"type"`
+	Area        string        `json:"area"`
+	Unit        string        `json:"unit"`
 	SafetyClass string        `json:"safetyClass"`
 	Status      AssetStatus   `json:"status"`
+	Description string        `json:"description"`
 	KeyMetrics  []AssetMetric `json:"keyMetrics"`
 	UpdatedAt   time.Time     `json:"updatedAt"`
 }

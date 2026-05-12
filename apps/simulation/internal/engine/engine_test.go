@@ -59,6 +59,43 @@ func TestValuesStayWithinSyntheticRanges(t *testing.T) {
 		if snapshot.PrimaryPressureMPa < 0 || snapshot.PrimaryPressureMPa > 18 {
 			t.Fatalf("primary pressure out of range: %f", snapshot.PrimaryPressureMPa)
 		}
+		if snapshot.LoopFlowKGS < 0 || snapshot.LoopFlowKGS > 150 {
+			t.Fatalf("process-loop flow out of range: %f", snapshot.LoopFlowKGS)
+		}
+		if snapshot.ValvePositionPct < 0 || snapshot.ValvePositionPct > 100 {
+			t.Fatalf("valve position out of range: %f", snapshot.ValvePositionPct)
+		}
+	}
+}
+
+func TestProcessLoopTelemetryIsPopulated(t *testing.T) {
+	engine := newTestEngine()
+	tickMany(engine, 3)
+
+	snapshot := engine.Snapshot()
+	if snapshot.LoopTemperatureC == 0 {
+		t.Fatal("expected loop temperature")
+	}
+	if snapshot.LoopPressureMPa == 0 {
+		t.Fatal("expected loop pressure")
+	}
+	if snapshot.LoopFlowKGS == 0 {
+		t.Fatal("expected loop flow")
+	}
+	if snapshot.TankLevelPct == 0 {
+		t.Fatal("expected tank level")
+	}
+	if snapshot.ValvePositionPct == 0 {
+		t.Fatal("expected valve position")
+	}
+	if snapshot.PumpState == "" {
+		t.Fatal("expected pump state")
+	}
+	if snapshot.HeatExchangerState == "" {
+		t.Fatal("expected heat exchanger state")
+	}
+	if snapshot.PIDControllerMode == "" {
+		t.Fatal("expected PID controller mode")
 	}
 }
 
@@ -103,73 +140,6 @@ func TestTripScenarioSetsModeAndHealth(t *testing.T) {
 	}
 	if snapshot.Health != model.HealthTrip {
 		t.Fatalf("expected TRIP health, got %s", snapshot.Health)
-	}
-}
-
-func TestTripScenarioProducesProtectionSystemAlarm(t *testing.T) {
-	engine := newTestEngine()
-	if err := engine.SetScenario(model.ScenarioTrip); err != nil {
-		t.Fatalf("set scenario: %v", err)
-	}
-	tickMany(engine, 10)
-
-	alarms := engine.ActiveAlarms()
-	if len(alarms) == 0 {
-		t.Fatal("expected trip alarm")
-	}
-	found := false
-	for _, alarm := range alarms {
-		if alarm.AssetID == "protection-system" && alarm.Severity == model.AlarmSeverityCritical {
-			found = true
-		}
-	}
-	if !found {
-		t.Fatalf("expected protection-system critical alarm, got %#v", alarms)
-	}
-}
-
-func TestScenarioStartStopAndResetCreateAlarmEvents(t *testing.T) {
-	engine := newTestEngine()
-	if err := engine.SetScenario(model.ScenarioHighTemperature); err != nil {
-		t.Fatalf("set scenario: %v", err)
-	}
-	if err := engine.ClearScenario(); err != nil {
-		t.Fatalf("clear scenario: %v", err)
-	}
-	engine.Reset()
-
-	events := engine.AlarmEvents(10)
-	for _, eventType := range []model.AlarmEventType{
-		model.EventScenarioStarted,
-		model.EventScenarioStopped,
-		model.EventSimulationReset,
-	} {
-		found := false
-		for _, event := range events {
-			if event.Type == eventType {
-				found = true
-				break
-			}
-		}
-		if !found {
-			t.Fatalf("expected event %s in %#v", eventType, events)
-		}
-	}
-}
-
-func TestTelemetryFieldsRequiredByProcessTopologyArePresent(t *testing.T) {
-	engine := newTestEngine()
-	tickMany(engine, 1)
-	snapshot := engine.Snapshot()
-
-	if snapshot.Timestamp.IsZero() {
-		t.Fatal("expected timestamp")
-	}
-	if snapshot.PrimaryTemperatureC == 0 || snapshot.PrimaryPressureMPa == 0 || snapshot.CoolantFlowPct == 0 {
-		t.Fatalf("expected primary-loop telemetry fields: %#v", snapshot)
-	}
-	if snapshot.TurbineRPM == 0 || snapshot.GeneratorLoadPct == 0 {
-		t.Fatalf("expected turbine/generator telemetry fields: %#v", snapshot)
 	}
 }
 

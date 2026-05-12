@@ -11,6 +11,7 @@ export interface TelemetryPoint {
   status: TelemetryStatus;
   timestamp: string;
   trend: "up" | "down" | "stable";
+  source?: string;
 }
 
 export interface TrendSample {

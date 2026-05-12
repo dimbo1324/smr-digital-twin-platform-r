@@ -1,11 +1,16 @@
 import { NavLink } from "react-router-dom";
-import { Radio, ShieldAlert, Sparkles, WifiOff } from "lucide-react";
+import { Radio, ShieldAlert, Sparkles, Wifi, WifiOff } from "lucide-react";
 import { navigationItems } from "@/shared/config/navigation";
+import { useSystemStatus } from "@/shared/api/useSystemStatus";
 import { cn } from "@/shared/lib/cn";
 import { Badge } from "@/shared/ui/badge";
 import { Separator } from "@/shared/ui/separator";
 
 export function AppSidebar() {
+  const systemStatus = useSystemStatus();
+  const simulationConnected =
+    systemStatus.state === "connected" && systemStatus.status.simulationConnected;
+
   return (
     <aside className="border-b border-border/70 bg-card/70 backdrop-blur-xl lg:min-h-screen lg:border-b-0 lg:border-r">
       <div className="flex h-full flex-col gap-5 p-4 lg:sticky lg:top-0 lg:min-h-screen lg:p-5">
@@ -27,10 +32,16 @@ export function AppSidebar() {
           <div className="mt-5 grid gap-2">
             <div className="flex items-center justify-between rounded-xl border border-border/60 bg-background/40 px-3 py-2">
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <WifiOff className="h-3.5 w-3.5 text-offline" aria-hidden="true" />
+                {simulationConnected ? (
+                  <Wifi className="h-3.5 w-3.5 text-success" aria-hidden="true" />
+                ) : (
+                  <WifiOff className="h-3.5 w-3.5 text-offline" aria-hidden="true" />
+                )}
                 Simulation
               </div>
-              <Badge variant="offline">Offline</Badge>
+              <Badge variant={simulationConnected ? "success" : "offline"}>
+                {simulationConnected ? "Connected" : "Offline"}
+              </Badge>
             </div>
             <div className="flex items-center justify-between rounded-xl border border-border/60 bg-background/40 px-3 py-2">
               <div className="flex items-center gap-2 text-xs text-muted-foreground">

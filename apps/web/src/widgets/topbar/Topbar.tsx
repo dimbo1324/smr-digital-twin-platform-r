@@ -103,7 +103,7 @@ function getApiBadge(state: ReturnType<typeof useSystemStatus>["state"]) {
   switch (state) {
     case "connected":
       return {
-        label: "Backend Mock API",
+        label: "Backend API",
         variant: "success" as const,
         icon: Wifi,
       };

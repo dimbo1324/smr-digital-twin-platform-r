@@ -12,6 +12,7 @@ export const mockTelemetryPoints: TelemetryPoint[] = [
     status: "mock",
     timestamp: mockTimestamp,
     trend: "stable",
+    source: "mock-ui",
   },
   {
     tag: "PT-101",
@@ -22,6 +23,7 @@ export const mockTelemetryPoints: TelemetryPoint[] = [
     status: "mock",
     timestamp: mockTimestamp,
     trend: "up",
+    source: "mock-ui",
   },
   {
     tag: "FT-101",
@@ -32,6 +34,7 @@ export const mockTelemetryPoints: TelemetryPoint[] = [
     status: "mock",
     timestamp: mockTimestamp,
     trend: "stable",
+    source: "mock-ui",
   },
   {
     tag: "LT-101",
@@ -42,6 +45,7 @@ export const mockTelemetryPoints: TelemetryPoint[] = [
     status: "normal",
     timestamp: mockTimestamp,
     trend: "down",
+    source: "mock-ui",
   },
   {
     tag: "V-101.POS",
@@ -52,6 +56,7 @@ export const mockTelemetryPoints: TelemetryPoint[] = [
     status: "warning",
     timestamp: mockTimestamp,
     trend: "stable",
+    source: "mock-ui",
   },
   {
     tag: "P-101.STATE",
@@ -62,6 +67,29 @@ export const mockTelemetryPoints: TelemetryPoint[] = [
     status: "offline",
     timestamp: mockTimestamp,
     trend: "stable",
+    source: "mock-ui",
+  },
+  {
+    tag: "HX-101.STATE",
+    label: "Heat Exchanger State",
+    value: "Mock Duty",
+    unit: "",
+    quality: "UNCERTAIN",
+    status: "warning",
+    timestamp: mockTimestamp,
+    trend: "stable",
+    source: "mock-ui",
+  },
+  {
+    tag: "TIC-101.MODE",
+    label: "PID Controller Mode",
+    value: "Disabled",
+    unit: "",
+    quality: "UNCERTAIN",
+    status: "warning",
+    timestamp: mockTimestamp,
+    trend: "stable",
+    source: "mock-ui",
   },
 ];
 

@@ -11,7 +11,8 @@ Current milestone:
 - in-memory asset registry mock data
 - in-memory latest telemetry mock data
 - optional simulation service gateway integration
-- telemetry history, alarm lifecycle, event log, and scenario proxy endpoints
+- telemetry history, alarms, and scenario proxy endpoints
+- SMR Unit Overview and Thermal Process Loop telemetry through `/api/v1/telemetry/latest`
 - structured request logging
 - CORS for the Vite frontend dev server
 - graceful HTTP shutdown
@@ -22,7 +23,7 @@ Out of scope for this step:
 - MQTT ingestion
 - WebSocket/SSE streaming
 - auth/RBAC
-- simulation control
+- simulation command layer
 - real plant integration
 
 ## Run Locally
@@ -76,14 +77,7 @@ curl http://localhost:8080/api/v1/system/status
 curl http://localhost:8080/api/v1/assets
 curl http://localhost:8080/api/v1/telemetry/latest
 curl "http://localhost:8080/api/v1/telemetry/history?window=15m"
-curl http://localhost:8080/api/v1/alarms
 curl http://localhost:8080/api/v1/alarms/active
-curl http://localhost:8080/api/v1/alarms/events
-curl http://localhost:8080/api/v1/alarms/alarm-PRIMARY_TEMPERATURE_HIGH_WARNING
-curl -X POST http://localhost:8080/api/v1/alarms/alarm-PRIMARY_TEMPERATURE_HIGH_WARNING/acknowledge \
-  -H "Content-Type: application/json" \
-  -d '{"actor":"demo-operator","note":"Acknowledged during simulation review"}'
-curl http://localhost:8080/api/v1/process/topology
 curl http://localhost:8080/api/v1/simulation/scenarios
 curl -X POST http://localhost:8080/api/v1/simulation/scenarios/high_temperature/start
 curl -X POST http://localhost:8080/api/v1/simulation/scenarios/stop
@@ -132,37 +126,18 @@ Returns the MVP process-loop assets:
 
 Returns simulation telemetry when `apps/simulation` is reachable. If the simulation service is unavailable, the API returns fallback mock telemetry with `meta.degraded=true`.
 
+The current telemetry contract includes both unit overview tags such as `SMR-POWER`, `TT-PRIMARY`, and `FT-COOLANT`, and process-loop tags such as `TT-101`, `PT-101`, `FT-101`, `LT-101`, `V-101.POS`, `P-101.STATE`, `HX-101.STATE`, and `TIC-101.MODE`.
+
 ### Simulation Proxy Endpoints
 
 The frontend still calls only `apps/api`. The API proxies simulation state through:
 
 - `GET /api/v1/telemetry/history?window=15m`
-- `GET /api/v1/alarms`
 - `GET /api/v1/alarms/active`
-- `GET /api/v1/alarms/events`
-- `GET /api/v1/alarms/{alarmId}`
-- `POST /api/v1/alarms/{alarmId}/acknowledge`
-- `GET /api/v1/process/topology`
 - `GET /api/v1/simulation/scenarios`
 - `POST /api/v1/simulation/scenarios/{scenarioName}/start`
 - `POST /api/v1/simulation/scenarios/stop`
 - `POST /api/v1/simulation/reset`
-
-### `GET /api/v1/process/topology`
-
-Returns a frontend-ready process domain model:
-
-- nodes with position, zone, status, metrics, and active alarms;
-- edges with source/target, flow type, label, status, and animation hint;
-- metadata describing simulation connectivity and simulation-only boundary.
-
-If the simulation service is unavailable, the endpoint still returns a degraded topology with `meta.simulationConnected=false` and `meta.source=degraded-fallback`.
-
-### Alarm Lifecycle Gateway
-
-Alarm lifecycle endpoints proxy `apps/simulation` and preserve a consistent API envelope. Supported statuses are `ACTIVE`, `ACKNOWLEDGED`, and `CLEARED`; supported event types include alarm raised, acknowledged, cleared, reactivated, scenario started/stopped, and simulation reset.
-
-Acknowledgement is simulation-only. It stores demo actor/note metadata in memory and does not represent real plant alarm handling or any real safety action.
 
 ## Future Integration Points
 

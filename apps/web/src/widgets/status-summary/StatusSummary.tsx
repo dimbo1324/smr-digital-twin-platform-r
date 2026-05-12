@@ -1,5 +1,6 @@
 import { Activity, Bell, Database, Server } from "lucide-react";
-import { mockTelemetrySummary } from "@/entities/telemetry/model/mockTelemetry";
+import { useSystemStatus } from "@/shared/api/useSystemStatus";
+import { useActiveSimulationAlarms, useLatestTelemetry } from "@/shared/api/useSimulationTelemetry";
 import { Badge } from "@/shared/ui/badge";
 import { Card, CardContent } from "@/shared/ui/card";
 
@@ -12,42 +13,48 @@ interface SummaryItem {
   metric: string;
 }
 
-const items: SummaryItem[] = [
-  {
-    label: "Reactor Module Status",
-    value: "Not Connected",
-    detail: "No real plant interface",
-    icon: Server,
-    variant: "offline",
-    metric: "safe boundary",
-  },
-  {
-    label: "Thermal Loop",
-    value: "Mock",
-    detail: "Static process model shell",
-    icon: Activity,
-    variant: "mock",
-    metric: "demo source",
-  },
-  {
-    label: "Active Alarms",
-    value: "0",
-    detail: "Historical examples only",
-    icon: Bell,
-    variant: "success",
-    metric: "clear",
-  },
-  {
-    label: "Telemetry Points",
-    value: String(mockTelemetrySummary.totalPoints),
-    detail: "TT, PT, FT, LT, valve, pump",
-    icon: Database,
-    variant: "warning",
-    metric: "mock tags",
-  },
-];
-
 export function StatusSummary() {
+  const systemStatus = useSystemStatus();
+  const telemetry = useLatestTelemetry();
+  const alarms = useActiveSimulationAlarms();
+  const simulationConnected =
+    systemStatus.state === "connected" && systemStatus.status.simulationConnected;
+
+  const items: SummaryItem[] = [
+    {
+      label: "Reactor Module Status",
+      value: "Simulation Only",
+      detail: "No real plant interface",
+      icon: Server,
+      variant: "offline",
+      metric: "safe boundary",
+    },
+    {
+      label: "Thermal Loop",
+      value: telemetry.state === "connected" ? "Live" : "Fallback",
+      detail: simulationConnected ? "Backend -> simulation" : "Mock/offline state",
+      icon: Activity,
+      variant: telemetry.state === "connected" ? "success" : "mock",
+      metric: telemetry.state === "connected" ? "api source" : "fallback",
+    },
+    {
+      label: "Active Alarms",
+      value: String(alarms.alarms.length),
+      detail: "Generated active alarms only",
+      icon: Bell,
+      variant: alarms.alarms.length > 0 ? "warning" : "success",
+      metric: alarms.alarms.length > 0 ? "active" : "clear",
+    },
+    {
+      label: "Telemetry Points",
+      value: String(telemetry.points.length),
+      detail: "Unit overview + process loop",
+      icon: Database,
+      variant: telemetry.state === "connected" ? "success" : "warning",
+      metric: telemetry.state === "connected" ? "live tags" : "fallback tags",
+    },
+  ];
+
   return (
     <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
       {items.map((item, index) => (

@@ -9,30 +9,28 @@ import (
 )
 
 type Config struct {
-	AppName               string
-	Environment           string
-	Host                  string
-	Port                  string
-	LogLevel              string
-	TickMS                int
-	HistorySize           int
-	AlarmEventHistorySize int
-	Seed                  int64
-	Version               string
+	AppName     string
+	Environment string
+	Host        string
+	Port        string
+	LogLevel    string
+	TickMS      int
+	HistorySize int
+	Seed        int64
+	Version     string
 }
 
 func Load() Config {
 	return Config{
-		AppName:               envString("SIM_APP_NAME", "smr-twin-simulation"),
-		Environment:           envString("SIM_ENV", "development"),
-		Host:                  envString("SIM_HOST", "0.0.0.0"),
-		Port:                  envString("SIM_PORT", "8081"),
-		LogLevel:              envString("SIM_LOG_LEVEL", "info"),
-		TickMS:                envInt("SIM_TICK_MS", 1000),
-		HistorySize:           envInt("SIM_HISTORY_SIZE", 3600),
-		AlarmEventHistorySize: envInt("SIM_ALARM_EVENT_HISTORY_SIZE", 1000),
-		Seed:                  int64(envInt("SIM_SEED", 42)),
-		Version:               envString("SIM_VERSION", "0.1.0"),
+		AppName:     envString("SIM_APP_NAME", "smr-twin-simulation"),
+		Environment: envString("SIM_ENV", "development"),
+		Host:        envString("SIM_HOST", "0.0.0.0"),
+		Port:        envString("SIM_PORT", "8081"),
+		LogLevel:    envString("SIM_LOG_LEVEL", "info"),
+		TickMS:      envInt("SIM_TICK_MS", 1000),
+		HistorySize: envInt("SIM_HISTORY_SIZE", 3600),
+		Seed:        int64(envInt("SIM_SEED", 42)),
+		Version:     envString("SIM_VERSION", "0.1.0"),
 	}
 }
 
