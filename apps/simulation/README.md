@@ -1,6 +1,6 @@
 # SMR Twin Simulation Service
 
-Go simulation-only telemetry engine for the SMR Twin Platform MVP. It generates deterministic synthetic telemetry, in-memory history, active alarms, and scenario states for the backend API.
+Go simulation-only telemetry engine for the SMR Twin Platform MVP. It generates deterministic synthetic telemetry, in-memory history, alarm lifecycle state, recent events, and scenario states for the backend API.
 
 The service exposes two synthetic telemetry layers:
 
@@ -42,6 +42,10 @@ curl http://localhost:8081/api/v1/simulation/assets
 curl http://localhost:8081/api/v1/simulation/telemetry/latest
 curl "http://localhost:8081/api/v1/simulation/telemetry/history?window=15m"
 curl http://localhost:8081/api/v1/simulation/alarms/active
+curl http://localhost:8081/api/v1/simulation/alarms/history
+curl -X POST http://localhost:8081/api/v1/simulation/alarms/alarm-id/acknowledge \
+  -H "Content-Type: application/json" \
+  -d '{"acknowledgedBy":"demo-operator","comment":"Acknowledged from Alarms page"}'
 curl -X POST http://localhost:8081/api/v1/simulation/commands \
   -H "Content-Type: application/json" \
   -d '{"targetTag":"V-101","commandType":"SET_POSITION","source":"frontend","requestedBy":"demo-engineer","payload":{"positionPercent":75}}'
@@ -65,6 +69,28 @@ curl -X POST http://localhost:8081/api/v1/simulation/reset
 - `trip`
 
 All scenarios are synthetic demonstrations for portfolio and UI validation.
+
+## Alarm Lifecycle
+
+The simulation service keeps alarm instances in memory:
+
+- `ACTIVE`: a synthetic rule condition is currently true.
+- `ACKNOWLEDGED`: a demo operator acknowledged an active alarm.
+- `CLEARED`: the synthetic condition returned to normal and the instance moved to history.
+
+Endpoints:
+
+- `GET /api/v1/simulation/alarms/active`
+- `GET /api/v1/simulation/alarms/history`
+- `POST /api/v1/simulation/alarms/{alarmID}/acknowledge`
+
+Alarm actions create events in the same recent event stream as command events:
+
+- `ALARM_ACTIVATED`
+- `ALARM_ACKNOWLEDGED`
+- `ALARM_CLEARED`
+
+This is an operator workflow simulator only. It is not a real plant alarm system.
 
 ## Simulation Commands
 

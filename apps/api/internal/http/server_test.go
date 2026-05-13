@@ -153,6 +153,8 @@ func newTestRouter() http.Handler {
 		LatestTelemetry:  telemetry.NewHandler(telemetryService, logger),
 		TelemetryHistory: emptyOKHandler(),
 		ActiveAlarms:     emptyOKHandler(),
+		AlarmHistory:     emptyOKHandler(),
+		AcknowledgeAlarm: emptyOKHandler(),
 		Scenarios:        emptyOKHandler(),
 		StartScenario:    emptyOKHandler(),
 		StopScenario:     emptyOKHandler(),

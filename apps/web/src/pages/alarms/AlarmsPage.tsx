@@ -1,131 +1,233 @@
-import { BellRing, CheckCircle2 } from "lucide-react";
-import { activeAlarms, historicalAlarms } from "@/entities/alarms/model/mockAlarms";
+import { BellRing, CheckCircle2, Clock3, ShieldAlert } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import type { Alarm } from "@/entities/alarms/model/types";
-import { AlarmList } from "@/widgets/alarm-list/AlarmList";
-import { useActiveSimulationAlarms } from "@/shared/api/useSimulationTelemetry";
+import { useAlarms } from "@/entities/alarms/api/useAlarms";
 import { Badge } from "@/shared/ui/badge";
+import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { PageShell } from "@/shared/ui/page-shell";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/shared/ui/table";
 
-const lifecycleStates = [
-  {
-    state: "ACTIVE",
-    description: "Rule condition is present and visible to the operator.",
-    variant: "warning",
-  },
-  {
-    state: "ACKNOWLEDGED",
-    description: "Operator has seen the alarm; condition may still exist.",
-    variant: "mock",
-  },
-  {
-    state: "CLEARED",
-    description: "Process returned to acceptable mock limits.",
-    variant: "success",
-  },
-] as const;
+const severityVariant: Record<Alarm["severity"], "outline" | "warning" | "destructive"> = {
+  LOW: "outline",
+  INFO: "outline",
+  MEDIUM: "warning",
+  WARNING: "warning",
+  HIGH: "destructive",
+  ALARM: "destructive",
+  CRITICAL: "destructive",
+};
+
+const statusVariant: Record<Alarm["status"], "warning" | "mock" | "success"> = {
+  ACTIVE: "warning",
+  ACKNOWLEDGED: "mock",
+  CLEARED: "success",
+};
 
 export function AlarmsPage() {
-  const liveAlarms = useActiveSimulationAlarms();
-  const mappedActiveAlarms: Alarm[] = liveAlarms.alarms.map((alarm) => ({
-    id: alarm.id,
-    tag: alarm.assetId,
-    severity: alarm.severity,
-    status: alarm.status,
-    message: alarm.message,
-    createdAt: new Date(alarm.startedAt).toLocaleString(),
-    clearedAt: alarm.clearedAt,
-  }));
-  const displayedActiveAlarms = mappedActiveAlarms.length > 0 ? mappedActiveAlarms : activeAlarms;
+  const alarms = useAlarms();
+  const activeCount = alarms.activeAlarms.filter((alarm) => alarm.status === "ACTIVE").length;
+  const acknowledgedCount = alarms.activeAlarms.filter((alarm) => alarm.status === "ACKNOWLEDGED").length;
 
   return (
     <PageShell>
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
-        <Card className="overflow-hidden">
-          <CardHeader>
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <CardTitle>Active Alarm Panel</CardTitle>
-                <CardDescription>
-                  Alarm lifecycle shell for future rule evaluation and acknowledgement.
-                </CardDescription>
-              </div>
-              <Badge variant={displayedActiveAlarms.length > 0 ? "warning" : "success"}>
-                {displayedActiveAlarms.length} active
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {displayedActiveAlarms.length === 0 ? (
-              <div className="flex min-h-[260px] flex-col items-center justify-center rounded-3xl border border-success/20 bg-gradient-to-br from-success/10 via-card to-card p-8 text-center">
-                <div className="rounded-full border border-success/25 bg-success/10 p-4 text-success shadow-[0_0_40px_hsl(var(--success)/0.18)]">
-                  <CheckCircle2 className="h-10 w-10" aria-hidden="true" />
-                </div>
-                <h3 className="mt-5 text-xl font-semibold text-foreground">
-                  No active alarms
-                </h3>
-                <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
-                  No active synthetic alarms are reported by the backend API. Scenario-driven
-                  alarms remain simulation-only and never represent a real plant condition.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {displayedActiveAlarms.map((alarm) => (
-                  <div
-                    key={alarm.id}
-                    className="rounded-2xl border border-warning/30 bg-warning/10 p-4"
-                  >
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-mono text-xs text-muted-foreground">
-                        {alarm.tag}
-                      </span>
-                      <Badge variant="warning">{alarm.status}</Badge>
-                      <Badge variant={alarm.severity === "CRITICAL" ? "destructive" : "warning"}>
-                        {alarm.severity}
-                      </Badge>
-                    </div>
-                    <p className="mt-3 text-sm text-foreground">{alarm.message}</p>
-                    <p className="mt-2 text-xs text-muted-foreground">{alarm.createdAt}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="rounded-3xl border border-border/70 bg-card/80 p-6 shadow-panel">
+          <Badge variant={alarms.state === "connected" ? "success" : "warning"}>
+            {alarms.state === "connected" ? "Live alarm lifecycle" : "Alarm API unavailable"}
+          </Badge>
+          <h1 className="mt-4 text-3xl font-semibold leading-tight text-foreground">
+            Alarm operations for the simulation-only process.
+          </h1>
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">
+            Alarm instances are generated from synthetic telemetry, acknowledged by the demo operator,
+            cleared automatically when the condition normalizes, and recorded in the unified event trail.
+          </p>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Lifecycle States</CardTitle>
-            <CardDescription>Supported alarm states for the domain model.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {lifecycleStates.map((item) => (
-              <div
-                key={item.state}
-                className="rounded-2xl border border-border/70 bg-surface-elevated/60 p-4"
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <span className="flex items-center gap-2 text-sm font-medium text-foreground">
-                    <BellRing className="h-4 w-4 text-primary" aria-hidden="true" />
-                    {item.state}
-                  </span>
-                  <Badge variant={item.variant}>mock</Badge>
-                </div>
-                <p className="mt-2 text-xs leading-5 text-muted-foreground">
-                  {item.description}
-                </p>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+        <div className="grid gap-3 rounded-3xl border border-border/70 bg-surface-elevated/70 p-5">
+          <SummaryItem label="Active" value={String(activeCount)} tone={activeCount > 0 ? "warning" : "success"} />
+          <SummaryItem label="Acknowledged" value={String(acknowledgedCount)} tone="mock" />
+          <SummaryItem label="Cleared history" value={String(alarms.history.length)} tone="outline" />
+        </div>
       </section>
 
-      <AlarmList
-        title="Historical Alarm Examples"
-        description="Mock alarm records with id, tag, severity, status, timestamps, and acknowledgement fields."
-        alarms={historicalAlarms}
-      />
+      {alarms.feedback ? (
+        <div className={`rounded-2xl border p-4 text-sm ${alarms.feedback.type === "success" ? "border-success/30 bg-success/10 text-success" : "border-destructive/30 bg-destructive/10 text-destructive"}`}>
+          {alarms.feedback.message}
+        </div>
+      ) : null}
+
+      <Card>
+        <CardHeader className="flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <CardTitle>Active And Acknowledged Alarms</CardTitle>
+            <CardDescription>
+              Live simulation alarm instances. Cleared alarms are removed from this list.
+            </CardDescription>
+          </div>
+          <Badge variant={alarms.activeAlarms.length > 0 ? "warning" : "success"}>
+            {alarms.activeAlarms.length} open
+          </Badge>
+        </CardHeader>
+        <CardContent>
+          {alarms.state === "loading" ? (
+            <StatePanel icon={Clock3} title="Loading alarms" description="Reading current alarm state from the API." />
+          ) : alarms.state === "degraded" ? (
+            <StatePanel icon={ShieldAlert} title="Alarm API unavailable" description="The page is not showing live alarm data right now." />
+          ) : alarms.activeAlarms.length === 0 ? (
+            <StatePanel icon={CheckCircle2} title="No active alarms" description="No synthetic alarm conditions are currently active." />
+          ) : (
+            <AlarmTable
+              alarms={alarms.activeAlarms}
+              acknowledgingId={alarms.acknowledgingId}
+              onAcknowledge={alarms.acknowledge}
+            />
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Cleared Alarm History</CardTitle>
+          <CardDescription>
+            In-memory history of alarms that returned to normal simulation limits.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {alarms.state === "connected" && alarms.history.length === 0 ? (
+            <StatePanel icon={BellRing} title="No cleared alarms yet" description="Cleared alarm instances will appear here after conditions normalize." />
+          ) : (
+            <AlarmTable alarms={alarms.history} />
+          )}
+        </CardContent>
+      </Card>
     </PageShell>
   );
+}
+
+function AlarmTable({
+  alarms,
+  acknowledgingId,
+  onAcknowledge,
+}: {
+  alarms: Alarm[];
+  acknowledgingId?: string;
+  onAcknowledge?: (id: string) => Promise<Alarm>;
+}) {
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Alarm</TableHead>
+          <TableHead>Severity</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead>Value</TableHead>
+          <TableHead>Lifecycle</TableHead>
+          <TableHead>Action</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {alarms.map((alarm) => (
+          <TableRow key={alarm.id}>
+            <TableCell className="min-w-[280px]">
+              <div className="font-mono text-xs text-muted-foreground">{alarm.code ?? alarm.id}</div>
+              <div className="mt-1 text-sm font-medium text-foreground">{alarm.message}</div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                {alarm.tag} · {alarm.source ?? "simulation"}
+              </div>
+            </TableCell>
+            <TableCell>
+              <Badge variant={severityVariant[alarm.severity]}>{alarm.severity}</Badge>
+            </TableCell>
+            <TableCell>
+              <Badge variant={statusVariant[alarm.status]}>{alarm.status}</Badge>
+            </TableCell>
+            <TableCell className="whitespace-nowrap font-mono text-xs text-foreground">
+              {formatNumber(alarm.lastValue ?? alarm.value)} {alarm.unit}
+              <div className="text-muted-foreground">limit {formatNumber(alarm.threshold)}</div>
+            </TableCell>
+            <TableCell className="min-w-[260px] text-xs leading-5 text-muted-foreground">
+              <div>Active: {formatDate(alarm.activeAt ?? alarm.createdAt)}</div>
+              {alarm.acknowledgedAt ? <div>Ack: {formatDate(alarm.acknowledgedAt)} by {alarm.acknowledgedBy}</div> : null}
+              {alarm.clearedAt ? <div>Cleared: {formatDate(alarm.clearedAt)}</div> : null}
+            </TableCell>
+            <TableCell>
+              {alarm.status === "ACTIVE" && onAcknowledge ? (
+                <Button
+                  size="sm"
+                  disabled={acknowledgingId === alarm.id}
+                  onClick={() => void onAcknowledge(alarm.id)}
+                >
+                  {acknowledgingId === alarm.id ? "Acknowledging" : "Acknowledge"}
+                </Button>
+              ) : alarm.status === "ACKNOWLEDGED" ? (
+                <Badge variant="mock">seen</Badge>
+              ) : (
+                <Badge variant="success">closed</Badge>
+              )}
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
+
+function StatePanel({
+  icon: Icon,
+  title,
+  description,
+}: {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="flex min-h-[220px] flex-col items-center justify-center rounded-3xl border border-border/70 bg-surface-subtle/60 p-8 text-center">
+      <div className="rounded-full border border-border/70 bg-card p-4 text-primary">
+        <Icon className="h-8 w-8" aria-hidden="true" />
+      </div>
+      <h3 className="mt-5 text-xl font-semibold text-foreground">{title}</h3>
+      <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">{description}</p>
+    </div>
+  );
+}
+
+function SummaryItem({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone: "success" | "warning" | "mock" | "outline";
+}) {
+  return (
+    <div className="flex items-center justify-between rounded-2xl border border-border/60 bg-background/40 px-4 py-3">
+      <span className="text-sm text-muted-foreground">{label}</span>
+      <Badge variant={tone}>{value}</Badge>
+    </div>
+  );
+}
+
+function formatDate(value?: string) {
+  if (!value) {
+    return "n/a";
+  }
+  return new Date(value).toLocaleString();
+}
+
+function formatNumber(value?: number) {
+  if (value === undefined || !Number.isFinite(value)) {
+    return "n/a";
+  }
+  return value.toFixed(2);
 }

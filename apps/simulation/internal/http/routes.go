@@ -12,6 +12,8 @@ func (s *Server) routes() http.Handler {
 	mux.HandleFunc("GET /api/v1/simulation/telemetry/latest", h.LatestTelemetry)
 	mux.HandleFunc("GET /api/v1/simulation/telemetry/history", h.History)
 	mux.HandleFunc("GET /api/v1/simulation/alarms/active", h.ActiveAlarms)
+	mux.HandleFunc("GET /api/v1/simulation/alarms/history", h.AlarmHistory)
+	mux.HandleFunc("POST /api/v1/simulation/alarms/{alarmID}/acknowledge", h.AcknowledgeAlarm)
 	mux.HandleFunc("GET /api/v1/simulation/scenarios", h.Scenarios)
 	mux.HandleFunc("POST /api/v1/simulation/scenarios/{scenarioName}/start", h.StartScenario)
 	mux.HandleFunc("POST /api/v1/simulation/scenarios/stop", h.StopScenario)

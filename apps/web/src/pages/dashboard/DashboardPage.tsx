@@ -1,6 +1,7 @@
 import { ArrowUpRight, FileText, ShieldCheck } from "lucide-react";
 import { historicalAlarms } from "@/entities/alarms/model/mockAlarms";
-import { mockEvents } from "@/entities/events/model/mockEvents";
+import { useAlarms } from "@/entities/alarms/api/useAlarms";
+import { useRecentEvents } from "@/entities/events/api/useRecentEvents";
 import { mockTelemetrySummary } from "@/entities/telemetry/model/mockTelemetry";
 import { AlarmList } from "@/widgets/alarm-list/AlarmList";
 import { StatusSummary } from "@/widgets/status-summary/StatusSummary";
@@ -14,6 +15,7 @@ import { PageShell } from "@/shared/ui/page-shell";
 export function DashboardPage() {
   const systemStatus = useSystemStatus();
   const liveTelemetry = useLatestTelemetry();
+  const alarms = useAlarms();
   const telemetryCount =
     liveTelemetry.points.length > 0 ? liveTelemetry.points.length : mockTelemetrySummary.totalPoints;
   const mode =
@@ -60,6 +62,7 @@ export function DashboardPage() {
               <Metric label="Simulation mode" value={mode} />
               <Metric label="Health" value={health} />
               <Metric label="Telemetry tags" value={String(telemetryCount)} />
+              <Metric label="Open alarms" value={String(alarms.activeAlarms.length)} />
               <Metric label="Source" value={liveTelemetry.state === "connected" ? "API" : "Fallback"} />
             </div>
           </div>
@@ -130,34 +133,47 @@ function SystemOverview({
 }
 
 function LatestEvents() {
+  const { events, state } = useRecentEvents();
+  const latestEvents = events.slice(-5).reverse();
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Latest Mock Events</CardTitle>
+        <CardTitle>Latest Events</CardTitle>
         <CardDescription>
-          Event-log shape for future platform and simulation events.
+          Live recent command, alarm, and simulation events.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
-        {mockEvents.map((event) => (
-          <div
-            key={event.id}
-            className="rounded-2xl border border-border/70 bg-surface-elevated/60 p-4 transition-[background-color,border-color,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-surface-elevated/80 hover:shadow-panel"
-          >
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="font-mono text-xs text-muted-foreground">
-                {event.timestamp}
-              </span>
-              <Badge variant={event.severity === "WARNING" ? "warning" : "secondary"}>
-                {event.severity}
-              </Badge>
-              <span className="font-mono text-xs text-muted-foreground">
-                {event.source}
-              </span>
-            </div>
-            <p className="mt-3 text-sm leading-6 text-foreground/80">{event.message}</p>
+        {state === "degraded" ? (
+          <div className="rounded-2xl border border-warning/30 bg-warning/10 p-4 text-sm text-muted-foreground">
+            Recent events are unavailable. The dashboard is not showing live event data.
           </div>
-        ))}
+        ) : latestEvents.length === 0 ? (
+          <div className="rounded-2xl border border-border/70 bg-surface-subtle/60 p-4 text-sm text-muted-foreground">
+            No events recorded yet.
+          </div>
+        ) : (
+          latestEvents.map((event) => (
+            <div
+              key={event.id}
+              className="rounded-2xl border border-border/70 bg-surface-elevated/60 p-4 transition-[background-color,border-color,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-surface-elevated/80 hover:shadow-panel"
+            >
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-mono text-xs text-muted-foreground">
+                  {new Date(event.timestamp).toLocaleString()}
+                </span>
+                <Badge variant={event.severity === "ERROR" || event.severity === "CRITICAL" ? "destructive" : event.severity === "WARNING" ? "warning" : "secondary"}>
+                  {event.severity}
+                </Badge>
+                <span className="font-mono text-xs text-muted-foreground">
+                  {event.type}
+                </span>
+              </div>
+              <p className="mt-3 text-sm leading-6 text-foreground/80">{event.message}</p>
+            </div>
+          ))
+        )}
       </CardContent>
     </Card>
   );
@@ -166,11 +182,11 @@ function LatestEvents() {
 function MvpScope() {
   const scopeItems = [
     "Industrial HMI shell",
-    "Static process mnemonic",
-    "Mock telemetry cards",
-    "Alarm lifecycle placeholders",
+    "Live process mnemonic",
+    "Simulation command layer",
+    "Alarm lifecycle operations",
+    "Unified recent event stream",
     "Trend chart workspace",
-    "Disabled simulation settings",
   ];
 
   return (

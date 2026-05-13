@@ -12,15 +12,22 @@ const (
 	EventTypeCommandCompleted       EventType = "COMMAND_COMPLETED"
 	EventTypeCommandFailed          EventType = "COMMAND_FAILED"
 	EventTypeEquipmentStateChanged  EventType = "EQUIPMENT_STATE_CHANGED"
+	EventTypeAlarmActivated         EventType = "ALARM_ACTIVATED"
+	EventTypeAlarmAcknowledged      EventType = "ALARM_ACKNOWLEDGED"
+	EventTypeAlarmCleared           EventType = "ALARM_CLEARED"
+	EventTypeSystemStatusChanged    EventType = "SYSTEM_STATUS_CHANGED"
 	EventTypeSimulationStateUpdated EventType = "SIMULATION_STATE_UPDATED"
+	EventTypeScenarioStarted        EventType = "SCENARIO_STARTED"
+	EventTypeScenarioCompleted      EventType = "SCENARIO_COMPLETED"
 )
 
 type EventSeverity string
 
 const (
-	EventSeverityInfo    EventSeverity = "INFO"
-	EventSeverityWarning EventSeverity = "WARNING"
-	EventSeverityError   EventSeverity = "ERROR"
+	EventSeverityInfo     EventSeverity = "INFO"
+	EventSeverityWarning  EventSeverity = "WARNING"
+	EventSeverityError    EventSeverity = "ERROR"
+	EventSeverityCritical EventSeverity = "CRITICAL"
 )
 
 type Event struct {
@@ -31,6 +38,7 @@ type Event struct {
 	Message   string            `json:"message"`
 	TargetTag string            `json:"targetTag,omitempty"`
 	CommandID string            `json:"commandId,omitempty"`
+	AlarmID   string            `json:"alarmId,omitempty"`
 	Timestamp time.Time         `json:"timestamp"`
 	Metadata  map[string]string `json:"metadata,omitempty"`
 }

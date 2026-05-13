@@ -25,6 +25,8 @@ function getDescription(title: string) {
       return "Live synthetic process mnemonic with simulation-only commands.";
     case "Alarms":
       return "Alarm lifecycle workspace for simulated operations.";
+    case "Events":
+      return "Unified event stream for commands, alarms, and simulation state.";
     case "Trends":
       return "Historian-style trend exploration with in-memory telemetry.";
     case "Settings":

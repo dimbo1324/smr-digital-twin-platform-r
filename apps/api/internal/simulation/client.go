@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -51,6 +52,14 @@ func (c *Client) TelemetryHistory(ctx context.Context, window string) ([]Telemet
 
 func (c *Client) ActiveAlarms(ctx context.Context) ([]Alarm, error) {
 	return get[[]Alarm](ctx, c, "/api/v1/simulation/alarms/active")
+}
+
+func (c *Client) AlarmHistory(ctx context.Context) ([]Alarm, error) {
+	return get[[]Alarm](ctx, c, "/api/v1/simulation/alarms/history")
+}
+
+func (c *Client) AcknowledgeAlarm(ctx context.Context, id string, request AlarmAcknowledgeRequest) (Alarm, error) {
+	return postJSON[Alarm](ctx, c, "/api/v1/simulation/alarms/"+url.PathEscape(id)+"/acknowledge", request)
 }
 
 func (c *Client) Scenarios(ctx context.Context) ([]ScenarioInfo, error) {

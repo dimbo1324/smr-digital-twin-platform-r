@@ -23,6 +23,8 @@ func (s *Server) routes() http.Handler {
 	mux.Handle("GET /api/v1/telemetry/latest", s.handlers.LatestTelemetry)
 	mux.Handle("GET /api/v1/telemetry/history", s.handlers.TelemetryHistory)
 	mux.Handle("GET /api/v1/alarms/active", s.handlers.ActiveAlarms)
+	mux.Handle("GET /api/v1/alarms/history", s.handlers.AlarmHistory)
+	mux.Handle("POST /api/v1/alarms/{alarmID}/acknowledge", s.handlers.AcknowledgeAlarm)
 	mux.Handle("GET /api/v1/simulation/scenarios", s.handlers.Scenarios)
 	mux.Handle("POST /api/v1/simulation/scenarios/{scenarioName}/start", s.handlers.StartScenario)
 	mux.Handle("POST /api/v1/simulation/scenarios/stop", s.handlers.StopScenario)

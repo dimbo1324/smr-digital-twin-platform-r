@@ -92,6 +92,36 @@ func (g *Gateway) ActiveAlarms(w http.ResponseWriter, r *http.Request) {
 	httpapi.WriteData(w, r, http.StatusOK, alarms, httpapi.MetaOptions{Count: len(alarms), Source: "simulation"})
 }
 
+func (g *Gateway) AlarmHistory(w http.ResponseWriter, r *http.Request) {
+	alarms, err := g.client.AlarmHistory(r.Context())
+	if err != nil {
+		httpapi.WriteData(w, r, http.StatusOK, []Alarm{}, httpapi.MetaOptions{Count: 0, Source: "memory", Degraded: true})
+		return
+	}
+	httpapi.WriteData(w, r, http.StatusOK, alarms, httpapi.MetaOptions{Count: len(alarms), Source: "simulation"})
+}
+
+func (g *Gateway) AcknowledgeAlarm(w http.ResponseWriter, r *http.Request) {
+	var request AlarmAcknowledgeRequest
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&request); err != nil {
+		httpapi.WriteError(w, r, http.StatusBadRequest, "MALFORMED_JSON", "Alarm acknowledge request body is invalid JSON")
+		return
+	}
+	if request.AcknowledgedBy == "" {
+		request.AcknowledgedBy = "demo-operator"
+	}
+
+	alarm, err := g.client.AcknowledgeAlarm(r.Context(), r.PathValue("alarmID"), request)
+	if err != nil {
+		g.writeSimulationCommandError(w, r, err)
+		return
+	}
+
+	httpapi.WriteData(w, r, http.StatusOK, alarm, httpapi.MetaOptions{Source: "simulation"})
+}
+
 func (g *Gateway) Scenarios(w http.ResponseWriter, r *http.Request) {
 	scenarios, err := g.client.Scenarios(r.Context())
 	if err != nil {

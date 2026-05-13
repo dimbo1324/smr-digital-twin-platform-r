@@ -42,18 +42,26 @@ export interface SimulationScenario {
 
 export interface SimulationAlarm {
   id: string;
+  ruleId?: string;
   assetId: string;
+  tag?: string;
   code: string;
   title: string;
   message: string;
   severity: "INFO" | "WARNING" | "ALARM" | "CRITICAL";
   status: "ACTIVE" | "ACKNOWLEDGED" | "CLEARED";
   value: number;
+  lastValue?: number;
   threshold: number;
   unit: string;
+  source?: string;
   startedAt: string;
+  activeAt?: string;
   updatedAt: string;
+  acknowledgedAt?: string;
+  acknowledgedBy?: string;
   clearedAt?: string;
+  metadata?: Record<string, string>;
 }
 
 export interface SimulationStatus {

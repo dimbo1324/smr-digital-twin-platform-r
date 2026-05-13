@@ -13,7 +13,8 @@ Current milestone:
 - optional simulation service gateway integration
 - telemetry history, alarms, and scenario proxy endpoints
 - simulation-only command proxy endpoints for `V-101` and `P-101`
-- recent in-memory command/event proxy endpoints
+- alarm lifecycle proxy endpoints for active, history, and acknowledge workflows
+- recent in-memory command/alarm/event proxy endpoints
 - SMR Unit Overview and Thermal Process Loop telemetry through `/api/v1/telemetry/latest`
 - structured request logging
 - CORS for the Vite frontend dev server
@@ -80,6 +81,10 @@ curl http://localhost:8080/api/v1/assets
 curl http://localhost:8080/api/v1/telemetry/latest
 curl "http://localhost:8080/api/v1/telemetry/history?window=15m"
 curl http://localhost:8080/api/v1/alarms/active
+curl http://localhost:8080/api/v1/alarms/history
+curl -X POST http://localhost:8080/api/v1/alarms/alarm-id/acknowledge \
+  -H "Content-Type: application/json" \
+  -d '{"acknowledgedBy":"demo-operator","comment":"Acknowledged from Alarms page"}'
 curl -X POST http://localhost:8080/api/v1/commands \
   -H "Content-Type: application/json" \
   -d '{"targetTag":"V-101","commandType":"OPEN","payload":{"reason":"operator_demo"}}'
@@ -135,6 +140,23 @@ Returns simulation telemetry when `apps/simulation` is reachable. If the simulat
 
 The current telemetry contract includes both unit overview tags such as `SMR-POWER`, `TT-PRIMARY`, and `FT-COOLANT`, and process-loop tags such as `TT-101`, `PT-101`, `FT-101`, `LT-101`, `V-101.POS`, `V-101.STATE`, `P-101.STATE`, `P-101.RPM`, `HX-101.STATE`, and `TIC-101.MODE`.
 
+### Alarm Lifecycle Endpoints
+
+- `GET /api/v1/alarms/active` returns active and acknowledged synthetic alarm instances that are not cleared.
+- `GET /api/v1/alarms/history` returns cleared in-memory alarm instances.
+- `POST /api/v1/alarms/{id}/acknowledge` acknowledges an active synthetic alarm instance.
+
+Example acknowledgement request:
+
+```json
+{
+  "acknowledgedBy": "demo-operator",
+  "comment": "Acknowledged from Alarms page"
+}
+```
+
+Acknowledgement affects only in-memory simulation state. Unknown alarms return `ALARM_NOT_FOUND`; already cleared alarms return `ALARM_ALREADY_CLEARED`.
+
 ### `POST /api/v1/commands`
 
 Submits a simulation-only command to `apps/simulation`. The API normalizes missing `source` to `frontend`, missing `requestedBy` to `demo-engineer`, and forwards the command to the simulation service.
@@ -176,7 +198,7 @@ Returns recent in-memory command records from the simulation service.
 
 ### `GET /api/v1/events/recent`
 
-Returns recent in-memory command/simulation events from the simulation service.
+Returns recent in-memory command, alarm, equipment, and simulation events from the simulation service.
 
 ### Simulation Proxy Endpoints
 

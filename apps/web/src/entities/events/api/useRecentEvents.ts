@@ -1,24 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
-import type { CommandRecord } from "@/entities/commands/model/types";
-import { getRecentCommands } from "@/entities/commands/api/commandsApi";
 import type { EventRecord } from "@/entities/events/model/types";
 import { getRecentEvents } from "@/entities/events/api/eventsApi";
 
-export function useCommandHistory(refreshMs = 2500) {
-  const [commands, setCommands] = useState<CommandRecord[]>([]);
+export function useRecentEvents(refreshMs = 2500) {
   const [events, setEvents] = useState<EventRecord[]>([]);
   const [state, setState] = useState<"loading" | "connected" | "degraded">("loading");
 
   const refresh = useCallback(() => {
-    Promise.all([getRecentCommands(), getRecentEvents()])
-      .then(([nextCommands, nextEvents]) => {
-        setCommands(nextCommands);
+    getRecentEvents()
+      .then((nextEvents) => {
         setEvents(nextEvents);
         setState("connected");
       })
-      .catch(() => {
-        setState("degraded");
-      });
+      .catch(() => setState("degraded"));
   }, []);
 
   useEffect(() => {
@@ -27,5 +21,5 @@ export function useCommandHistory(refreshMs = 2500) {
     return () => window.clearInterval(interval);
   }, [refresh, refreshMs]);
 
-  return { commands, events, state, refresh };
+  return { events, state, refresh };
 }

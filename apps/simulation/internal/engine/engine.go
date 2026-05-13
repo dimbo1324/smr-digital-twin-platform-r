@@ -145,12 +145,6 @@ func (e *Engine) Status() model.SimulationStatus {
 	}
 }
 
-func (e *Engine) ActiveAlarms() []model.Alarm {
-	e.mu.RLock()
-	defer e.mu.RUnlock()
-	return e.evaluator.Active()
-}
-
 func (e *Engine) Scenarios() []model.ScenarioInfo {
 	return scenarios.List()
 }
@@ -200,7 +194,7 @@ func (e *Engine) tickLocked(now time.Time) {
 	e.state.tickCount++
 	snapshot := e.tick(now)
 	e.state.snapshot = snapshot
-	e.evaluator.Evaluate(snapshot)
+	e.applyAlarmChangesLocked(e.evaluator.Evaluate(snapshot))
 	e.history.Add(snapshot)
 }
 

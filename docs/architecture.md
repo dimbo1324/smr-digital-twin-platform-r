@@ -52,11 +52,37 @@ Command history and events are stored in an in-memory ring buffer inside `apps/s
 
 This is intentionally not a real control path. Commands mutate only in-memory simulated assets and exist to validate the digital twin interaction loop.
 
+## Alarm And Event Operations Flow
+
+The current alarm workflow is also REST plus polling:
+
+```mermaid
+sequenceDiagram
+    participant ENG as "Simulation Engine"
+    participant ALM as "Alarm Evaluator"
+    participant EVT as "Unified Event Trail"
+    participant API as "Go API"
+    participant UI as "Frontend HMI"
+
+    ENG->>ALM: "Evaluate synthetic telemetry on tick"
+    ALM->>ALM: "Create or update AlarmInstance"
+    ALM->>EVT: "ALARM_ACTIVATED"
+    UI->>API: "GET /api/v1/alarms/active"
+    UI->>API: "POST /api/v1/alarms/{id}/acknowledge"
+    API->>ALM: "Proxy acknowledge request"
+    ALM->>EVT: "ALARM_ACKNOWLEDGED"
+    ENG->>ALM: "Condition normalizes"
+    ALM->>EVT: "ALARM_CLEARED"
+    UI->>API: "GET /api/v1/events/recent"
+```
+
+Alarm and event storage is in-memory inside `apps/simulation`. The API is a proxy boundary for the frontend and is the intended place for future auth, RBAC, rate limiting, persistent audit writes, and contract versioning.
+
 ## Current Limitations
 
 - Live UI updates use polling, not WebSocket or SSE.
 - Telemetry history is in-memory.
-- Active alarms are generated and displayed, but acknowledgement and cleared history are planned.
+- Alarm lifecycle and event history are in-memory.
 - Process commands are implemented only for simulated `V-101` and `P-101` assets.
 - Command/event history is in-memory and not an immutable audit store.
 - MQTT, TSDB persistence, PID control, report export, auth/RBAC, and Kubernetes are not part of the current milestone.

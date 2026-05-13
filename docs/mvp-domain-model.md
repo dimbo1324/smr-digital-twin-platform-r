@@ -124,19 +124,52 @@ Telemetry quality values:
 
 ## Alarm Model
 
-The MVP alarm shape is:
+The MVP separates alarm rules from alarm instances.
+
+AlarmRule:
 
 - `id`
-- `tag` or `assetId`
+- `tag`
+- `condition`
 - `severity`
-- `status`
 - `message`
-- `activeAt` or `startedAt`
+- `enabled`
+- `source`
+- `description`
+
+AlarmInstance:
+
+- `id`
+- `ruleId`
+- `tag`
+- `status`
+- `severity`
+- `message`
+- `activeAt`
 - `acknowledgedAt`
+- `acknowledgedBy`
 - `clearedAt`
 - `source`
+- `lastValue`
+- `threshold`
+- `metadata`
 
-Current implementation supports generated active alarms and basic active alarm display. Acknowledgement, cleared history, shelving, and operator workflow are planned for later milestones.
+Alarm statuses:
+
+- `ACTIVE`
+- `ACKNOWLEDGED`
+- `CLEARED`
+
+Current lifecycle:
+
+1. A synthetic rule condition becomes true and creates an `ACTIVE` alarm instance.
+2. The condition remains true without creating duplicate instances.
+3. The operator acknowledges an `ACTIVE` alarm and it becomes `ACKNOWLEDGED`.
+4. The synthetic condition normalizes and the alarm becomes `CLEARED`.
+5. Cleared alarms leave the active endpoint and appear in alarm history.
+6. A later recurrence creates a new alarm instance.
+
+Current implementation is in-memory and simulation-only. Shelving, persistent audit storage, and production-grade operator workflow are planned for later milestones.
 
 ## Event / Audit Model
 
@@ -161,15 +194,22 @@ Current event types:
 - `COMMAND_COMPLETED`
 - `COMMAND_FAILED`
 - `EQUIPMENT_STATE_CHANGED`
+- `ALARM_ACTIVATED`
+- `ALARM_ACKNOWLEDGED`
+- `ALARM_CLEARED`
+- `SYSTEM_STATUS_CHANGED`
 - `SIMULATION_STATE_UPDATED`
+- `SCENARIO_STARTED`
+- `SCENARIO_COMPLETED`
 
 Current severities:
 
 - `INFO`
 - `WARNING`
 - `ERROR`
+- `CRITICAL`
 
-The current implementation stores recent command and simulation events in memory. A persistent event/audit store and full event log page are planned.
+The current implementation stores recent command, alarm, and simulation events in memory and exposes them through the Events page. A persistent event/audit store is planned.
 
 ## Command Model
 
@@ -311,6 +351,8 @@ Implemented now:
 - Simulation-only command layer for `V-101` and `P-101`.
 - Valve and pump state machines.
 - In-memory command history and event/audit trail.
+- Alarm lifecycle with active, acknowledged, and cleared in-memory instances.
+- Events page backed by the unified recent event stream.
 - Frontend HMI shell.
 - API gateway to simulation service.
 - Active alarm generation and display.
@@ -319,8 +361,8 @@ Implemented now:
 
 Partial:
 
-- Alarm lifecycle.
-- Events, because only a recent in-memory command/simulation trail exists.
+- Alarm lifecycle persistence and shelving.
+- Events, because the stream is in-memory only.
 - Assets.
 - Trends.
 - Process UI controls, because only `V-101` and `P-101` simulation commands are implemented.

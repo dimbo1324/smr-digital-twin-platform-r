@@ -38,17 +38,3 @@ export interface CommandRecord {
   errorMessage?: string;
   correlationId?: string;
 }
-
-export type SimulationEventSeverity = "INFO" | "WARNING" | "ERROR";
-
-export interface SimulationEvent {
-  id: string;
-  type: string;
-  source: string;
-  severity: SimulationEventSeverity;
-  message: string;
-  targetTag?: CommandTargetTag;
-  commandId?: string;
-  timestamp: string;
-  metadata?: Record<string, string>;
-}
