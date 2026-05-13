@@ -25,7 +25,9 @@ type TelemetrySnapshot struct {
 	LoopFlowKGS            float64   `json:"loopFlowKgS"`
 	TankLevelPct           float64   `json:"tankLevelPct"`
 	ValvePositionPct       float64   `json:"valvePositionPct"`
+	ValveState             string    `json:"valveState"`
 	PumpState              string    `json:"pumpState"`
+	PumpRPM                float64   `json:"pumpRpm"`
 	HeatExchangerState     string    `json:"heatExchangerState"`
 	PIDControllerMode      string    `json:"pidControllerMode"`
 	Timestamp              time.Time `json:"timestamp"`

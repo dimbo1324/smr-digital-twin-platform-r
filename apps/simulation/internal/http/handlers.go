@@ -107,6 +107,39 @@ func (h *Handler) Reset(w http.ResponseWriter, _ *http.Request) {
 	writeData(w, h.engine.Status(), 0)
 }
 
+func (h *Handler) SubmitCommand(w http.ResponseWriter, r *http.Request) {
+	var request model.CommandRequest
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&request); err != nil {
+		writeError(w, http.StatusBadRequest, "MALFORMED_JSON", "Command request body is invalid JSON")
+		return
+	}
+
+	command, err := h.engine.SubmitCommand(request)
+	if err != nil {
+		var commandErr *engine.CommandError
+		if errors.As(err, &commandErr) {
+			writeError(w, commandErr.HTTPStatus, commandErr.Code, commandErr.Message)
+			return
+		}
+		writeError(w, http.StatusInternalServerError, "COMMAND_FAILED", "Failed to process simulation command")
+		return
+	}
+
+	writeData(w, command, 0)
+}
+
+func (h *Handler) RecentCommands(w http.ResponseWriter, _ *http.Request) {
+	commands := h.engine.RecentCommands()
+	writeData(w, commands, len(commands))
+}
+
+func (h *Handler) RecentEvents(w http.ResponseWriter, _ *http.Request) {
+	events := h.engine.RecentEvents()
+	writeData(w, events, len(events))
+}
+
 func parseWindow(raw string) (time.Duration, error) {
 	if raw == "" {
 		return 15 * time.Minute, nil

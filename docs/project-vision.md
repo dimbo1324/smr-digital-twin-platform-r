@@ -21,7 +21,7 @@ The MVP domain is intentionally split into two layers:
 1. `SMR Unit Overview` — a high-level synthetic representation of unit-level performance, including aggregate power, primary-loop values, turbine/generator metrics, and overall health.
 2. `Thermal Process Loop MVP` — a lower-level training process loop for actuator, PID, telemetry, alarm, and future simulation-only command development.
 
-The current Go simulation service already provides high-level SMR unit overview telemetry. The process-loop telemetry layer is used by the HMI mnemonic and is the foundation for future `V-101` and `P-101` command work.
+The current Go simulation service already provides high-level SMR unit overview telemetry. The process-loop telemetry layer is used by the HMI mnemonic and now supports simulation-only `V-101` and `P-101` command work.
 
 ## MVP Goal
 
@@ -57,7 +57,7 @@ The MVP includes:
 - Docker Compose environment for local development.
 - Basic backend, simulation, and frontend checks.
 
-The following are planned extensions rather than current implementation: MQTT, persistent time-series storage, full alarm lifecycle, full event log service, declarative scenario definitions, report export, auth/RBAC, and WebSocket/SSE transport.
+The following are planned extensions rather than current implementation: MQTT, persistent time-series storage, full alarm lifecycle, full event log service, persistent command/audit storage, declarative scenario definitions, report export, auth/RBAC, and WebSocket/SSE transport.
 
 ## Out of Scope
 

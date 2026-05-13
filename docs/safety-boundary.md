@@ -13,4 +13,12 @@ The simulation engine:
 
 Scenario controls in the UI start and stop demonstration states inside `apps/simulation`. They are not real control commands and must not be interpreted as operating instructions.
 
-Process controls for assets such as `V-101` and `P-101` are disabled until a simulation-only command layer is implemented. Future commands must target simulated assets only, include explicit command source metadata, and be recorded through event/audit flows.
+Process controls for assets such as `V-101` and `P-101` use a simulation-only command layer. These commands:
+
+- mutate only in-memory simulation state;
+- do not leave the local software stack;
+- do not connect to physical actuators, PLCs, DCS systems, or plant networks;
+- include explicit command source and requester metadata;
+- are recorded in an in-memory command/event audit trail for demo purposes.
+
+The current command trail is not a persistent compliance audit store. Persistent audit, auth/RBAC, and external integrations are planned separately and must preserve the simulation-only boundary.

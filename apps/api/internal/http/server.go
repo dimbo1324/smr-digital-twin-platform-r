@@ -20,6 +20,9 @@ type Handlers struct {
 	StartScenario    http.Handler
 	StopScenario     http.Handler
 	ResetSimulation  http.Handler
+	SubmitCommand    http.Handler
+	RecentCommands   http.Handler
+	RecentEvents     http.Handler
 }
 
 type Server struct {

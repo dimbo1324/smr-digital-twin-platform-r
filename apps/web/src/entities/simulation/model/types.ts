@@ -21,7 +21,9 @@ export interface SimulationTelemetrySnapshot {
   loopFlowKgS: number;
   tankLevelPct: number;
   valvePositionPct: number;
+  valveState: string;
   pumpState: string;
+  pumpRpm: number;
   heatExchangerState: string;
   pidControllerMode: string;
   timestamp: string;

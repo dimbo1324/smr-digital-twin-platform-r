@@ -226,9 +226,9 @@ func asset(id, tag, name, assetType, area string, status model.AssetStatus, desc
 
 func processAssetStatus(state string) model.AssetStatus {
 	switch state {
-	case "Offline":
+	case string(model.PumpStateStopped), "Offline":
 		return model.AssetStatusOffline
-	case "Mock Duty":
+	case string(model.PumpStateStarting), string(model.PumpStateStopping), "Mock Duty":
 		return model.AssetStatusWarning
 	default:
 		return model.AssetStatusOK

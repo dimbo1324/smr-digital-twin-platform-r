@@ -22,11 +22,11 @@ function getDescription(title: string) {
     case "Dashboard":
       return "Executive telemetry overview for the simulation shell.";
     case "Process":
-      return "Mock process mnemonic and equipment readiness view.";
+      return "Live synthetic process mnemonic with simulation-only commands.";
     case "Alarms":
       return "Alarm lifecycle workspace for simulated operations.";
     case "Trends":
-      return "Historian-style trend exploration with mock telemetry.";
+      return "Historian-style trend exploration with in-memory telemetry.";
     case "Settings":
       return "Local shell preferences and future integration placeholders.";
     default:
@@ -91,7 +91,7 @@ export function Topbar() {
         <div className="flex flex-col gap-2 rounded-2xl border border-warning/20 bg-warning/10 px-4 py-3 text-sm text-foreground sm:flex-row sm:items-center sm:justify-between">
           <span className="font-medium">Simulation-only interface. No real plant control.</span>
           <span className="text-muted-foreground">
-            Commands remain disabled until a simulation command layer exists.
+            Valve and pump commands mutate only in-memory simulation state.
           </span>
         </div>
       </div>

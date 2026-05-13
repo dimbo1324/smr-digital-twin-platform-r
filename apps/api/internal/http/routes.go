@@ -27,6 +27,9 @@ func (s *Server) routes() http.Handler {
 	mux.Handle("POST /api/v1/simulation/scenarios/{scenarioName}/start", s.handlers.StartScenario)
 	mux.Handle("POST /api/v1/simulation/scenarios/stop", s.handlers.StopScenario)
 	mux.Handle("POST /api/v1/simulation/reset", s.handlers.ResetSimulation)
+	mux.Handle("POST /api/v1/commands", s.handlers.SubmitCommand)
+	mux.Handle("GET /api/v1/commands/recent", s.handlers.RecentCommands)
+	mux.Handle("GET /api/v1/events/recent", s.handlers.RecentEvents)
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		WriteError(w, r, http.StatusNotFound, "NOT_FOUND", "Route not found")
 	})

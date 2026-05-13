@@ -4,6 +4,9 @@ import { mockTelemetryPoints } from "@/entities/telemetry/model/mockTelemetry";
 import { findTelemetryByTag } from "@/entities/telemetry/lib/selectors";
 import { TelemetryValue } from "@/entities/telemetry/ui/TelemetryValue";
 import { ControlValvePanel } from "@/features/control-valve/ControlValvePanel";
+import { PumpControlPanel } from "@/features/control-pump/PumpControlPanel";
+import { useCommandHistory } from "@/entities/commands/api/useCommandHistory";
+import { CommandEventPanel } from "@/widgets/command-event-panel/CommandEventPanel";
 import { ProcessDiagram } from "@/widgets/process-diagram/ProcessDiagram";
 import { useLatestTelemetry } from "@/shared/api/useSimulationTelemetry";
 import { Badge } from "@/shared/ui/badge";
@@ -12,6 +15,7 @@ import { PageShell } from "@/shared/ui/page-shell";
 
 export function ProcessPage() {
   const liveTelemetry = useLatestTelemetry();
+  const commandHistory = useCommandHistory();
   const telemetryPoints =
     liveTelemetry.points.length > 0 ? liveTelemetry.points : mockTelemetryPoints;
   const processTelemetryTags = [
@@ -20,7 +24,9 @@ export function ProcessPage() {
     "FT-101",
     "LT-101",
     "V-101.POS",
+    "V-101.STATE",
     "P-101.STATE",
+    "P-101.RPM",
     "HX-101.STATE",
     "TIC-101.MODE",
   ];
@@ -46,14 +52,14 @@ export function ProcessPage() {
 
         <div className="grid gap-3 rounded-3xl border border-border/70 bg-surface-elevated/70 p-5">
           <ProcessFact label="Loop" value="SMR synthetic energy loop" />
-          <ProcessFact label="Command state" value="Scenario simulation only" />
+          <ProcessFact label="Command state" value="Simulation-only commands enabled" />
           <ProcessFact label="Telemetry source" value={liveTelemetry.state === "connected" ? "Backend -> Simulation" : "Local fallback"} />
         </div>
       </section>
 
       <ProcessDiagram telemetryPoints={telemetryPoints} dataState={liveTelemetry.state} />
 
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
         <Card>
           <CardHeader>
             <CardTitle>Telemetry Snapshot</CardTitle>
@@ -70,8 +76,25 @@ export function ProcessPage() {
           </CardContent>
         </Card>
 
-        <ControlValvePanel telemetryPoints={telemetryPoints} dataState={liveTelemetry.state} />
+        <div className="grid gap-6">
+          <ControlValvePanel
+            telemetryPoints={telemetryPoints}
+            dataState={liveTelemetry.state}
+            onCommandComplete={commandHistory.refresh}
+          />
+          <PumpControlPanel
+            telemetryPoints={telemetryPoints}
+            dataState={liveTelemetry.state}
+            onCommandComplete={commandHistory.refresh}
+          />
+        </div>
       </section>
+
+      <CommandEventPanel
+        commands={commandHistory.commands}
+        events={commandHistory.events}
+        state={commandHistory.state}
+      />
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {mockEquipment.map((equipment) => (

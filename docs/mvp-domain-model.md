@@ -12,7 +12,7 @@ SMR Twin Platform is a simulation-only digital twin platform for SMR energy syst
 - All assets are simulated.
 - There is no connection to real plant networks, controllers, sensors, or actuators.
 - The platform must not describe itself as a production nuclear control system.
-- Future command APIs must target simulated assets only and must keep command source, status, result, and audit data explicit.
+- Command APIs target simulated assets only, mutate in-memory simulation state, and keep command source, status, result, and audit data explicit.
 
 ## Domain Levels
 
@@ -48,8 +48,8 @@ Current process-loop assets:
 | Tag | Name | Type | Purpose |
 | --- | --- | --- | --- |
 | `T-101` | Tank | tank | Level/inventory display |
-| `P-101` | Pump | pump | Future pump state machine |
-| `V-101` | Control Valve | valve | Future valve command target |
+| `P-101` | Pump | pump | Simulation-only pump state machine and command target |
+| `V-101` | Control Valve | valve | Simulation-only valve state machine and command target |
 | `HX-101` | Heat Exchanger | heat-exchanger | Synthetic heat transfer display |
 | `TT-101` | Loop Temperature Transmitter | sensor | Process loop temperature |
 | `PT-101` | Loop Pressure Transmitter | sensor | Process loop pressure |
@@ -110,7 +110,9 @@ Current process-loop telemetry:
 | `FT-101` | Loop Flow | numeric | `kg/s` | simulation via API |
 | `LT-101` | Tank Level | numeric | `%` | simulation via API |
 | `V-101.POS` | Valve Position | numeric | `%` | simulation via API |
+| `V-101.STATE` | Valve State | text | empty | simulation via API |
 | `P-101.STATE` | Pump State | text | empty | simulation via API |
+| `P-101.RPM` | Pump Speed | numeric | `rpm` | simulation via API |
 | `HX-101.STATE` | Heat Exchanger State | text | empty | simulation via API |
 | `TIC-101.MODE` | PID Controller Mode | text | empty | simulation via API |
 
@@ -136,44 +138,138 @@ The MVP alarm shape is:
 
 Current implementation supports generated active alarms and basic active alarm display. Acknowledgement, cleared history, shelving, and operator workflow are planned for later milestones.
 
-## Event Model
+## Event / Audit Model
 
-The planned event shape is:
+The current in-memory event/audit shape is:
 
 - `id`
 - `type`
 - `source`
 - `severity`
 - `message`
+- `targetTag`
+- `commandId`
 - `timestamp`
 - `metadata`
 
-Current implementation has mock event previews in the dashboard only. A full event service and event log page are planned.
+Current event types:
+
+- `COMMAND_RECEIVED`
+- `COMMAND_ACCEPTED`
+- `COMMAND_REJECTED`
+- `COMMAND_STARTED`
+- `COMMAND_COMPLETED`
+- `COMMAND_FAILED`
+- `EQUIPMENT_STATE_CHANGED`
+- `SIMULATION_STATE_UPDATED`
+
+Current severities:
+
+- `INFO`
+- `WARNING`
+- `ERROR`
+
+The current implementation stores recent command and simulation events in memory. A persistent event/audit store and full event log page are planned.
 
 ## Command Model
 
-The command model is planned next and is not fully implemented in this milestone.
+The command model is implemented for simulation-only interaction with `V-101` and `P-101`.
 
-Planned command envelope:
+Current command envelope:
 
-- `commandId`
+- `id`
 - `targetTag`
 - `commandType`
 - `source`
+- `requestedBy`
 - `payload`
+- `status`
 - `requestedAt`
 - `acceptedAt`
-- `status`
-- `result`
+- `completedAt`
+- `rejectedAt`
+- `resultMessage`
+- `errorCode`
+- `errorMessage`
+- `correlationId`
 
-Planned command sources:
+Command statuses:
 
-- `USER`
-- `PID`
-- `SCENARIO`
-- `SAFETY_LIMITER`
+- `RECEIVED`
+- `ACCEPTED`
+- `REJECTED`
+- `IN_PROGRESS`
+- `COMPLETED`
+- `FAILED`
 
-The next milestone should implement a simulation-only command layer for `V-101` and `P-101` with event and audit trail records.
+Command sources:
+
+- `frontend`
+- `api`
+- `scenario`
+- `system`
+
+Supported targets:
+
+- `V-101`
+- `P-101`
+
+Supported `V-101` commands:
+
+- `OPEN`
+- `CLOSE`
+- `STOP`
+- `SET_POSITION`
+
+Supported `P-101` commands:
+
+- `START`
+- `STOP`
+
+Unsupported targets, unsupported command types, malformed JSON, and invalid `positionPercent` values are rejected with structured error responses.
+
+### Valve `V-101` State Machine
+
+Valve runtime fields:
+
+- `tag`
+- `state`
+- `positionPercent`
+- `targetPositionPercent`
+- `lastCommandId`
+- `updatedAt`
+
+Valve states:
+
+- `CLOSED`
+- `OPENING`
+- `OPEN`
+- `CLOSING`
+- `STOPPED`
+- `MOVING_TO_POSITION`
+- `FAULT`
+
+The valve moves deterministically toward its target position in simulation ticks. `V-101.POS` and `V-101.STATE` telemetry reflect the current in-memory state.
+
+### Pump `P-101` State Machine
+
+Pump runtime fields:
+
+- `tag`
+- `state`
+- `rpm`
+- `lastCommandId`
+- `updatedAt`
+
+Pump states:
+
+- `STOPPED`
+- `STARTING`
+- `RUNNING`
+- `STOPPING`
+- `FAULT`
+
+The pump uses a simple transition delay for start/stop behavior. `P-101.STATE` and `P-101.RPM` telemetry reflect the current in-memory state.
 
 ## Scenario Model
 
@@ -212,6 +308,9 @@ Implemented now:
 
 - SMR Unit Overview synthetic telemetry.
 - Thermal Process Loop synthetic telemetry exposed through API latest telemetry.
+- Simulation-only command layer for `V-101` and `P-101`.
+- Valve and pump state machines.
+- In-memory command history and event/audit trail.
 - Frontend HMI shell.
 - API gateway to simulation service.
 - Active alarm generation and display.
@@ -221,25 +320,24 @@ Implemented now:
 Partial:
 
 - Alarm lifecycle.
-- Events.
+- Events, because only a recent in-memory command/simulation trail exists.
 - Assets.
 - Trends.
-- Process UI controls.
+- Process UI controls, because only `V-101` and `P-101` simulation commands are implemented.
 
 Not implemented:
 
-- Command layer.
 - PID control.
 - MQTT.
 - Persistent historian.
+- Persistent command/audit storage.
 - Report export.
 - Auth/RBAC.
 
 ## Planned Extensions
 
-- Simulation-only `V-101` valve command and state machine.
-- Simulation-only `P-101` pump command and state machine.
-- Event/audit trail for all command attempts.
+- Expanded command arbitration for user, scenario, PID, and system command sources.
+- Persistent event/audit storage and full event log page.
 - Alarm acknowledgement and cleared history.
 - MQTT telemetry bridge.
 - PID controller and manual/auto command arbitration.

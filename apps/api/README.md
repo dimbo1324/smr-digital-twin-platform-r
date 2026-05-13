@@ -12,6 +12,8 @@ Current milestone:
 - in-memory latest telemetry mock data
 - optional simulation service gateway integration
 - telemetry history, alarms, and scenario proxy endpoints
+- simulation-only command proxy endpoints for `V-101` and `P-101`
+- recent in-memory command/event proxy endpoints
 - SMR Unit Overview and Thermal Process Loop telemetry through `/api/v1/telemetry/latest`
 - structured request logging
 - CORS for the Vite frontend dev server
@@ -23,7 +25,7 @@ Out of scope for this step:
 - MQTT ingestion
 - WebSocket/SSE streaming
 - auth/RBAC
-- simulation command layer
+- persistent command/audit storage
 - real plant integration
 
 ## Run Locally
@@ -78,6 +80,11 @@ curl http://localhost:8080/api/v1/assets
 curl http://localhost:8080/api/v1/telemetry/latest
 curl "http://localhost:8080/api/v1/telemetry/history?window=15m"
 curl http://localhost:8080/api/v1/alarms/active
+curl -X POST http://localhost:8080/api/v1/commands \
+  -H "Content-Type: application/json" \
+  -d '{"targetTag":"V-101","commandType":"OPEN","payload":{"reason":"operator_demo"}}'
+curl http://localhost:8080/api/v1/commands/recent
+curl http://localhost:8080/api/v1/events/recent
 curl http://localhost:8080/api/v1/simulation/scenarios
 curl -X POST http://localhost:8080/api/v1/simulation/scenarios/high_temperature/start
 curl -X POST http://localhost:8080/api/v1/simulation/scenarios/stop
@@ -126,7 +133,50 @@ Returns the MVP process-loop assets:
 
 Returns simulation telemetry when `apps/simulation` is reachable. If the simulation service is unavailable, the API returns fallback mock telemetry with `meta.degraded=true`.
 
-The current telemetry contract includes both unit overview tags such as `SMR-POWER`, `TT-PRIMARY`, and `FT-COOLANT`, and process-loop tags such as `TT-101`, `PT-101`, `FT-101`, `LT-101`, `V-101.POS`, `P-101.STATE`, `HX-101.STATE`, and `TIC-101.MODE`.
+The current telemetry contract includes both unit overview tags such as `SMR-POWER`, `TT-PRIMARY`, and `FT-COOLANT`, and process-loop tags such as `TT-101`, `PT-101`, `FT-101`, `LT-101`, `V-101.POS`, `V-101.STATE`, `P-101.STATE`, `P-101.RPM`, `HX-101.STATE`, and `TIC-101.MODE`.
+
+### `POST /api/v1/commands`
+
+Submits a simulation-only command to `apps/simulation`. The API normalizes missing `source` to `frontend`, missing `requestedBy` to `demo-engineer`, and forwards the command to the simulation service.
+
+Supported targets:
+
+- `V-101`
+- `P-101`
+
+Supported `V-101` commands:
+
+- `OPEN`
+- `CLOSE`
+- `STOP`
+- `SET_POSITION`
+
+Supported `P-101` commands:
+
+- `START`
+- `STOP`
+
+Example:
+
+```json
+{
+  "targetTag": "V-101",
+  "commandType": "SET_POSITION",
+  "payload": {
+    "positionPercent": 75
+  }
+}
+```
+
+The command affects only in-memory simulation state. It does not control real equipment.
+
+### `GET /api/v1/commands/recent`
+
+Returns recent in-memory command records from the simulation service.
+
+### `GET /api/v1/events/recent`
+
+Returns recent in-memory command/simulation events from the simulation service.
 
 ### Simulation Proxy Endpoints
 

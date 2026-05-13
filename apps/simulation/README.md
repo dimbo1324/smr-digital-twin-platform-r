@@ -9,6 +9,8 @@ The service exposes two synthetic telemetry layers:
 
 This service is not connected to real equipment. It does not implement real nuclear operating procedures, safety automation, or plant control.
 
+The current command layer is simulation-only. Commands mutate only in-memory `V-101` and `P-101` state and are recorded in an in-memory command/event trail.
+
 ## Run
 
 ```bash
@@ -40,6 +42,11 @@ curl http://localhost:8081/api/v1/simulation/assets
 curl http://localhost:8081/api/v1/simulation/telemetry/latest
 curl "http://localhost:8081/api/v1/simulation/telemetry/history?window=15m"
 curl http://localhost:8081/api/v1/simulation/alarms/active
+curl -X POST http://localhost:8081/api/v1/simulation/commands \
+  -H "Content-Type: application/json" \
+  -d '{"targetTag":"V-101","commandType":"SET_POSITION","source":"frontend","requestedBy":"demo-engineer","payload":{"positionPercent":75}}'
+curl http://localhost:8081/api/v1/simulation/commands/recent
+curl http://localhost:8081/api/v1/simulation/events/recent
 curl http://localhost:8081/api/v1/simulation/scenarios
 curl -X POST http://localhost:8081/api/v1/simulation/scenarios/high_temperature/start
 curl -X POST http://localhost:8081/api/v1/simulation/scenarios/stop
@@ -58,6 +65,76 @@ curl -X POST http://localhost:8081/api/v1/simulation/reset
 - `trip`
 
 All scenarios are synthetic demonstrations for portfolio and UI validation.
+
+## Simulation Commands
+
+Supported targets:
+
+- `V-101`
+- `P-101`
+
+Supported `V-101` commands:
+
+- `OPEN`
+- `CLOSE`
+- `STOP`
+- `SET_POSITION`
+
+Supported `P-101` commands:
+
+- `START`
+- `STOP`
+
+Example request:
+
+```json
+{
+  "targetTag": "V-101",
+  "commandType": "SET_POSITION",
+  "source": "frontend",
+  "requestedBy": "demo-engineer",
+  "payload": {
+    "positionPercent": 75
+  }
+}
+```
+
+The service validates targets, command types, and valve position payloads before mutating state. Rejected commands are recorded in the recent command/event trail.
+
+## State Machines
+
+`V-101` valve states:
+
+- `CLOSED`
+- `OPENING`
+- `OPEN`
+- `CLOSING`
+- `STOPPED`
+- `MOVING_TO_POSITION`
+- `FAULT`
+
+`P-101` pump states:
+
+- `STOPPED`
+- `STARTING`
+- `RUNNING`
+- `STOPPING`
+- `FAULT`
+
+The synthetic process loop reacts to these states:
+
+- `V-101.POS` and `V-101.STATE` reflect the valve state machine.
+- `P-101.STATE` and `P-101.RPM` reflect the pump state machine.
+- `FT-101` flow trends with pump state and valve position.
+
+## Recent Commands And Events
+
+Recent commands and events are exposed through:
+
+- `GET /api/v1/simulation/commands/recent`
+- `GET /api/v1/simulation/events/recent`
+
+This trail is in-memory only and resets when the simulation service restarts. It is not a persistent compliance audit store.
 
 ## Test
 

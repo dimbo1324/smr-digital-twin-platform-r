@@ -44,6 +44,9 @@ func main() {
 		StartScenario:    http.HandlerFunc(gateway.StartScenario),
 		StopScenario:     http.HandlerFunc(gateway.StopScenario),
 		ResetSimulation:  http.HandlerFunc(gateway.Reset),
+		SubmitCommand:    http.HandlerFunc(gateway.SubmitCommand),
+		RecentCommands:   http.HandlerFunc(gateway.RecentCommands),
+		RecentEvents:     http.HandlerFunc(gateway.RecentEvents),
 	})
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)

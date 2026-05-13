@@ -73,7 +73,9 @@ function pointSourceVariant(point: TelemetryPoint | undefined): SourceVariant {
 function buildNodes(telemetryPoints: TelemetryPoint[]): ProcessNode[] {
   const tankLevel = findTelemetryByTag(telemetryPoints, "LT-101");
   const pumpState = findTelemetryByTag(telemetryPoints, "P-101.STATE");
+  const pumpRpm = findTelemetryByTag(telemetryPoints, "P-101.RPM");
   const valvePosition = findTelemetryByTag(telemetryPoints, "V-101.POS");
+  const valveState = findTelemetryByTag(telemetryPoints, "V-101.STATE");
   const heatExchangerState = findTelemetryByTag(telemetryPoints, "HX-101.STATE");
   const temperature = findTelemetryByTag(telemetryPoints, "TT-101");
   const pressure = findTelemetryByTag(telemetryPoints, "PT-101");
@@ -94,7 +96,7 @@ function buildNodes(telemetryPoints: TelemetryPoint[]): ProcessNode[] {
       tag: "P-101",
       label: "Pump",
       status: pointStatus(pumpState, "offline"),
-      value: formatTelemetryValue(pumpState),
+      value: `${formatTelemetryValue(pumpState)} / ${formatTelemetryValue(pumpRpm)}`,
       icon: Gauge,
       source: telemetrySourceLabel(pumpState),
       sourceVariant: pointSourceVariant(pumpState),
@@ -103,7 +105,7 @@ function buildNodes(telemetryPoints: TelemetryPoint[]): ProcessNode[] {
       tag: "V-101",
       label: "Valve",
       status: pointStatus(valvePosition, "warning"),
-      value: `${formatTelemetryValue(valvePosition)} open`,
+      value: `${formatTelemetryValue(valvePosition)} / ${formatTelemetryValue(valveState)}`,
       icon: SlidersHorizontal,
       source: telemetrySourceLabel(valvePosition),
       sourceVariant: pointSourceVariant(valvePosition),

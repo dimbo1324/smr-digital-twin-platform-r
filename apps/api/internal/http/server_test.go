@@ -157,6 +157,9 @@ func newTestRouter() http.Handler {
 		StartScenario:    emptyOKHandler(),
 		StopScenario:     emptyOKHandler(),
 		ResetSimulation:  emptyOKHandler(),
+		SubmitCommand:    emptyOKHandler(),
+		RecentCommands:   emptyOKHandler(),
+		RecentEvents:     emptyOKHandler(),
 	})
 
 	return server.Router()

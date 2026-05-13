@@ -1,6 +1,8 @@
 package simulation
 
 import (
+	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
 	"time"
@@ -126,6 +128,68 @@ func (g *Gateway) Reset(w http.ResponseWriter, r *http.Request) {
 	httpapi.WriteData(w, r, http.StatusOK, status, httpapi.MetaOptions{Source: "simulation"})
 }
 
+func (g *Gateway) SubmitCommand(w http.ResponseWriter, r *http.Request) {
+	var request CommandRequest
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&request); err != nil {
+		httpapi.WriteError(w, r, http.StatusBadRequest, "MALFORMED_JSON", "Command request body is invalid JSON")
+		return
+	}
+
+	if request.Source == "" {
+		request.Source = "frontend"
+	}
+	if request.RequestedBy == "" {
+		request.RequestedBy = "demo-engineer"
+	}
+	if request.CorrelationID == "" {
+		request.CorrelationID = httpapi.RequestIDFromContext(r.Context())
+	}
+
+	command, err := g.client.SubmitCommand(r.Context(), request)
+	if err != nil {
+		g.writeSimulationCommandError(w, r, err)
+		return
+	}
+
+	httpapi.WriteData(w, r, http.StatusOK, command, httpapi.MetaOptions{Source: "simulation"})
+}
+
+func (g *Gateway) RecentCommands(w http.ResponseWriter, r *http.Request) {
+	commands, err := g.client.RecentCommands(r.Context())
+	if err != nil {
+		g.writeSimulationCommandError(w, r, err)
+		return
+	}
+	httpapi.WriteData(w, r, http.StatusOK, commands, httpapi.MetaOptions{Count: len(commands), Source: "simulation"})
+}
+
+func (g *Gateway) RecentEvents(w http.ResponseWriter, r *http.Request) {
+	events, err := g.client.RecentEvents(r.Context())
+	if err != nil {
+		g.writeSimulationCommandError(w, r, err)
+		return
+	}
+	httpapi.WriteData(w, r, http.StatusOK, events, httpapi.MetaOptions{Count: len(events), Source: "simulation"})
+}
+
+func (g *Gateway) writeSimulationCommandError(w http.ResponseWriter, r *http.Request, err error) {
+	if errors.Is(err, ErrDisabled) {
+		httpapi.WriteError(w, r, http.StatusServiceUnavailable, "SIMULATION_UNAVAILABLE", "Simulation service is disabled")
+		return
+	}
+	if responseErr, ok := IsResponseError(err); ok {
+		status := responseErr.StatusCode
+		if status == 0 {
+			status = http.StatusBadGateway
+		}
+		httpapi.WriteError(w, r, status, responseErr.Code, responseErr.Message)
+		return
+	}
+	httpapi.WriteError(w, r, http.StatusBadGateway, "SIMULATION_UNAVAILABLE", "Simulation service is not reachable")
+}
+
 func telemetryPointsFromSnapshot(s TelemetrySnapshot) []telemetry.TelemetryPoint {
 	return []telemetry.TelemetryPoint{
 		numberPoint("SMR-POWER", "Reactor Power", s.ReactorPowerPct, "%", s.Timestamp),
@@ -152,7 +216,9 @@ func telemetryPointsFromSnapshot(s TelemetrySnapshot) []telemetry.TelemetryPoint
 		numberPoint("FT-101", "Loop Flow", s.LoopFlowKGS, "kg/s", s.Timestamp),
 		numberPoint("LT-101", "Tank Level", s.TankLevelPct, "%", s.Timestamp),
 		numberPoint("V-101.POS", "Valve Position", s.ValvePositionPct, "%", s.Timestamp),
+		textPointWithQuality("V-101.STATE", "Valve State", valueOrFallback(s.ValveState, "STOPPED"), telemetry.QualityGood, s.Timestamp),
 		textPointWithQuality("P-101.STATE", "Pump State", valueOrFallback(s.PumpState, "Mock"), telemetry.QualityGood, s.Timestamp),
+		numberPoint("P-101.RPM", "Pump Speed", s.PumpRPM, "rpm", s.Timestamp),
 		textPointWithQuality("HX-101.STATE", "Heat Exchanger State", valueOrFallback(s.HeatExchangerState, "Mock Duty"), telemetry.QualityGood, s.Timestamp),
 		textPointWithQuality("TIC-101.MODE", "PID Controller Mode", valueOrFallback(s.PIDControllerMode, "Disabled"), telemetry.QualityUncertain, s.Timestamp),
 	}

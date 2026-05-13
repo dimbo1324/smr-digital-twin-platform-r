@@ -35,7 +35,9 @@ type TelemetrySnapshot struct {
 	LoopFlowKGS            float64   `json:"loopFlowKgS"`
 	TankLevelPct           float64   `json:"tankLevelPct"`
 	ValvePositionPct       float64   `json:"valvePositionPct"`
+	ValveState             string    `json:"valveState"`
 	PumpState              string    `json:"pumpState"`
+	PumpRPM                float64   `json:"pumpRpm"`
 	HeatExchangerState     string    `json:"heatExchangerState"`
 	PIDControllerMode      string    `json:"pidControllerMode"`
 	Timestamp              time.Time `json:"timestamp"`
@@ -98,4 +100,48 @@ type Status struct {
 	SnapshotCount           int    `json:"snapshotCount"`
 	LastSimulationTimestamp string `json:"lastSimulationTimestamp"`
 	SimulationOnly          bool   `json:"simulationOnly"`
+}
+
+type CommandPayload struct {
+	PositionPercent *float64 `json:"positionPercent,omitempty"`
+	Reason          string   `json:"reason,omitempty"`
+}
+
+type CommandRequest struct {
+	TargetTag     string         `json:"targetTag"`
+	CommandType   string         `json:"commandType"`
+	Source        string         `json:"source"`
+	RequestedBy   string         `json:"requestedBy"`
+	Payload       CommandPayload `json:"payload"`
+	CorrelationID string         `json:"correlationId,omitempty"`
+}
+
+type Command struct {
+	ID            string         `json:"id"`
+	TargetTag     string         `json:"targetTag"`
+	CommandType   string         `json:"commandType"`
+	Source        string         `json:"source"`
+	RequestedBy   string         `json:"requestedBy"`
+	Payload       CommandPayload `json:"payload"`
+	Status        string         `json:"status"`
+	RequestedAt   time.Time      `json:"requestedAt"`
+	AcceptedAt    *time.Time     `json:"acceptedAt,omitempty"`
+	CompletedAt   *time.Time     `json:"completedAt,omitempty"`
+	RejectedAt    *time.Time     `json:"rejectedAt,omitempty"`
+	ResultMessage string         `json:"resultMessage,omitempty"`
+	ErrorCode     string         `json:"errorCode,omitempty"`
+	ErrorMessage  string         `json:"errorMessage,omitempty"`
+	CorrelationID string         `json:"correlationId,omitempty"`
+}
+
+type Event struct {
+	ID        string            `json:"id"`
+	Type      string            `json:"type"`
+	Source    string            `json:"source"`
+	Severity  string            `json:"severity"`
+	Message   string            `json:"message"`
+	TargetTag string            `json:"targetTag,omitempty"`
+	CommandID string            `json:"commandId,omitempty"`
+	Timestamp time.Time         `json:"timestamp"`
+	Metadata  map[string]string `json:"metadata,omitempty"`
 }

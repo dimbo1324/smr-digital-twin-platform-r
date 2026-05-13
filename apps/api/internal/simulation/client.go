@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -67,6 +69,18 @@ func (c *Client) Reset(ctx context.Context) (Status, error) {
 	return post[Status](ctx, c, "/api/v1/simulation/reset")
 }
 
+func (c *Client) SubmitCommand(ctx context.Context, request CommandRequest) (Command, error) {
+	return postJSON[Command](ctx, c, "/api/v1/simulation/commands", request)
+}
+
+func (c *Client) RecentCommands(ctx context.Context) ([]Command, error) {
+	return get[[]Command](ctx, c, "/api/v1/simulation/commands/recent")
+}
+
+func (c *Client) RecentEvents(ctx context.Context) ([]Event, error) {
+	return get[[]Event](ctx, c, "/api/v1/simulation/events/recent")
+}
+
 func get[T any](ctx context.Context, c *Client, path string) (T, error) {
 	return do[T](ctx, c, http.MethodGet, path)
 }
@@ -75,16 +89,35 @@ func post[T any](ctx context.Context, c *Client, path string) (T, error) {
 	return do[T](ctx, c, http.MethodPost, path)
 }
 
+func postJSON[T any](ctx context.Context, c *Client, path string, body any) (T, error) {
+	return doWithBody[T](ctx, c, http.MethodPost, path, body)
+}
+
 func do[T any](ctx context.Context, c *Client, method, path string) (T, error) {
+	return doWithBody[T](ctx, c, method, path, nil)
+}
+
+func doWithBody[T any](ctx context.Context, c *Client, method, path string, body any) (T, error) {
 	var zero T
 	if !c.enabled {
 		return zero, ErrDisabled
 	}
-	request, err := http.NewRequestWithContext(ctx, method, c.baseURL+path, bytes.NewReader(nil))
+	var reader io.Reader = bytes.NewReader(nil)
+	if body != nil {
+		payload, err := json.Marshal(body)
+		if err != nil {
+			return zero, err
+		}
+		reader = bytes.NewReader(payload)
+	}
+	request, err := http.NewRequestWithContext(ctx, method, c.baseURL+path, reader)
 	if err != nil {
 		return zero, err
 	}
 	request.Header.Set("Accept", "application/json")
+	if body != nil {
+		request.Header.Set("Content-Type", "application/json")
+	}
 
 	response, err := c.http.Do(request)
 	if err != nil {
@@ -93,7 +126,11 @@ func do[T any](ctx context.Context, c *Client, method, path string) (T, error) {
 	defer response.Body.Close()
 
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
-		return zero, fmt.Errorf("simulation response status %d", response.StatusCode)
+		var payload errorEnvelope
+		if err := json.NewDecoder(response.Body).Decode(&payload); err == nil && payload.Error.Code != "" {
+			return zero, ResponseError{StatusCode: response.StatusCode, Code: payload.Error.Code, Message: payload.Error.Message}
+		}
+		return zero, ResponseError{StatusCode: response.StatusCode, Code: "SIMULATION_ERROR", Message: fmt.Sprintf("simulation response status %d", response.StatusCode)}
 	}
 
 	var payload envelope[T]
@@ -104,3 +141,28 @@ func do[T any](ctx context.Context, c *Client, method, path string) (T, error) {
 }
 
 var ErrDisabled = fmt.Errorf("simulation client disabled")
+
+type ResponseError struct {
+	StatusCode int
+	Code       string
+	Message    string
+}
+
+func (e ResponseError) Error() string {
+	return e.Message
+}
+
+func IsResponseError(err error) (ResponseError, bool) {
+	var responseErr ResponseError
+	if errors.As(err, &responseErr) {
+		return responseErr, true
+	}
+	return ResponseError{}, false
+}
+
+type errorEnvelope struct {
+	Error struct {
+		Code    string `json:"code"`
+		Message string `json:"message"`
+	} `json:"error"`
+}

@@ -13,11 +13,13 @@ export interface ApiEnvelope<T> {
 
 export class ApiError extends Error {
   readonly status: number;
+  readonly code?: string;
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, code?: string) {
     super(message);
     this.name = "ApiError";
     this.status = status;
+    this.code = code;
   }
 }
 
@@ -37,24 +39,47 @@ export async function apiGet<T>(path: string, signal?: AbortSignal): Promise<Api
   });
 
   if (!response.ok) {
-    throw new ApiError(`API request failed with status ${response.status}`, response.status);
+    throw await toApiError(response);
   }
 
   return response.json() as Promise<ApiEnvelope<T>>;
 }
 
-export async function apiPost<T>(path: string, signal?: AbortSignal): Promise<ApiEnvelope<T>> {
+export async function apiPost<T>(
+  path: string,
+  body?: unknown,
+  signal?: AbortSignal,
+): Promise<ApiEnvelope<T>> {
+  const headers: HeadersInit = {
+    Accept: "application/json",
+  };
+  if (body !== undefined) {
+    headers["Content-Type"] = "application/json";
+  }
+
   const response = await fetch(`${getApiBaseUrl()}${path}`, {
     method: "POST",
-    headers: {
-      Accept: "application/json",
-    },
+    headers,
+    body: body === undefined ? undefined : JSON.stringify(body),
     signal,
   });
 
   if (!response.ok) {
-    throw new ApiError(`API request failed with status ${response.status}`, response.status);
+    throw await toApiError(response);
   }
 
   return response.json() as Promise<ApiEnvelope<T>>;
+}
+
+async function toApiError(response: Response): Promise<ApiError> {
+  try {
+    const payload = (await response.json()) as { error?: { code?: string; message?: string } };
+    if (payload.error?.message) {
+      return new ApiError(payload.error.message, response.status, payload.error.code);
+    }
+  } catch {
+    // Fall through to the generic error below.
+  }
+
+  return new ApiError(`API request failed with status ${response.status}`, response.status);
 }

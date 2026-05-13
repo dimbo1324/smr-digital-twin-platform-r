@@ -9,8 +9,35 @@ import (
 type state struct {
 	snapshot       model.TelemetrySnapshot
 	activeScenario model.ScenarioName
+	valve          valveRuntime
+	pump           pumpRuntime
+	commands       []model.Command
+	events         []model.Event
 	running        bool
 	tickCount      int64
+	commandSeq     int64
+	eventSeq       int64
+}
+
+type valveRuntime struct {
+	tag                   string
+	state                 model.ValveState
+	positionPercent       float64
+	targetPositionPercent float64
+	lastCommandID         string
+	activeCommandID       string
+	updatedAt             time.Time
+}
+
+type pumpRuntime struct {
+	tag             string
+	state           model.PumpState
+	rpm             float64
+	targetRPM       float64
+	transitionUntil time.Time
+	lastCommandID   string
+	activeCommandID string
+	updatedAt       time.Time
 }
 
 func initialState(now time.Time) state {
@@ -38,7 +65,9 @@ func initialState(now time.Time) state {
 			LoopFlowKGS:            118,
 			TankLevelPct:           72,
 			ValvePositionPct:       64,
-			PumpState:              "Running",
+			ValveState:             string(model.ValveStateStopped),
+			PumpState:              string(model.PumpStateRunning),
+			PumpRPM:                1800,
 			HeatExchangerState:     "Online",
 			PIDControllerMode:      "Disabled",
 			Timestamp:              now,
@@ -48,5 +77,19 @@ func initialState(now time.Time) state {
 			Scenario:               string(model.ScenarioNormal),
 		},
 		activeScenario: model.ScenarioNormal,
+		valve: valveRuntime{
+			tag:                   "V-101",
+			state:                 model.ValveStateStopped,
+			positionPercent:       64,
+			targetPositionPercent: 64,
+			updatedAt:             now,
+		},
+		pump: pumpRuntime{
+			tag:       "P-101",
+			state:     model.PumpStateRunning,
+			rpm:       1800,
+			targetRPM: 1800,
+			updatedAt: now,
+		},
 	}
 }

@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"fmt"
 	"math"
 	"time"
 
@@ -15,6 +16,14 @@ type targets struct {
 
 func (e *Engine) tick(now time.Time) model.TelemetrySnapshot {
 	current := e.state.snapshot
+	deltaSeconds := now.Sub(current.Timestamp).Seconds()
+	if deltaSeconds <= 0 || deltaSeconds > 60 {
+		deltaSeconds = e.cfg.TickInterval.Seconds()
+	}
+	if deltaSeconds <= 0 {
+		deltaSeconds = 1
+	}
+	e.updateActuatorsLocked(now, deltaSeconds)
 	target := e.targetsForScenario(current)
 	phase := float64(e.state.tickCount) / 8
 
@@ -55,12 +64,15 @@ func (e *Engine) tick(now time.Time) model.TelemetrySnapshot {
 	if current.Mode == model.ModeTrip {
 		current.Health = model.HealthTrip
 	}
-	current.LoopTemperatureC = round(approach(current.LoopTemperatureC, current.PrimaryTemperatureC+0.4, 0.16))
-	current.LoopPressureMPa = round(approach(current.LoopPressureMPa, current.PrimaryPressureMPa, 0.18))
-	current.LoopFlowKGS = round(approach(current.LoopFlowKGS, clamp(current.CoolantFlowPct*1.34, 0, 150), 0.16))
+	processFlow := e.processFlowTargetLocked()
+	current.LoopFlowKGS = round(approach(current.LoopFlowKGS, processFlow, 0.28))
+	current.LoopTemperatureC = round(approach(current.LoopTemperatureC, processTemperatureTarget(processFlow), 0.10))
+	current.LoopPressureMPa = round(approach(current.LoopPressureMPa, e.processPressureTargetLocked(), 0.18))
 	current.TankLevelPct = round(approach(current.TankLevelPct, clamp(54+current.SteamGeneratorLevelPct*0.28, 0, 100), 0.10))
-	current.ValvePositionPct = round(approach(current.ValvePositionPct, e.valveTargetForScenario(), 0.10))
-	current.PumpState = pumpStateForSnapshot(current)
+	current.ValvePositionPct = round(e.state.valve.positionPercent)
+	current.ValveState = string(e.state.valve.state)
+	current.PumpState = string(e.state.pump.state)
+	current.PumpRPM = round(e.state.pump.rpm)
 	current.HeatExchangerState = heatExchangerStateForSnapshot(current)
 	current.PIDControllerMode = "Disabled"
 	current.Timestamp = now
@@ -132,29 +144,6 @@ func deriveHealth(snapshot model.TelemetrySnapshot) model.Health {
 	return model.HealthOK
 }
 
-func (e *Engine) valveTargetForScenario() float64 {
-	switch e.state.activeScenario {
-	case model.ScenarioPumpDegradation:
-		return 58
-	case model.ScenarioHighTemperature, model.ScenarioPressureDeviation:
-		return 72
-	case model.ScenarioTrip:
-		return 18
-	default:
-		return 64
-	}
-}
-
-func pumpStateForSnapshot(snapshot model.TelemetrySnapshot) string {
-	if snapshot.Mode == model.ModeTrip || snapshot.CoolantFlowPct <= 10 {
-		return "Offline"
-	}
-	if snapshot.Health == model.HealthAlarm || snapshot.Health == model.HealthWarning {
-		return "Running"
-	}
-	return "Running"
-}
-
 func heatExchangerStateForSnapshot(snapshot model.TelemetrySnapshot) string {
 	if snapshot.Mode == model.ModeTrip {
 		return "Offline"
@@ -163,6 +152,111 @@ func heatExchangerStateForSnapshot(snapshot model.TelemetrySnapshot) string {
 		return "Mock Duty"
 	}
 	return "Online"
+}
+
+func (e *Engine) updateActuatorsLocked(now time.Time, deltaSeconds float64) {
+	e.updateValveLocked(now, deltaSeconds)
+	e.updatePumpLocked(now, deltaSeconds)
+}
+
+func (e *Engine) updateValveLocked(now time.Time, deltaSeconds float64) {
+	if !valveIsMoving(e.state.valve.state) {
+		return
+	}
+
+	previous := e.state.valve.positionPercent
+	step := valveSpeedPctPerSec * deltaSeconds
+	target := e.state.valve.targetPositionPercent
+	if previous < target {
+		e.state.valve.positionPercent = clamp(previous+step, previous, target)
+	} else {
+		e.state.valve.positionPercent = clamp(previous-step, target, previous)
+	}
+	e.state.valve.updatedAt = now
+
+	if !almostEqual(e.state.valve.positionPercent, target) {
+		return
+	}
+
+	e.state.valve.positionPercent = target
+	e.state.valve.state = valveRestState(target)
+	commandID := e.state.valve.activeCommandID
+	e.state.valve.activeCommandID = ""
+	if commandID == "" {
+		return
+	}
+
+	e.updateCommandLocked(commandID, func(command model.Command) model.Command {
+		return completeCommand(command, now, commandCompletedText)
+	})
+	e.appendEventLocked(model.EventTypeCommandCompleted, model.EventSeverityInfo, "simulation", "Valve V-101 movement completed in simulation.", e.state.valve.tag, commandID, now, nil)
+	e.appendEquipmentEventLocked(fmt.Sprintf("Valve V-101 state changed to %s.", e.state.valve.state), e.state.valve.tag, commandID, now)
+}
+
+func (e *Engine) updatePumpLocked(now time.Time, deltaSeconds float64) {
+	switch e.state.pump.state {
+	case model.PumpStateStarting:
+		e.state.pump.rpm = approach(e.state.pump.rpm, pumpNominalRPM, clamp(deltaSeconds/2, 0.1, 1))
+		if now.Before(e.state.pump.transitionUntil) {
+			return
+		}
+		e.state.pump.state = model.PumpStateRunning
+		e.state.pump.rpm = pumpNominalRPM
+		e.completePumpActiveCommandLocked(now, "Pump P-101 reached RUNNING in simulation.")
+	case model.PumpStateStopping:
+		e.state.pump.rpm = approach(e.state.pump.rpm, 0, clamp(deltaSeconds/2, 0.1, 1))
+		if now.Before(e.state.pump.transitionUntil) {
+			return
+		}
+		e.state.pump.state = model.PumpStateStopped
+		e.state.pump.rpm = 0
+		e.completePumpActiveCommandLocked(now, "Pump P-101 reached STOPPED in simulation.")
+	case model.PumpStateRunning:
+		e.state.pump.rpm = pumpNominalRPM
+	case model.PumpStateStopped:
+		e.state.pump.rpm = 0
+	}
+	e.state.pump.updatedAt = now
+}
+
+func (e *Engine) completePumpActiveCommandLocked(now time.Time, message string) {
+	commandID := e.state.pump.activeCommandID
+	e.state.pump.activeCommandID = ""
+	if commandID == "" {
+		return
+	}
+	e.updateCommandLocked(commandID, func(command model.Command) model.Command {
+		return completeCommand(command, now, message)
+	})
+	e.appendEventLocked(model.EventTypeCommandCompleted, model.EventSeverityInfo, "simulation", message, e.state.pump.tag, commandID, now, nil)
+	e.appendEquipmentEventLocked(fmt.Sprintf("Pump P-101 state changed to %s.", e.state.pump.state), e.state.pump.tag, commandID, now)
+}
+
+func (e *Engine) processFlowTargetLocked() float64 {
+	pumpFactor := 0.0
+	switch e.state.pump.state {
+	case model.PumpStateRunning:
+		pumpFactor = 1.0
+	case model.PumpStateStarting, model.PumpStateStopping:
+		pumpFactor = 0.2
+	}
+	return clamp(150*pumpFactor*(e.state.valve.positionPercent/100), 0, 150)
+}
+
+func (e *Engine) processPressureTargetLocked() float64 {
+	pumpFactor := 0.0
+	switch e.state.pump.state {
+	case model.PumpStateRunning:
+		pumpFactor = 1.0
+	case model.PumpStateStarting, model.PumpStateStopping:
+		pumpFactor = 0.35
+	}
+	valveRestriction := (100 - e.state.valve.positionPercent) / 100
+	return clamp(13.6+pumpFactor*1.4+valveRestriction*0.35, 0, 18)
+}
+
+func processTemperatureTarget(flow float64) float64 {
+	return clamp(292-flow*0.045, 270, 310)
 }
 
 func approach(current, target, alpha float64) float64 {

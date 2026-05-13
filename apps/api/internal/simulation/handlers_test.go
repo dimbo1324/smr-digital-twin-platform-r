@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
 	"log/slog"
@@ -37,6 +38,12 @@ func TestLatestTelemetryReturnsSimulationDataWhenClientSucceeds(t *testing.T) {
 	}
 	if !containsTelemetryTag(data, "SMR-POWER") {
 		t.Fatal("expected unit overview telemetry tag SMR-POWER")
+	}
+	if !containsTelemetryTag(data, "V-101.STATE") {
+		t.Fatal("expected valve state telemetry tag V-101.STATE")
+	}
+	if !containsTelemetryTag(data, "P-101.RPM") {
+		t.Fatal("expected pump speed telemetry tag P-101.RPM")
 	}
 }
 
@@ -109,6 +116,72 @@ func TestScenarioStartEndpointProxiesRequest(t *testing.T) {
 	}
 }
 
+func TestSubmitCommandProxiesRequest(t *testing.T) {
+	server := fakeSimulationServer()
+	defer server.Close()
+	gateway := newTestGateway(server.URL, true)
+
+	body := []byte(`{"targetTag":"V-101","commandType":"OPEN","payload":{"reason":"operator_demo"}}`)
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodPost, "/api/v1/commands", bytes.NewReader(body))
+	gateway.SubmitCommand(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", recorder.Code)
+	}
+	payload := decodeMap(t, recorder.Body.Bytes())
+	data := payload["data"].(map[string]any)
+	if data["targetTag"] != "V-101" {
+		t.Fatalf("expected V-101 target, got %v", data["targetTag"])
+	}
+	if data["source"] != "frontend" {
+		t.Fatalf("expected frontend source, got %v", data["source"])
+	}
+}
+
+func TestSubmitCommandMalformedJSONReturns400(t *testing.T) {
+	gateway := newTestGateway("http://127.0.0.1:1", true)
+
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodPost, "/api/v1/commands", bytes.NewReader([]byte(`{`)))
+	gateway.SubmitCommand(recorder, request)
+
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("expected status 400, got %d", recorder.Code)
+	}
+}
+
+func TestSubmitCommandSimulationUnavailableReturns502(t *testing.T) {
+	gateway := newTestGateway("http://127.0.0.1:1", true)
+
+	body := []byte(`{"targetTag":"V-101","commandType":"OPEN","payload":{"reason":"operator_demo"}}`)
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodPost, "/api/v1/commands", bytes.NewReader(body))
+	gateway.SubmitCommand(recorder, request)
+
+	if recorder.Code != http.StatusBadGateway {
+		t.Fatalf("expected status 502, got %d", recorder.Code)
+	}
+}
+
+func TestRecentCommandsAndEventsProxy(t *testing.T) {
+	server := fakeSimulationServer()
+	defer server.Close()
+	gateway := newTestGateway(server.URL, true)
+
+	commandRecorder := httptest.NewRecorder()
+	gateway.RecentCommands(commandRecorder, httptest.NewRequest(http.MethodGet, "/api/v1/commands/recent", nil))
+	if commandRecorder.Code != http.StatusOK {
+		t.Fatalf("expected commands status 200, got %d", commandRecorder.Code)
+	}
+
+	eventRecorder := httptest.NewRecorder()
+	gateway.RecentEvents(eventRecorder, httptest.NewRequest(http.MethodGet, "/api/v1/events/recent", nil))
+	if eventRecorder.Code != http.StatusOK {
+		t.Fatalf("expected events status 200, got %d", eventRecorder.Code)
+	}
+}
+
 func newTestGateway(baseURL string, enabled bool) *Gateway {
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 	return NewGateway(
@@ -127,11 +200,19 @@ func fakeSimulationServer() *httptest.Server {
 		case r.URL.Path == "/api/v1/simulation/status":
 			_, _ = w.Write([]byte(`{"data":{"running":true,"mode":"NORMAL","health":"OK","activeScenario":"normal","tickMs":1000,"historySize":3600,"snapshotCount":1,"lastSimulationTimestamp":"2026-05-12T12:00:00Z","simulationOnly":true},"meta":{"timestamp":"2026-05-12T12:00:00Z","source":"simulation","simulationOnly":true}}`))
 		case r.URL.Path == "/api/v1/simulation/telemetry/latest":
-			_, _ = w.Write([]byte(`{"data":{"reactorPowerPct":72,"thermalPowerMw":216,"electricPowerMw":76,"primaryTemperatureC":286,"secondaryTemperatureC":222,"primaryPressureMPa":15.1,"secondaryPressureMPa":6.2,"coolantFlowPct":88,"steamGeneratorLevelPct":62,"turbineRpm":3600,"generatorLoadPct":71,"condenserVacuumKPa":88,"feedwaterFlowPct":76,"vibrationMmS":2.1,"radiationLevelUSvH":0.18,"availabilityPct":99,"efficiencyPct":35,"loopTemperatureC":286.4,"loopPressureMPa":15.1,"loopFlowKgS":118,"tankLevelPct":72,"valvePositionPct":64,"pumpState":"Running","heatExchangerState":"Online","pidControllerMode":"Disabled","timestamp":"2026-05-12T12:00:00Z","mode":"NORMAL","health":"OK","simulationOnly":true,"scenario":"normal"},"meta":{"timestamp":"2026-05-12T12:00:00Z","source":"simulation","simulationOnly":true}}`))
+			_, _ = w.Write([]byte(`{"data":{"reactorPowerPct":72,"thermalPowerMw":216,"electricPowerMw":76,"primaryTemperatureC":286,"secondaryTemperatureC":222,"primaryPressureMPa":15.1,"secondaryPressureMPa":6.2,"coolantFlowPct":88,"steamGeneratorLevelPct":62,"turbineRpm":3600,"generatorLoadPct":71,"condenserVacuumKPa":88,"feedwaterFlowPct":76,"vibrationMmS":2.1,"radiationLevelUSvH":0.18,"availabilityPct":99,"efficiencyPct":35,"loopTemperatureC":286.4,"loopPressureMPa":15.1,"loopFlowKgS":118,"tankLevelPct":72,"valvePositionPct":64,"valveState":"STOPPED","pumpState":"RUNNING","pumpRpm":1800,"heatExchangerState":"Online","pidControllerMode":"Disabled","timestamp":"2026-05-12T12:00:00Z","mode":"NORMAL","health":"OK","simulationOnly":true,"scenario":"normal"},"meta":{"timestamp":"2026-05-12T12:00:00Z","source":"simulation","simulationOnly":true}}`))
 		case r.URL.Path == "/api/v1/simulation/alarms/active":
 			_, _ = w.Write([]byte(`{"data":[{"id":"alarm-1","assetId":"primary-loop","code":"TEST","title":"Test","message":"Synthetic alarm","severity":"WARNING","status":"ACTIVE","value":1,"threshold":1,"unit":"%","startedAt":"2026-05-12T12:00:00Z","updatedAt":"2026-05-12T12:00:00Z"}],"meta":{"timestamp":"2026-05-12T12:00:00Z","source":"simulation","simulationOnly":true,"count":1}}`))
 		case r.URL.Path == "/api/v1/simulation/scenarios/trip/start":
 			_, _ = w.Write([]byte(`{"data":{"running":true,"mode":"TRIP","health":"TRIP","activeScenario":"trip","tickMs":1000,"historySize":3600,"snapshotCount":1,"lastSimulationTimestamp":"2026-05-12T12:00:00Z","simulationOnly":true},"meta":{"timestamp":"2026-05-12T12:00:00Z","source":"simulation","simulationOnly":true}}`))
+		case r.URL.Path == "/api/v1/simulation/commands":
+			var request CommandRequest
+			_ = json.NewDecoder(r.Body).Decode(&request)
+			_, _ = w.Write([]byte(`{"data":{"id":"cmd-1","targetTag":"` + request.TargetTag + `","commandType":"` + request.CommandType + `","source":"` + request.Source + `","requestedBy":"` + request.RequestedBy + `","payload":{"reason":"operator_demo"},"status":"IN_PROGRESS","requestedAt":"2026-05-12T12:00:00Z","acceptedAt":"2026-05-12T12:00:00Z","resultMessage":"Command accepted by simulation engine"},"meta":{"timestamp":"2026-05-12T12:00:00Z","source":"simulation","simulationOnly":true}}`))
+		case r.URL.Path == "/api/v1/simulation/commands/recent":
+			_, _ = w.Write([]byte(`{"data":[{"id":"cmd-1","targetTag":"V-101","commandType":"OPEN","source":"frontend","requestedBy":"demo-engineer","payload":{"reason":"operator_demo"},"status":"IN_PROGRESS","requestedAt":"2026-05-12T12:00:00Z","acceptedAt":"2026-05-12T12:00:00Z"}],"meta":{"timestamp":"2026-05-12T12:00:00Z","source":"simulation","simulationOnly":true,"count":1}}`))
+		case r.URL.Path == "/api/v1/simulation/events/recent":
+			_, _ = w.Write([]byte(`{"data":[{"id":"evt-1","type":"COMMAND_ACCEPTED","source":"simulation","severity":"INFO","message":"Command accepted","targetTag":"V-101","commandId":"cmd-1","timestamp":"2026-05-12T12:00:00Z"}],"meta":{"timestamp":"2026-05-12T12:00:00Z","source":"simulation","simulationOnly":true,"count":1}}`))
 		default:
 			w.WriteHeader(http.StatusNotFound)
 		}

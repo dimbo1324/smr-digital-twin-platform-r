@@ -27,22 +27,25 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 - Basic synthetic scenarios such as normal, startup, load ramp, high temperature, pressure deviation, pump degradation, sensor drift, and trip.
 - Basic active alarm display generated from synthetic simulation thresholds.
 - In-memory telemetry history for trend charts.
+- Simulation-only command layer for `V-101` and `P-101` through the API gateway.
+- Valve `V-101` and pump `P-101` state machines that update synthetic telemetry.
+- In-memory command history and event/audit trail for simulation command attempts.
+- Frontend valve and pump control panels with pending, success, and error states.
 - Explicit safety boundary in docs and UI copy.
 
 ## Partially Implemented
 
 - **Alarms**: generated active alarms and UI display exist. Acknowledge endpoints, cleared alarm history, shelving, and operator workflow are planned.
 - **Trends**: in-memory simulation history exists. External TSDB persistence, downsampling APIs, and long-range queries are not implemented yet.
-- **Events**: dashboard has mock event previews. A full event service and event log page are planned.
-- **Process UI**: process-loop values are bound to live API telemetry when available. Controls remain disabled until the simulation command layer exists.
+- **Events**: command and simulation events are captured in an in-memory recent-event trail. A full event service, persistent audit store, and event log page are planned.
+- **Process UI**: process-loop values are bound to live API telemetry when available. Valve and pump controls call simulation-only command endpoints; other process controls remain planned.
 - **Scenario controls**: predefined synthetic scenarios can be started/stopped through the API. Declarative YAML/JSON scenario definitions are planned.
 - **Assets**: API exposes current simulation assets and fallback process-loop assets. Persistent asset registry is planned.
 
 ## Planned Next
 
-- Simulation-only command layer for `V-101` and `P-101`.
-- Valve and pump state machines.
-- Event and audit trail for simulation commands.
+- Expanded command arbitration for user, scenario, PID, and system sources.
+- Persistent command history and audit storage.
 - Alarm acknowledge/clear endpoints and alarm history.
 - Full event log page and event service.
 - MQTT bridge for simulated telemetry.
@@ -59,7 +62,6 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 - Kafka, Redpanda, or NATS.
 - PostgreSQL, TimescaleDB, InfluxDB, Redis, or MinIO persistence.
 - PID controller.
-- Real command endpoints for actuators.
 - Production auth/RBAC.
 - PDF/Excel report export.
 - Kubernetes or Helm deployment.
@@ -120,7 +122,8 @@ See [MVP Domain Model](docs/mvp-domain-model.md) for the current contract and pl
 - No safety-critical automation.
 - No real reactor operating procedures.
 - No connection to real plant networks or physical actuators.
-- Commands, when added, will apply only to simulated assets.
+- Simulation commands apply only to in-memory simulated assets.
+- Command history and event/audit records are in-memory only at this stage.
 - UI and API copy must preserve the distinction between monitoring, simulation, advisory concepts, and real control.
 
 ## Technology Stack
@@ -133,7 +136,7 @@ See [MVP Domain Model](docs/mvp-domain-model.md) for the current contract and pl
 | Messaging | MQTT planned, not implemented |
 | Data | In-memory now; PostgreSQL/TimescaleDB planned |
 | DevOps | Docker, Docker Compose, Makefile |
-| Security | Safety boundary now; auth/RBAC/audit planned |
+| Security | Safety boundary and in-memory command audit now; auth/RBAC and persistent audit planned |
 
 ## Repository Layout
 
@@ -219,6 +222,11 @@ curl http://localhost:8080/api/v1/assets
 curl http://localhost:8080/api/v1/telemetry/latest
 curl "http://localhost:8080/api/v1/telemetry/history?window=15m"
 curl http://localhost:8080/api/v1/alarms/active
+curl -X POST http://localhost:8080/api/v1/commands \
+  -H "Content-Type: application/json" \
+  -d '{"targetTag":"V-101","commandType":"SET_POSITION","payload":{"positionPercent":75}}'
+curl http://localhost:8080/api/v1/commands/recent
+curl http://localhost:8080/api/v1/events/recent
 curl http://localhost:8080/api/v1/simulation/scenarios
 curl -X POST http://localhost:8080/api/v1/simulation/scenarios/high_temperature/start
 curl -X POST http://localhost:8080/api/v1/simulation/scenarios/stop
@@ -231,15 +239,21 @@ Simulation service, usually called through the API:
 curl http://localhost:8081/health
 curl http://localhost:8081/api/v1/simulation/status
 curl http://localhost:8081/api/v1/simulation/telemetry/latest
+curl -X POST http://localhost:8081/api/v1/simulation/commands \
+  -H "Content-Type: application/json" \
+  -d '{"targetTag":"P-101","commandType":"START","source":"frontend","requestedBy":"demo-engineer"}'
+curl http://localhost:8081/api/v1/simulation/commands/recent
+curl http://localhost:8081/api/v1/simulation/events/recent
 ```
 
 ## Known Limitations
 
 - Live UI transport is polling, not WebSocket/SSE.
 - Telemetry history is in-memory and resets with the simulation service.
+- Command history and event/audit records are in-memory and reset with the simulation service.
 - Active alarms are generated and displayed, but operator acknowledgement and cleared history are not implemented.
-- Process controls are intentionally disabled because the command API is not implemented.
-- Events are currently mock previews only.
+- Command support is limited to simulated `V-101` valve and `P-101` pump assets.
+- Events are recent command/simulation previews, not a persistent event log service.
 - Data source switching in UI is not a real runtime integration switch yet.
 - Frontend bundle currently builds as a single large SPA chunk.
 - The simulation is synthetic and intentionally not a real reactor physics model.
@@ -248,14 +262,13 @@ curl http://localhost:8081/api/v1/simulation/telemetry/latest
 
 1. Stabilize architecture truth, domain levels, live process UI, and dev commands.
 2. Add simulation-only command layer for valve and pump with event/audit trail.
-3. Add actuator state machines.
-4. Add alarm acknowledgement and cleared history.
-5. Add event log service and UI page.
-6. Add MQTT bridge for simulated telemetry.
-7. Add PID/manual-auto control in simulation-only mode.
-8. Add persistent historian and trend APIs.
-9. Add report export.
-10. Add auth/RBAC, observability, CI, and deployment hardening.
+3. Add alarm acknowledgement and cleared history.
+4. Add event log service and UI page.
+5. Add MQTT bridge for simulated telemetry.
+6. Add PID/manual-auto control in simulation-only mode.
+7. Add persistent historian and trend APIs.
+8. Add report export.
+9. Add auth/RBAC, observability, CI, and deployment hardening.
 
 ## Documentation
 
