@@ -294,9 +294,7 @@ func (e *Engine) updateCommandLocked(commandID string, update func(model.Command
 }
 
 func (e *Engine) appendEventLocked(eventType model.EventType, severity model.EventSeverity, source, message, targetTag, commandID string, timestamp time.Time, metadata map[string]string) {
-	e.state.eventSeq++
-	e.state.events = append(e.state.events, model.Event{
-		ID:        fmt.Sprintf("evt-%d", e.state.eventSeq),
+	e.appendEventRecordLocked(model.Event{
 		Type:      eventType,
 		Source:    source,
 		Severity:  severity,
@@ -306,6 +304,25 @@ func (e *Engine) appendEventLocked(eventType model.EventType, severity model.Eve
 		Timestamp: timestamp,
 		Metadata:  metadata,
 	})
+}
+
+func (e *Engine) appendAlarmEventLocked(eventType model.EventType, severity model.EventSeverity, message string, alarm model.Alarm, timestamp time.Time, metadata map[string]string) {
+	e.appendEventRecordLocked(model.Event{
+		Type:      eventType,
+		Source:    "alarm-evaluator",
+		Severity:  severity,
+		Message:   message,
+		TargetTag: alarm.Tag,
+		AlarmID:   alarm.ID,
+		Timestamp: timestamp,
+		Metadata:  metadata,
+	})
+}
+
+func (e *Engine) appendEventRecordLocked(event model.Event) {
+	e.state.eventSeq++
+	event.ID = fmt.Sprintf("evt-%d", e.state.eventSeq)
+	e.state.events = append(e.state.events, event)
 	if len(e.state.events) > maxEventHistory {
 		e.state.events = e.state.events[len(e.state.events)-maxEventHistory:]
 	}

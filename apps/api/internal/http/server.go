@@ -16,6 +16,8 @@ type Handlers struct {
 	LatestTelemetry  http.Handler
 	TelemetryHistory http.Handler
 	ActiveAlarms     http.Handler
+	AlarmHistory     http.Handler
+	AcknowledgeAlarm http.Handler
 	Scenarios        http.Handler
 	StartScenario    http.Handler
 	StopScenario     http.Handler

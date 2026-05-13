@@ -1,10 +1,11 @@
-import type { CommandRecord, SimulationEvent } from "@/entities/commands/model/types";
+import type { CommandRecord } from "@/entities/commands/model/types";
+import type { EventRecord } from "@/entities/events/model/types";
 import { Badge } from "@/shared/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 
 export interface CommandEventPanelProps {
   commands: CommandRecord[];
-  events: SimulationEvent[];
+  events: EventRecord[];
   state: "loading" | "connected" | "degraded";
 }
 

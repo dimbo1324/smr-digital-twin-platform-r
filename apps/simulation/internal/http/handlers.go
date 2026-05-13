@@ -3,6 +3,7 @@ package httpapi
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"time"
 
@@ -77,6 +78,34 @@ func (h *Handler) History(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) ActiveAlarms(w http.ResponseWriter, _ *http.Request) {
 	alarms := h.engine.ActiveAlarms()
 	writeData(w, alarms, len(alarms))
+}
+
+func (h *Handler) AlarmHistory(w http.ResponseWriter, _ *http.Request) {
+	alarms := h.engine.AlarmHistory()
+	writeData(w, alarms, len(alarms))
+}
+
+func (h *Handler) AcknowledgeAlarm(w http.ResponseWriter, r *http.Request) {
+	var request model.AlarmAcknowledgeRequest
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&request); err != nil && !errors.Is(err, io.EOF) {
+		writeError(w, http.StatusBadRequest, "MALFORMED_JSON", "Alarm acknowledge request body is invalid JSON")
+		return
+	}
+
+	alarm, err := h.engine.AcknowledgeAlarm(r.PathValue("alarmID"), request)
+	if err != nil {
+		var alarmErr *engine.AlarmError
+		if errors.As(err, &alarmErr) {
+			writeError(w, alarmErr.HTTPStatus, alarmErr.Code, alarmErr.Message)
+			return
+		}
+		writeError(w, http.StatusInternalServerError, "ALARM_ACKNOWLEDGE_FAILED", "Failed to acknowledge alarm")
+		return
+	}
+
+	writeData(w, alarm, 0)
 }
 
 func (h *Handler) Scenarios(w http.ResponseWriter, _ *http.Request) {

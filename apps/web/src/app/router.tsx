@@ -2,6 +2,7 @@ import { Navigate, Route, BrowserRouter as Router, Routes } from "react-router-d
 import { AppLayout } from "@/app/layouts/AppLayout";
 import { AlarmsPage } from "@/pages/alarms/AlarmsPage";
 import { DashboardPage } from "@/pages/dashboard/DashboardPage";
+import { EventsPage } from "@/pages/events/EventsPage";
 import { ProcessPage } from "@/pages/process/ProcessPage";
 import { SettingsPage } from "@/pages/settings/SettingsPage";
 import { TrendsPage } from "@/pages/trends/TrendsPage";
@@ -15,6 +16,7 @@ export function AppRouter() {
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/process" element={<ProcessPage />} />
           <Route path="/alarms" element={<AlarmsPage />} />
+          <Route path="/events" element={<EventsPage />} />
           <Route path="/trends" element={<TrendsPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

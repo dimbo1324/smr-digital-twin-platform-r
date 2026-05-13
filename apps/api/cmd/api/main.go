@@ -40,6 +40,8 @@ func main() {
 		LatestTelemetry:  http.HandlerFunc(gateway.LatestTelemetry),
 		TelemetryHistory: http.HandlerFunc(gateway.TelemetryHistory),
 		ActiveAlarms:     http.HandlerFunc(gateway.ActiveAlarms),
+		AlarmHistory:     http.HandlerFunc(gateway.AlarmHistory),
+		AcknowledgeAlarm: http.HandlerFunc(gateway.AcknowledgeAlarm),
 		Scenarios:        http.HandlerFunc(gateway.Scenarios),
 		StartScenario:    http.HandlerFunc(gateway.StartScenario),
 		StopScenario:     http.HandlerFunc(gateway.StopScenario),

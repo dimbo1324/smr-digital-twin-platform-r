@@ -22,3 +22,5 @@ Process controls for assets such as `V-101` and `P-101` use a simulation-only co
 - are recorded in an in-memory command/event audit trail for demo purposes.
 
 The current command trail is not a persistent compliance audit store. Persistent audit, auth/RBAC, and external integrations are planned separately and must preserve the simulation-only boundary.
+
+Alarm and event operations are also simulation-only. Acknowledging an alarm only changes an in-memory synthetic alarm instance created by `apps/simulation`; it does not confirm, silence, or clear a real plant condition. Cleared alarm history and recent events are demo workflow records, not a regulated operational archive.

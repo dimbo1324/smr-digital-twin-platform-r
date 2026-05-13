@@ -3,6 +3,7 @@ import {
   Bell,
   Gauge,
   LayoutDashboard,
+  ScrollText,
   Settings,
   type LucideIcon,
 } from "lucide-react";
@@ -28,6 +29,11 @@ export const navigationItems: NavigationItem[] = [
     title: "Alarms",
     path: "/alarms",
     icon: Bell,
+  },
+  {
+    title: "Events",
+    path: "/events",
+    icon: ScrollText,
   },
   {
     title: "Trends",
