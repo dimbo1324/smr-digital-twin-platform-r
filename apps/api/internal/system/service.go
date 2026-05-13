@@ -22,19 +22,19 @@ func (s *Service) Status(_ context.Context) (Status, error) {
 		Mode:            "simulation_only",
 		Environment:     s.cfg.Environment,
 		ControlBoundary: "no_live_control",
-		DataSource:      "mock",
+		DataSource:      "in_memory_fallback",
 		BackendAPI: ComponentStatus{
 			Status:    "connected",
 			LatencyMS: &latency,
 		},
 		MQTTBroker: ComponentStatus{
-			Status: "not_connected",
+			Status: "not_implemented",
 		},
 		SimulationService: ComponentStatus{
 			Status: "not_connected",
 		},
 		Historian: ComponentStatus{
-			Status: "not_connected",
+			Status: "in_memory",
 		},
 		SafetyDisclaimer: safetyDisclaimer,
 		Version:          s.cfg.Version,

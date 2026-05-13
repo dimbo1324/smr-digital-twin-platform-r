@@ -30,7 +30,7 @@ func NewServer(cfg config.Config, logger *slog.Logger, handler *Handler) *Server
 }
 
 func (s *Server) Router() http.Handler {
-	return chain(s.routes(), RequestID, RequestLogger(s.logger), Recoverer(s.logger))
+	return chain(s.routes(), RequestID, RequestLogger(s.logger), Recoverer(s.logger), SecurityHeaders)
 }
 
 func (s *Server) Run(ctx context.Context) error {

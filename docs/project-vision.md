@@ -52,7 +52,8 @@ The MVP includes:
 - Go simulation service for synthetic process and unit overview behaviour.
 - Polling-based live telemetry through the backend API.
 - In-memory telemetry history for local trend views.
-- Basic generated active alarms.
+- In-memory alarm lifecycle for synthetic `ACTIVE`, `ACKNOWLEDGED`, and `CLEARED` instances.
+- Unified in-memory event stream for commands, alarms, and simulation events.
 - Scenario controls for predefined synthetic scenarios.
 - Docker Compose environment for local development.
 - Basic backend, simulation, and frontend checks.
@@ -124,7 +125,7 @@ The frontend should feel like an operations cockpit rather than a generic admin 
 Every few steps should produce something visible or demonstrable:
 
 ```text
-structure -> frontend shell -> static HMI -> mock telemetry -> MQTT -> simulator -> historian -> alarms -> reports
+structure -> frontend shell -> live synthetic HMI -> simulation commands -> alarm/event workflow -> historian persistence -> MQTT -> reports
 ```
 
 ### Observable By Default

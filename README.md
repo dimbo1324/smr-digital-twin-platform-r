@@ -24,12 +24,14 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 - Docker Compose stack for `web`, `api`, and `simulation`.
 - Polling-based live telemetry from frontend to API.
 - Dashboard overview backed by live API status, synthetic telemetry, active alarms, alarm history, command history, and recent events.
-- API proxy from backend to simulation service, with fallback mock data for selected endpoints.
+- API proxy from backend to simulation service, with clearly labelled in-memory fallback data for selected endpoints.
 - Basic synthetic scenarios such as normal, startup, load ramp, high temperature, pressure deviation, pump degradation, sensor drift, and trip.
 - Alarm lifecycle for synthetic alarm instances: `ACTIVE`, `ACKNOWLEDGED`, and `CLEARED`.
 - Alarm history for cleared in-memory alarm instances.
 - Unified recent event stream for command, alarm, equipment, and simulation events.
 - In-memory telemetry history for trend charts.
+- Process asset cards backed by the API assets endpoint, with labelled fallback states.
+- Trends summary cards backed by latest API telemetry and chart history backed by in-memory simulation history.
 - Simulation-only command layer for `V-101` and `P-101` through the API gateway.
 - Valve `V-101` and pump `P-101` state machines that update synthetic telemetry.
 - In-memory command history and event/audit trail for simulation command attempts.

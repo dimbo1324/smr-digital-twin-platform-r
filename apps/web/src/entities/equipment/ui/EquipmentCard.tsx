@@ -46,7 +46,22 @@ export function EquipmentCard({ equipment }: EquipmentCardProps) {
       </CardHeader>
       <CardContent>
         <p className="text-sm leading-6 text-foreground/80">{equipment.description}</p>
-        <p className="mt-3 text-xs text-muted-foreground">{equipment.location}</p>
+        {equipment.keyMetrics && equipment.keyMetrics.length > 0 ? (
+          <div className="mt-4 grid gap-2 sm:grid-cols-2">
+            {equipment.keyMetrics.slice(0, 2).map((metric) => (
+              <div key={metric.name} className="rounded-xl border border-border/60 bg-surface-subtle/60 px-3 py-2">
+                <p className="text-[11px] text-muted-foreground">{metric.name}</p>
+                <p className="mt-1 font-mono text-xs text-foreground">
+                  {Math.round(metric.value * 10) / 10} {metric.unit}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : null}
+        <p className="mt-3 text-xs text-muted-foreground">
+          {equipment.location}
+          {equipment.source ? ` / ${equipment.source}` : ""}
+        </p>
       </CardContent>
     </Card>
   );

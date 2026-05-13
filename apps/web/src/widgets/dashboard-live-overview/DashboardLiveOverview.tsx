@@ -14,6 +14,7 @@ import type { Alarm, AlarmSeverity } from "@/entities/alarms/model/types";
 import type { CommandRecord, CommandStatus } from "@/entities/commands/model/types";
 import type { EventRecord, EventSeverity } from "@/entities/events/model/types";
 import type { TelemetryPoint, TelemetryQuality } from "@/entities/telemetry/model/types";
+import { TREND_TELEMETRY_TAGS } from "@/entities/telemetry/model/processTags";
 import {
   findTelemetryByTag,
   formatTelemetryAge,
@@ -22,6 +23,7 @@ import {
 } from "@/entities/telemetry/lib/selectors";
 import type { SystemStatusState } from "@/shared/api/useSystemStatus";
 import type { LiveTelemetryState } from "@/shared/api/useSimulationTelemetry";
+import { formatRelativeTime, sortByTimestampDesc } from "@/shared/lib/time";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
@@ -46,14 +48,12 @@ interface DashboardLiveOverviewProps {
   };
 }
 
-const telemetryTags = [
-  { tag: "TT-101", label: "Loop Temperature" },
-  { tag: "PT-101", label: "Loop Pressure" },
-  { tag: "FT-101", label: "Loop Flow" },
+const dashboardTelemetryTags = [
+  ...TREND_TELEMETRY_TAGS,
   { tag: "LT-101", label: "Tank Level" },
   { tag: "V-101.POS", label: "Valve Position" },
   { tag: "P-101.STATE", label: "Pump State" },
-];
+] as const;
 
 const severityRank: Record<string, number> = {
   CRITICAL: 5,
@@ -122,7 +122,7 @@ function PlatformStatusCard({ systemStatus }: { systemStatus: SystemStatusState 
             <SummaryRow label="Control boundary" value={systemStatus.status.controlBoundary} />
             <SummaryRow label="Version" value={systemStatus.status.version} />
             <p className="pt-2 text-xs text-muted-foreground">
-              Last sync: {formatAge(systemStatus.status.timestamp)}
+              Last sync: {formatRelativeTime(systemStatus.status.timestamp)}
             </p>
           </>
         )}
@@ -246,7 +246,7 @@ function CommandSummaryCard({
           <>
             <SummaryRow label="Target" value={latestCommand.targetTag} />
             <SummaryRow label="Command" value={latestCommand.commandType} />
-            <SummaryRow label="Requested" value={formatAge(commandTimestamp(latestCommand))} />
+            <SummaryRow label="Requested" value={formatRelativeTime(commandTimestamp(latestCommand))} />
             <PreviewText
               label="Result"
               value={latestCommand.resultMessage ?? latestCommand.errorMessage ?? "Command accepted by simulation layer."}
@@ -288,7 +288,7 @@ function ProcessTelemetrySummary({ telemetry }: { telemetry: LiveTelemetryState 
           <StateNotice label="No telemetry data available from the API." tone="offline" />
         ) : (
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {telemetryTags.map((item) => {
+            {dashboardTelemetryTags.map((item) => {
               const point = findTelemetryByTag(telemetry.points, item.tag);
               return (
                 <TelemetryMetric
@@ -348,7 +348,7 @@ function RecentEventsFeed({ events }: { events: DashboardLiveOverviewProps["even
 function SystemBoundaryPanel({ systemStatus }: { systemStatus: SystemStatusState }) {
   const source =
     systemStatus.state === "connected" && systemStatus.status.dataSource
-      ? systemStatus.status.dataSource
+      ? dataSourceLabel(systemStatus.status.dataSource)
       : "simulation API when available";
 
   return (
@@ -442,7 +442,7 @@ function EventPreview({ event }: { event: EventRecord }) {
       <p className="mt-3 text-sm leading-6 text-foreground/80">{event.message}</p>
       <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
         <span>{event.source}</span>
-        <span>{formatAge(event.timestamp)}</span>
+        <span>{formatRelativeTime(event.timestamp)}</span>
         {event.commandId ? <span className="font-mono">cmd {event.commandId.slice(0, 8)}</span> : null}
         {event.alarmId ? <span className="font-mono">alarm {event.alarmId.slice(0, 8)}</span> : null}
       </div>
@@ -550,15 +550,15 @@ function CapabilityList({
 }
 
 function newestAlarm(alarms: Alarm[]): Alarm | undefined {
-  return [...alarms].sort((left, right) => timestampMs(right.activeAt ?? right.createdAt) - timestampMs(left.activeAt ?? left.createdAt))[0];
+  return sortByTimestampDesc(alarms, (alarm) => alarm.activeAt ?? alarm.createdAt)[0];
 }
 
 function newestCommand(commands: CommandRecord[]): CommandRecord | undefined {
-  return [...commands].sort((left, right) => timestampMs(commandTimestamp(right)) - timestampMs(commandTimestamp(left)))[0];
+  return sortByTimestampDesc(commands, commandTimestamp)[0];
 }
 
 function newestEvents(events: EventRecord[]): EventRecord[] {
-  return [...events].sort((left, right) => timestampMs(right.timestamp) - timestampMs(left.timestamp));
+  return sortByTimestampDesc(events, (event) => event.timestamp);
 }
 
 function commandTimestamp(command: CommandRecord): string {
@@ -567,38 +567,6 @@ function commandTimestamp(command: CommandRecord): string {
 
 function highestAlarmSeverity(alarms: Alarm[]): AlarmSeverity | undefined {
   return [...alarms].sort((left, right) => (severityRank[right.severity] ?? 0) - (severityRank[left.severity] ?? 0))[0]?.severity;
-}
-
-function timestampMs(timestamp: string | undefined): number {
-  if (!timestamp) {
-    return 0;
-  }
-
-  const value = new Date(timestamp).getTime();
-  return Number.isFinite(value) ? value : 0;
-}
-
-function formatAge(timestamp: string | undefined): string {
-  if (!timestamp) {
-    return "No timestamp";
-  }
-
-  const ageMs = Math.max(0, Date.now() - timestampMs(timestamp));
-  if (ageMs < 1000) {
-    return "just now";
-  }
-
-  const seconds = Math.round(ageMs / 1000);
-  if (seconds < 60) {
-    return `${seconds}s ago`;
-  }
-
-  const minutes = Math.round(seconds / 60);
-  if (minutes < 60) {
-    return `${minutes}m ago`;
-  }
-
-  return new Date(timestamp).toLocaleString();
 }
 
 function telemetrySource(point: TelemetryPoint): string {
@@ -623,6 +591,17 @@ function apiLabel(status: string): string {
   }
 
   return "Offline";
+}
+
+function dataSourceLabel(source: string): string {
+  switch (source) {
+    case "synthetic_simulation":
+      return "Synthetic simulation";
+    case "in_memory_fallback":
+      return "In-memory fallback";
+    default:
+      return source;
+  }
 }
 
 function qualityBadge(quality: TelemetryQuality | undefined) {

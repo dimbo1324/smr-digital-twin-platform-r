@@ -1,7 +1,8 @@
-import { mockEquipment } from "@/entities/equipment/model/mockEquipment";
 import { EquipmentCard } from "@/entities/equipment/ui/EquipmentCard";
+import { useAssets } from "@/entities/equipment/api/useAssets";
 import { mockTelemetryPoints } from "@/entities/telemetry/model/mockTelemetry";
 import { findTelemetryByTag } from "@/entities/telemetry/lib/selectors";
+import { PROCESS_ASSET_TAGS, PROCESS_LOOP_TELEMETRY_TAGS } from "@/entities/telemetry/model/processTags";
 import { TelemetryValue } from "@/entities/telemetry/ui/TelemetryValue";
 import { ControlValvePanel } from "@/features/control-valve/ControlValvePanel";
 import { PumpControlPanel } from "@/features/control-pump/PumpControlPanel";
@@ -15,24 +16,16 @@ import { PageShell } from "@/shared/ui/page-shell";
 
 export function ProcessPage() {
   const liveTelemetry = useLatestTelemetry();
+  const assets = useAssets();
   const commandHistory = useCommandHistory();
   const telemetryPoints =
     liveTelemetry.points.length > 0 ? liveTelemetry.points : mockTelemetryPoints;
-  const processTelemetryTags = [
-    "TT-101",
-    "PT-101",
-    "FT-101",
-    "LT-101",
-    "V-101.POS",
-    "V-101.STATE",
-    "P-101.STATE",
-    "P-101.RPM",
-    "HX-101.STATE",
-    "TIC-101.MODE",
-  ];
-  const processTelemetryPoints = processTelemetryTags
-    .map((tag) => findTelemetryByTag(telemetryPoints, tag))
+  const processTelemetryPoints = PROCESS_LOOP_TELEMETRY_TAGS
+    .map(({ tag }) => findTelemetryByTag(telemetryPoints, tag))
     .filter((point) => point !== undefined);
+  const processAssets = assets.assets.filter((asset) =>
+    PROCESS_ASSET_TAGS.includes(asset.tag as (typeof PROCESS_ASSET_TAGS)[number]),
+  );
 
   return (
     <PageShell>
@@ -54,6 +47,7 @@ export function ProcessPage() {
           <ProcessFact label="Loop" value="SMR synthetic energy loop" />
           <ProcessFact label="Command state" value="Simulation-only commands enabled" />
           <ProcessFact label="Telemetry source" value={liveTelemetry.state === "connected" ? "Backend -> Simulation" : "Local fallback"} />
+          <ProcessFact label="Asset source" value={assetSourceLabel(assets.state, assets.source)} />
         </div>
       </section>
 
@@ -96,11 +90,34 @@ export function ProcessPage() {
         state={commandHistory.state}
       />
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {mockEquipment.map((equipment) => (
-          <EquipmentCard key={equipment.id} equipment={equipment} />
-        ))}
-      </section>
+      <Card>
+        <CardHeader className="flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <CardTitle>Process Assets</CardTitle>
+            <CardDescription>
+              Asset cards from <span className="font-mono">/api/v1/assets</span>, filtered to the Thermal Process Loop MVP.
+            </CardDescription>
+          </div>
+          <Badge variant={assets.state === "connected" ? "success" : assets.state === "loading" ? "warning" : "offline"}>
+            {assetSourceLabel(assets.state, assets.source)}
+          </Badge>
+        </CardHeader>
+        <CardContent>
+          {assets.state === "loading" ? (
+            <AssetState label="Loading process assets from API..." />
+          ) : assets.state === "degraded" && processAssets.length === 0 ? (
+            <AssetState label="Asset API unavailable. No live asset registry data is being shown." />
+          ) : processAssets.length === 0 ? (
+            <AssetState label="No process-loop assets returned by the API." />
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {processAssets.map((equipment) => (
+                <EquipmentCard key={equipment.id} equipment={equipment} />
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </PageShell>
   );
 }
@@ -112,4 +129,28 @@ function ProcessFact({ label, value }: { label: string; value: string }) {
       <span className="text-sm font-medium text-foreground">{value}</span>
     </div>
   );
+}
+
+function AssetState({ label }: { label: string }) {
+  return (
+    <div className="rounded-2xl border border-border/70 bg-surface-subtle/60 p-5 text-sm text-muted-foreground">
+      {label}
+    </div>
+  );
+}
+
+function assetSourceLabel(state: "loading" | "connected" | "degraded", source?: string) {
+  if (state === "loading") {
+    return "Loading";
+  }
+
+  if (source === "simulation") {
+    return "Simulation API";
+  }
+
+  if (state === "degraded") {
+    return source ? `${source} fallback` : "Unavailable";
+  }
+
+  return source ?? "API";
 }

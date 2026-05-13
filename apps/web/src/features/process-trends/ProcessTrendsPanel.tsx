@@ -48,9 +48,10 @@ const tags: Array<{
 
 export interface ProcessTrendsPanelProps {
   history?: SimulationTelemetrySnapshot[];
+  dataState?: "loading" | "connected" | "degraded";
 }
 
-export function ProcessTrendsPanel({ history }: ProcessTrendsPanelProps) {
+export function ProcessTrendsPanel({ history, dataState = "loading" }: ProcessTrendsPanelProps) {
   const [activeTag, setActiveTag] = useState<TrendTag>("temperature");
   const selectedTag = useMemo(
     () => tags.find((tag) => tag.id === activeTag) ?? tags[0],
@@ -72,16 +73,35 @@ export function ProcessTrendsPanel({ history }: ProcessTrendsPanelProps) {
       flow: sample.loopFlowKgS ?? sample.coolantFlowPct,
     }));
   }, [history]);
+  const usingFallback = !history || history.length === 0;
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Trend Workspace</CardTitle>
-        <CardDescription>
-          Historian-style view backed by live synthetic simulation history when available.
-        </CardDescription>
+      <CardHeader className="flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <CardTitle>Trend Workspace</CardTitle>
+          <CardDescription>
+            Historian-style view backed by in-memory simulation history when available.
+          </CardDescription>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <span className="rounded-full border border-border/80 bg-background/40 px-3 py-1 text-xs text-muted-foreground">
+            {dataState === "connected" ? "Simulation history" : dataState}
+          </span>
+          {usingFallback ? (
+            <span className="rounded-full border border-warning/30 bg-warning/10 px-3 py-1 text-xs text-warning">
+              Fallback demo graph
+            </span>
+          ) : null}
+        </div>
       </CardHeader>
       <CardContent>
+        {usingFallback ? (
+          <div className="mb-4 rounded-2xl border border-warning/30 bg-warning/10 p-4 text-sm text-muted-foreground">
+            No history samples are available yet, so this chart is showing an explicitly labelled static demo curve.
+          </div>
+        ) : null}
+
         <div className="mb-5 flex flex-wrap gap-2 rounded-full border border-border/70 bg-muted/40 p-1">
           {tags.map((tag) => (
             <Button

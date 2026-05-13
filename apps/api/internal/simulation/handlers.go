@@ -13,6 +13,8 @@ import (
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/api/internal/telemetry"
 )
 
+const maxJSONBodyBytes = 1 << 20
+
 type Gateway struct {
 	client            *Client
 	fallbackAssets    *assets.Service
@@ -33,9 +35,12 @@ func (g *Gateway) SystemStatus(w http.ResponseWriter, r *http.Request) {
 			status.SimulationMode = simStatus.Mode
 			status.SimulationHealth = simStatus.Health
 			status.LastSimulationTimestamp = simStatus.LastSimulationTimestamp
+			status.DataSource = "synthetic_simulation"
 			status.SimulationService.Status = "connected"
+			status.Historian.Status = "in_memory"
 		} else {
 			status.SimulationConnected = false
+			status.DataSource = "in_memory_fallback"
 			status.SimulationService.Status = "not_connected"
 		}
 	}
@@ -103,6 +108,7 @@ func (g *Gateway) AlarmHistory(w http.ResponseWriter, r *http.Request) {
 
 func (g *Gateway) AcknowledgeAlarm(w http.ResponseWriter, r *http.Request) {
 	var request AlarmAcknowledgeRequest
+	r.Body = http.MaxBytesReader(w, r.Body, maxJSONBodyBytes)
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(&request); err != nil {
@@ -160,6 +166,7 @@ func (g *Gateway) Reset(w http.ResponseWriter, r *http.Request) {
 
 func (g *Gateway) SubmitCommand(w http.ResponseWriter, r *http.Request) {
 	var request CommandRequest
+	r.Body = http.MaxBytesReader(w, r.Body, maxJSONBodyBytes)
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(&request); err != nil {

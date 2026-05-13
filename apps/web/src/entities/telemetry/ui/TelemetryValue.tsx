@@ -24,9 +24,9 @@ interface TelemetryScale {
 
 const telemetryRanges: Record<string, { min: number; max: number; label: string }> = {
   "%": { min: 0, max: 100, label: "0-100% engineering range" },
-  C: { min: 250, max: 330, label: "250-330 C mock operating band" },
-  MPa: { min: 0, max: 20, label: "0-20 MPa mock operating band" },
-  "kg/s": { min: 0, max: 160, label: "0-160 kg/s mock operating band" },
+  C: { min: 250, max: 330, label: "250-330 C synthetic band" },
+  MPa: { min: 0, max: 20, label: "0-20 MPa synthetic band" },
+  "kg/s": { min: 0, max: 160, label: "0-160 kg/s synthetic band" },
   MW: { min: 0, max: 320, label: "0-320 MW synthetic band" },
   rpm: { min: 0, max: 3800, label: "0-3800 rpm synthetic band" },
   kPa: { min: 0, max: 100, label: "0-100 kPa synthetic band" },
@@ -86,7 +86,7 @@ export function TelemetryValue({ point }: TelemetryValueProps) {
               aria-valuemin={0}
               aria-valuemax={100}
               aria-valuenow={Math.round(telemetryScale.percent)}
-              aria-label={`${point.label} normalized mock telemetry value`}
+              aria-label={`${point.label} normalized synthetic telemetry value`}
             >
               <div
                 className={cn(

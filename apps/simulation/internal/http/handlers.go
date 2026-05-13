@@ -12,6 +12,8 @@ import (
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/model"
 )
 
+const maxJSONBodyBytes = 1 << 20
+
 type responseMeta struct {
 	Timestamp      time.Time `json:"timestamp"`
 	Source         string    `json:"source"`
@@ -87,6 +89,7 @@ func (h *Handler) AlarmHistory(w http.ResponseWriter, _ *http.Request) {
 
 func (h *Handler) AcknowledgeAlarm(w http.ResponseWriter, r *http.Request) {
 	var request model.AlarmAcknowledgeRequest
+	r.Body = http.MaxBytesReader(w, r.Body, maxJSONBodyBytes)
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(&request); err != nil && !errors.Is(err, io.EOF) {
@@ -138,6 +141,7 @@ func (h *Handler) Reset(w http.ResponseWriter, _ *http.Request) {
 
 func (h *Handler) SubmitCommand(w http.ResponseWriter, r *http.Request) {
 	var request model.CommandRequest
+	r.Body = http.MaxBytesReader(w, r.Body, maxJSONBodyBytes)
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(&request); err != nil {

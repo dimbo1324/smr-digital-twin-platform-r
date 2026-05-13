@@ -8,6 +8,12 @@ export type EquipmentType =
 
 export type EquipmentStatus = "offline" | "mock" | "warning" | "normal";
 
+export interface EquipmentMetric {
+  name: string;
+  value: number;
+  unit: string;
+}
+
 export interface Equipment {
   id: string;
   tag: string;
@@ -17,4 +23,7 @@ export interface Equipment {
   location: string;
   description: string;
   telemetryTags: string[];
+  source?: string;
+  updatedAt?: string;
+  keyMetrics?: EquipmentMetric[];
 }
