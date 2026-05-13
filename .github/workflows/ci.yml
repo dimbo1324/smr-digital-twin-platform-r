@@ -1,0 +1,107 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - "feat/**"
+      - "refactor/**"
+      - "ci/**"
+      - "test/**"
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api:
+    name: API
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: apps/api/go.mod
+          cache-dependency-path: apps/api/go.sum
+
+      - name: Run API tests
+        run: go test ./...
+
+      - name: Run API vet
+        run: go vet ./...
+
+  simulation:
+    name: Simulation
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/simulation
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: apps/simulation/go.mod
+          cache-dependency-path: apps/simulation/go.sum
+
+      - name: Run simulation tests
+        run: go test ./...
+
+      - name: Run simulation vet
+        run: go vet ./...
+
+  web:
+    name: Web
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run frontend typecheck
+        run: npm run typecheck
+
+      - name: Run frontend lint
+        run: npm run lint
+
+      - name: Build frontend
+        run: npm run build
+
+  compose:
+    name: Docker Compose
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show Docker Compose version
+        run: docker compose version
+
+      - name: Validate Docker Compose config
+        run: docker compose config --quiet
