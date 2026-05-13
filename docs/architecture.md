@@ -52,6 +52,19 @@ Command history and events are stored in an in-memory ring buffer inside `apps/s
 
 This is intentionally not a real control path. Commands mutate only in-memory simulated assets and exist to validate the digital twin interaction loop.
 
+## Dashboard Live Overview
+
+The Dashboard is an overview page for the local simulation platform, not a production plant operations screen.
+It reads independent live API sources through REST polling:
+
+- `GET /api/v1/system/status` for API, environment, mode, and safety boundary status.
+- `GET /api/v1/telemetry/latest` for synthetic process-loop telemetry.
+- `GET /api/v1/alarms/active` and `GET /api/v1/alarms/history` for active, acknowledged, and cleared alarm summaries.
+- `GET /api/v1/commands/recent` for the latest simulation-only command result.
+- `GET /api/v1/events/recent` for command, alarm, and simulation activity.
+
+Each dashboard section handles loading, empty, and unavailable states independently. Remaining non-production boundaries are labelled explicitly as synthetic telemetry, in-memory storage, REST polling, and no real plant control.
+
 ## Alarm And Event Operations Flow
 
 The current alarm workflow is also REST plus polling:

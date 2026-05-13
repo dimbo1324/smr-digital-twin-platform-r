@@ -353,6 +353,7 @@ Implemented now:
 - In-memory command history and event/audit trail.
 - Alarm lifecycle with active, acknowledged, and cleared in-memory instances.
 - Events page backed by the unified recent event stream.
+- Dashboard overview backed by live API status, synthetic telemetry, active alarms, command history, and recent events.
 - Frontend HMI shell.
 - API gateway to simulation service.
 - Active alarm generation and display.

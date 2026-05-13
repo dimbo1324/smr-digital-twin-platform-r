@@ -23,6 +23,7 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 - Go simulation service with deterministic synthetic telemetry, scenarios, active alarm generation, and in-memory history.
 - Docker Compose stack for `web`, `api`, and `simulation`.
 - Polling-based live telemetry from frontend to API.
+- Dashboard overview backed by live API status, synthetic telemetry, active alarms, alarm history, command history, and recent events.
 - API proxy from backend to simulation service, with fallback mock data for selected endpoints.
 - Basic synthetic scenarios such as normal, startup, load ramp, high temperature, pressure deviation, pump degradation, sensor drift, and trip.
 - Alarm lifecycle for synthetic alarm instances: `ACTIVE`, `ACKNOWLEDGED`, and `CLEARED`.
@@ -268,13 +269,14 @@ curl http://localhost:8081/api/v1/simulation/events/recent
 - Events are recent in-memory command/alarm/simulation records, not a persistent event log service.
 - Data source switching in UI is not a real runtime integration switch yet.
 - Frontend bundle currently builds as a single large SPA chunk.
+- Dashboard data is live for the local simulator, but it still uses REST polling and in-memory simulation sources.
 - The simulation is synthetic and intentionally not a real reactor physics model.
 
 ## Roadmap
 
 1. Stabilize architecture truth, domain levels, live process UI, and dev commands.
 2. Add simulation-only command layer for valve and pump with event/audit trail.
-3. Add event stream polish, schema generation, and Playwright smoke coverage.
+3. Add dashboard/event stream polish, schema generation, and Playwright smoke coverage.
 4. Add MQTT bridge for simulated telemetry.
 5. Add PID/manual-auto control in simulation-only mode.
 6. Add persistent historian and trend APIs.
