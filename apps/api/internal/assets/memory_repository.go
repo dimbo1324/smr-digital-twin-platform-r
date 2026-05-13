@@ -21,7 +21,7 @@ func NewMemoryRepository() *MemoryRepository {
 				Type:        AssetTypeTank,
 				Status:      AssetStatusMock,
 				Area:        "thermal-loop",
-				Description: "Mock tank for MVP process mnemonic",
+				Description: "In-memory fallback tank for the MVP process mnemonic",
 				Metadata:    metadata,
 			},
 			{
@@ -31,7 +31,7 @@ func NewMemoryRepository() *MemoryRepository {
 				Type:        AssetTypePump,
 				Status:      AssetStatusOffline,
 				Area:        "thermal-loop",
-				Description: "Mock pump for future simulation control",
+				Description: "In-memory fallback pump for simulation-only control UI",
 				Metadata:    metadata,
 			},
 			{
@@ -41,7 +41,7 @@ func NewMemoryRepository() *MemoryRepository {
 				Type:        AssetTypeValve,
 				Status:      AssetStatusWarning,
 				Area:        "thermal-loop",
-				Description: "Mock valve actuator for future command layer",
+				Description: "In-memory fallback valve for simulation-only command UI",
 				Metadata:    metadata,
 			},
 			{
@@ -51,7 +51,7 @@ func NewMemoryRepository() *MemoryRepository {
 				Type:        AssetTypeHeatExchanger,
 				Status:      AssetStatusMock,
 				Area:        "thermal-loop",
-				Description: "Mock heat exchanger for future thermal model",
+				Description: "In-memory fallback heat exchanger for the synthetic process loop",
 				Metadata:    metadata,
 			},
 			{
@@ -61,7 +61,7 @@ func NewMemoryRepository() *MemoryRepository {
 				Type:        AssetTypeSensor,
 				Status:      AssetStatusNormal,
 				Area:        "thermal-loop",
-				Description: "Mock temperature point for HMI telemetry",
+				Description: "In-memory fallback temperature point for HMI telemetry",
 				Metadata:    metadata,
 			},
 			{
@@ -71,7 +71,7 @@ func NewMemoryRepository() *MemoryRepository {
 				Type:        AssetTypeSensor,
 				Status:      AssetStatusNormal,
 				Area:        "thermal-loop",
-				Description: "Mock pressure point for HMI telemetry",
+				Description: "In-memory fallback pressure point for HMI telemetry",
 				Metadata:    metadata,
 			},
 			{
@@ -81,7 +81,7 @@ func NewMemoryRepository() *MemoryRepository {
 				Type:        AssetTypeSensor,
 				Status:      AssetStatusNormal,
 				Area:        "thermal-loop",
-				Description: "Mock flow point for HMI telemetry",
+				Description: "In-memory fallback flow point for HMI telemetry",
 				Metadata:    metadata,
 			},
 			{
@@ -91,7 +91,7 @@ func NewMemoryRepository() *MemoryRepository {
 				Type:        AssetTypeSensor,
 				Status:      AssetStatusNormal,
 				Area:        "thermal-loop",
-				Description: "Mock tank level point for HMI telemetry",
+				Description: "In-memory fallback tank level point for HMI telemetry",
 				Metadata:    metadata,
 			},
 			{
@@ -101,7 +101,7 @@ func NewMemoryRepository() *MemoryRepository {
 				Type:        AssetTypePIDController,
 				Status:      AssetStatusNormal,
 				Area:        "thermal-loop",
-				Description: "Mock PID controller placeholder for future control logic",
+				Description: "In-memory fallback PID placeholder for future control logic",
 				Metadata:    metadata,
 			},
 		},

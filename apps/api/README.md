@@ -1,6 +1,6 @@
 # SMR Twin API
 
-Backend skeleton for **SMR Twin Platform**, a simulation-only digital twin platform for a small modular reactor energy loop. This service currently exposes REST endpoints with mock domain data for the frontend shell. It does not connect to real equipment and does not implement live control.
+Backend API gateway for **SMR Twin Platform**, a simulation-only digital twin platform for a small modular reactor energy loop. This service exposes REST endpoints for the frontend HMI, proxies the Go simulation service, and provides labelled in-memory fallback data when the simulation service is unavailable. It does not connect to real equipment and does not implement real plant control.
 
 ## Scope
 
@@ -8,8 +8,8 @@ Current milestone:
 
 - healthcheck endpoint
 - platform status endpoint
-- in-memory asset registry mock data
-- in-memory latest telemetry mock data
+- simulation-backed assets and clearly labelled in-memory fallback assets
+- simulation-backed latest telemetry and clearly labelled in-memory fallback telemetry
 - optional simulation service gateway integration
 - telemetry history, alarms, and scenario proxy endpoints
 - simulation-only command proxy endpoints for `V-101` and `P-101`
@@ -110,7 +110,7 @@ Returns platform-level status for the frontend dashboard/topbar, including the s
     "platform": "SMR Twin Platform",
     "mode": "simulation_only",
     "controlBoundary": "no_live_control",
-    "dataSource": "mock",
+    "dataSource": "synthetic_simulation",
     "safetyDisclaimer": "Simulation-only interface. No real plant control."
   },
   "meta": {
@@ -136,7 +136,7 @@ Returns the MVP process-loop assets:
 
 ### `GET /api/v1/telemetry/latest`
 
-Returns simulation telemetry when `apps/simulation` is reachable. If the simulation service is unavailable, the API returns fallback mock telemetry with `meta.degraded=true`.
+Returns simulation telemetry when `apps/simulation` is reachable. If the simulation service is unavailable, the API returns labelled in-memory fallback telemetry with `meta.degraded=true`.
 
 The current telemetry contract includes both unit overview tags such as `SMR-POWER`, `TT-PRIMARY`, and `FT-COOLANT`, and process-loop tags such as `TT-101`, `PT-101`, `FT-101`, `LT-101`, `V-101.POS`, `V-101.STATE`, `P-101.STATE`, `P-101.RPM`, `HX-101.STATE`, and `TIC-101.MODE`.
 

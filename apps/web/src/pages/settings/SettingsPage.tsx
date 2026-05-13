@@ -29,7 +29,7 @@ export function SettingsPage() {
           description="Simulation-only runtime controls for synthetic demo scenarios."
           rows={[
             ["Simulation tick rate", simulation.status ? `${simulation.status.tickMs} ms` : "1000 ms"],
-            ["Connection", simulation.state === "connected" ? "Connected" : "Fallback / unavailable"],
+            ["Connection", simulation.state === "connected" ? "Connected" : "In-memory fallback / unavailable"],
             ["Active scenario", simulation.status?.activeScenario ?? "normal"],
             ["Boundary", "Simulation-only, no live control"],
           ]}
@@ -71,7 +71,7 @@ export function SettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {["Mock fallback", "Backend API", "MQTT planned"].map((source) => (
+            {["In-memory fallback", "Backend API", "MQTT planned"].map((source) => (
               <label
                 key={source}
                 className="flex cursor-not-allowed items-center justify-between rounded-2xl border border-border/70 bg-surface-elevated/60 p-4"
@@ -82,7 +82,7 @@ export function SettingsPage() {
                   checked={
                     simulation.state === "connected"
                       ? source === "Backend API"
-                      : source === "Mock fallback"
+                      : source === "In-memory fallback"
                   }
                   readOnly
                   disabled

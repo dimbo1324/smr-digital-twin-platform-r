@@ -60,6 +60,7 @@ func (s *Server) Router() http.Handler {
 		RequestID,
 		RequestLogger(s.logger),
 		Recoverer(s.logger),
+		SecurityHeaders,
 		CORS(s.cfg.AllowedOrigins),
 	)
 }

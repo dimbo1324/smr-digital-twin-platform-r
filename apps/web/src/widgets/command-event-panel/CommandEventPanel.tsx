@@ -1,5 +1,6 @@
 import type { CommandRecord } from "@/entities/commands/model/types";
 import type { EventRecord } from "@/entities/events/model/types";
+import { sortByTimestampDesc } from "@/shared/lib/time";
 import { Badge } from "@/shared/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 
@@ -10,8 +11,8 @@ export interface CommandEventPanelProps {
 }
 
 export function CommandEventPanel({ commands, events, state }: CommandEventPanelProps) {
-  const latestCommands = commands.slice(-5).reverse();
-  const latestEvents = events.slice(-5).reverse();
+  const latestCommands = sortByTimestampDesc(commands, commandTimestamp).slice(0, 5);
+  const latestEvents = sortByTimestampDesc(events, (event) => event.timestamp).slice(0, 5);
 
   return (
     <section className="grid gap-6 xl:grid-cols-2">
@@ -99,4 +100,8 @@ function statusVariant(status: CommandRecord["status"]) {
     default:
       return "outline" as const;
   }
+}
+
+function commandTimestamp(command: CommandRecord) {
+  return command.completedAt ?? command.acceptedAt ?? command.rejectedAt ?? command.requestedAt;
 }

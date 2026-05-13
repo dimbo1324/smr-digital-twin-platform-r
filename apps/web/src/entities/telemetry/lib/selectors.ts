@@ -79,7 +79,7 @@ export function telemetrySourceLabel(point: TelemetryPoint | undefined): string 
   }
 
   if (point.source === "simulation") {
-    return "live";
+    return "simulation";
   }
 
   if (point.source?.includes("mock")) {

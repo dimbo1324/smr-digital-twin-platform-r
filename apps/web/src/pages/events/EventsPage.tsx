@@ -6,6 +6,7 @@ import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { PageShell } from "@/shared/ui/page-shell";
+import { timestampMs } from "@/shared/lib/time";
 import {
   Table,
   TableBody,
@@ -42,7 +43,7 @@ export function EventsPage() {
       .filter((event) => typeFilter === "all" || event.type === typeFilter)
       .filter((event) => sourceFilter === "all" || event.source === sourceFilter)
       .sort((left, right) => {
-        const diff = new Date(right.timestamp).getTime() - new Date(left.timestamp).getTime();
+        const diff = timestampMs(right.timestamp) - timestampMs(left.timestamp);
         return sortOrder === "newest" ? diff : -diff;
       });
   }, [events, severityFilter, sourceFilter, sortOrder, typeFilter]);

@@ -47,7 +47,7 @@ export function Topbar() {
       ? `${systemStatus.status.environment} Environment`
       : "Demo Environment";
   const lastSyncLabel =
-    systemStatus.state === "connected" ? "Last sync: backend API" : "Last sync: mock";
+    systemStatus.state === "connected" ? "Last sync: backend API" : "Last sync: offline fallback";
 
   return (
     <header className="sticky top-0 z-20 border-b border-border/70 bg-background/70 backdrop-blur-2xl">
@@ -117,7 +117,7 @@ function getApiBadge(state: ReturnType<typeof useSystemStatus>["state"]) {
       };
     default:
       return {
-        label: "Offline Mock Data",
+        label: "API Offline",
         variant: "offline" as const,
         icon: WifiOff,
       };

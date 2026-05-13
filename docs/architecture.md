@@ -20,7 +20,7 @@ The current MVP separates domain concerns into two layers:
 - `SMR Unit Overview`: high-level synthetic unit metrics for dashboard, top-level status, scenarios, and trends.
 - `Thermal Process Loop MVP`: lower-level process-loop assets and tags for the HMI mnemonic and future simulation-only command layer.
 
-The API should preserve both layers. Unit overview telemetry must not replace process-loop telemetry, and process-loop UI should prefer live API values before falling back to local mock values.
+The API should preserve both layers. Unit overview telemetry must not replace process-loop telemetry, and process-loop UI should prefer live API values before falling back to clearly labelled in-memory/demo values.
 
 ## Simulation Command Flow
 
@@ -64,6 +64,8 @@ It reads independent live API sources through REST polling:
 - `GET /api/v1/events/recent` for command, alarm, and simulation activity.
 
 Each dashboard section handles loading, empty, and unavailable states independently. Remaining non-production boundaries are labelled explicitly as synthetic telemetry, in-memory storage, REST polling, and no real plant control.
+
+The Process page reads process-loop assets through `GET /api/v1/assets` and process telemetry through `GET /api/v1/telemetry/latest`. The Trends page uses latest telemetry for summary cards and `GET /api/v1/telemetry/history` for chart data. If history is unavailable, the chart explicitly labels its static fallback curve as demo data.
 
 ## Alarm And Event Operations Flow
 

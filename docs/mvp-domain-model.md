@@ -71,7 +71,7 @@ The MVP asset shape is:
 - `description`
 - `metadata`
 
-Current implementation has API fallback process-loop assets and simulation-generated unit overview assets. A persistent asset registry is planned.
+Current implementation exposes simulation-generated assets through the API when the simulation service is reachable, with labelled in-memory fallback process-loop assets when it is not. A persistent asset registry is planned.
 
 ## Telemetry Model
 
@@ -354,6 +354,8 @@ Implemented now:
 - Alarm lifecycle with active, acknowledged, and cleared in-memory instances.
 - Events page backed by the unified recent event stream.
 - Dashboard overview backed by live API status, synthetic telemetry, active alarms, command history, and recent events.
+- Process asset cards backed by `/api/v1/assets`.
+- Trends summary cards backed by latest API telemetry.
 - Frontend HMI shell.
 - API gateway to simulation service.
 - Active alarm generation and display.
@@ -380,8 +382,8 @@ Not implemented:
 ## Planned Extensions
 
 - Expanded command arbitration for user, scenario, PID, and system command sources.
-- Persistent event/audit storage and full event log page.
-- Alarm acknowledgement and cleared history.
+- Persistent event/audit storage with pagination and retention policy.
+- Alarm shelving and richer operator workflow.
 - MQTT telemetry bridge.
 - PID controller and manual/auto command arbitration.
 - Persistent historian and report export.

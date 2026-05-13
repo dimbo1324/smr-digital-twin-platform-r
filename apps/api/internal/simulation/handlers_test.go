@@ -78,6 +78,9 @@ func TestSystemStatusIncludesSimulationConnected(t *testing.T) {
 	if data["simulationConnected"] != true {
 		t.Fatalf("expected simulationConnected true, got %v", data["simulationConnected"])
 	}
+	if data["dataSource"] != "synthetic_simulation" {
+		t.Fatalf("expected synthetic_simulation dataSource, got %v", data["dataSource"])
+	}
 }
 
 func TestActiveAlarmsProxiesSimulationAlarms(t *testing.T) {
