@@ -36,6 +36,7 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 - Valve `V-101` and pump `P-101` state machines that update synthetic telemetry.
 - In-memory command history and event/audit trail for simulation command attempts.
 - Frontend valve and pump control panels with pending, success, and error states.
+- GitHub Actions CI quality gates for Go API, Go simulation, frontend, and Docker Compose config validation.
 - Explicit safety boundary in docs and UI copy.
 
 ## Partially Implemented
@@ -201,6 +202,38 @@ make simulation-run
 make web-build
 ```
 
+## CI Quality Gates
+
+The repository includes a GitHub Actions workflow at `.github/workflows/ci.yml`.
+It runs on `push` and `pull_request` and checks the current simulation-only MVP without deploying or starting the full stack.
+
+Automated CI jobs:
+
+- **API**: `go test ./...` and `go vet ./...` in `apps/api`.
+- **Simulation**: `go test ./...` and `go vet ./...` in `apps/simulation`.
+- **Web**: `npm ci`, `npm run typecheck`, `npm run lint`, and `npm run build` in `apps/web`.
+- **Compose**: `docker compose config --quiet` from the repository root.
+
+Local equivalents:
+
+```bash
+cd apps/api
+go test ./...
+go vet ./...
+
+cd ../simulation
+go test ./...
+go vet ./...
+
+cd ../web
+npm run typecheck
+npm run lint
+npm run build
+
+cd ../..
+docker compose config --quiet
+```
+
 ## Available Services
 
 | Service | URL |
@@ -283,7 +316,7 @@ curl http://localhost:8081/api/v1/simulation/events/recent
 5. Add PID/manual-auto control in simulation-only mode.
 6. Add persistent historian and trend APIs.
 7. Add report export.
-8. Add auth/RBAC, observability, CI, and deployment hardening.
+8. Add auth/RBAC, observability, deployment hardening, and extended CI checks.
 
 ## Documentation
 
