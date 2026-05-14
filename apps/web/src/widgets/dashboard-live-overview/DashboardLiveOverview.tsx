@@ -266,7 +266,7 @@ function ProcessTelemetrySummary({ telemetry }: { telemetry: LiveTelemetryState 
   const hasTelemetry = telemetry.points.length > 0;
 
   return (
-    <Card>
+    <Card data-testid="dashboard-telemetry-summary">
       <CardHeader className="space-y-3">
         <div className="flex items-center justify-between gap-3">
           <CardTitle>Process Telemetry Summary</CardTitle>
@@ -308,7 +308,7 @@ function RecentEventsFeed({ events }: { events: DashboardLiveOverviewProps["even
   const latestEvents = newestEvents(events.events).slice(0, 6);
 
   return (
-    <Card>
+    <Card data-testid="dashboard-events-feed">
       <CardHeader className="space-y-3">
         <div className="flex items-center justify-between gap-3">
           <CardTitle>Recent Events</CardTitle>

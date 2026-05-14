@@ -20,7 +20,7 @@ export function TrendsPage() {
   const summaryState = latestTelemetry.state === "connected" ? "Live telemetry summary" : "Fallback telemetry summary";
 
   return (
-    <PageShell>
+    <PageShell data-testid="trends-page">
       <section className="rounded-3xl border border-border/70 bg-card/80 p-6 shadow-panel">
         <Badge variant={latestTelemetry.state === "connected" ? "success" : "warning"}>
           {summaryState}

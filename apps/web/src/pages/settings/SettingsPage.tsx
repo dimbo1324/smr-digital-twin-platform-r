@@ -11,7 +11,7 @@ export function SettingsPage() {
   const simulation = useSimulationScenarios();
 
   return (
-    <PageShell>
+    <PageShell data-testid="settings-page">
       <section className="grid gap-6 xl:grid-cols-2">
         <SettingsPanel
           title="Project Settings"

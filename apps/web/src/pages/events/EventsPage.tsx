@@ -48,7 +48,7 @@ export function EventsPage() {
   }, [events, severityFilter, sourceFilter, sortOrder, typeFilter]);
 
   return (
-    <PageShell>
+    <PageShell data-testid="events-page">
       <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="rounded-3xl border border-border/70 bg-card/80 p-6 shadow-panel">
           <Badge variant={state === "connected" ? "success" : "warning"}>
@@ -83,15 +83,34 @@ export function EventsPage() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 md:grid-cols-4">
-            <FilterSelect label="Severity" value={severityFilter} values={severities} onChange={setSeverityFilter} />
-            <FilterSelect label="Type" value={typeFilter} values={types} onChange={setTypeFilter} />
-            <FilterSelect label="Source" value={sourceFilter} values={sources} onChange={setSourceFilter} />
+            <FilterSelect
+              label="Severity"
+              value={severityFilter}
+              values={severities}
+              onChange={setSeverityFilter}
+              testId="events-filter-severity"
+            />
+            <FilterSelect
+              label="Type"
+              value={typeFilter}
+              values={types}
+              onChange={setTypeFilter}
+              testId="events-filter-type"
+            />
+            <FilterSelect
+              label="Source"
+              value={sourceFilter}
+              values={sources}
+              onChange={setSourceFilter}
+              testId="events-filter-source"
+            />
             <label className="text-xs font-medium text-muted-foreground">
               Sort
               <select
                 value={sortOrder}
                 onChange={(event) => setSortOrder(event.target.value as SortOrder)}
                 className="mt-2 h-10 w-full rounded-full border border-border/80 bg-card/70 px-3 text-sm text-foreground"
+                data-testid="events-sort-toggle"
               >
                 <option value="newest">Newest first</option>
                 <option value="oldest">Oldest first</option>
@@ -138,7 +157,7 @@ function EventsTable({ events }: { events: EventRecord[] }) {
       </TableHeader>
       <TableBody>
         {events.map((event) => (
-          <TableRow key={event.id}>
+          <TableRow key={event.id} data-testid="event-row">
             <TableCell className="whitespace-nowrap font-mono text-xs text-muted-foreground">
               {new Date(event.timestamp).toLocaleString()}
             </TableCell>
@@ -175,11 +194,13 @@ function FilterSelect({
   value,
   values,
   onChange,
+  testId,
 }: {
   label: string;
   value: string;
   values: string[];
   onChange: (value: string) => void;
+  testId: string;
 }) {
   return (
     <label className="text-xs font-medium text-muted-foreground">
@@ -191,6 +212,7 @@ function FilterSelect({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         className="mt-2 h-10 w-full rounded-full border border-border/80 bg-card/70 px-3 text-sm text-foreground"
+        data-testid={testId}
       >
         <option value="all">All</option>
         {values.map((item) => (

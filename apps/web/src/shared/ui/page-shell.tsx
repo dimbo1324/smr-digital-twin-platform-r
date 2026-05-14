@@ -1,13 +1,11 @@
-import type { PropsWithChildren } from "react";
+import type { HTMLAttributes } from "react";
 import { cn } from "@/shared/lib/cn";
 
-interface PageShellProps extends PropsWithChildren {
-  className?: string;
-}
+type PageShellProps = HTMLAttributes<HTMLDivElement>;
 
-export function PageShell({ children, className }: PageShellProps) {
+export function PageShell({ children, className, ...props }: PageShellProps) {
   return (
-    <div className={cn("flex flex-col gap-7 animate-enter", className)}>
+    <div className={cn("flex flex-col gap-7 animate-enter", className)} {...props}>
       {children}
     </div>
   );

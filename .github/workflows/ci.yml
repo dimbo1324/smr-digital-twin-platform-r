@@ -108,3 +108,82 @@ jobs:
 
       - name: Validate Docker Compose config
         run: docker compose config --quiet
+
+  e2e:
+    name: E2E Smoke
+    runs-on: ubuntu-latest
+    needs: [api, simulation, web, compose]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: apps/api/go.mod
+          cache-dependency-path: |
+            apps/api/go.sum
+            apps/simulation/go.sum
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: apps/web
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        working-directory: apps/web
+        run: npx playwright install --with-deps chromium
+
+      - name: Start simulation service
+        run: |
+          (cd apps/simulation && SIM_HOST=127.0.0.1 SIM_PORT=8081 go run ./cmd/simulation) > /tmp/simulation.log 2>&1 &
+          echo $! > /tmp/simulation.pid
+
+      - name: Start API service
+        run: |
+          (cd apps/api && API_HTTP_HOST=127.0.0.1 API_HTTP_PORT=8080 SIMULATION_ENABLED=true SIMULATION_BASE_URL=http://127.0.0.1:8081 go run ./cmd/api) > /tmp/api.log 2>&1 &
+          echo $! > /tmp/api.pid
+
+      - name: Wait for backend services
+        run: |
+          wait_for_url() {
+            local url="$1"
+            local name="$2"
+            for attempt in {1..60}; do
+              if curl -fsS "$url" > /dev/null; then
+                echo "$name is ready"
+                return 0
+              fi
+              sleep 2
+            done
+            echo "$name did not become ready"
+            echo "--- simulation log ---"
+            cat /tmp/simulation.log || true
+            echo "--- api log ---"
+            cat /tmp/api.log || true
+            return 1
+          }
+
+          wait_for_url http://127.0.0.1:8081/health simulation
+          wait_for_url http://127.0.0.1:8080/health api
+
+      - name: Run Playwright smoke tests
+        working-directory: apps/web
+        env:
+          VITE_API_BASE_URL: http://127.0.0.1:8080
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:5173
+        run: npm run test:e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report/
+          retention-days: 7

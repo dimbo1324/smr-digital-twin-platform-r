@@ -37,6 +37,7 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 - In-memory command history and event/audit trail for simulation command attempts.
 - Frontend valve and pump control panels with pending, success, and error states.
 - GitHub Actions CI quality gates for Go API, Go simulation, frontend, and Docker Compose config validation.
+- Playwright Chromium smoke test for the core browser flow across Dashboard, Process commands, Alarms, and Events.
 - OpenAPI 3.1 contract and JSON Schema reference files under `packages/schemas`.
 - Generated frontend API schema types committed under `apps/web/src/shared/api/generated`.
 - TanStack Query frontend data layer with typed REST hooks, query keys, polling intervals, and mutation invalidation.
@@ -218,6 +219,7 @@ Automated CI jobs:
 - **Web**: `npm ci`, `npm run typecheck`, `npm run lint`, and `npm run build` in `apps/web`.
 - **API types**: `npm run api:types` regenerates frontend contract types before frontend checks.
 - **Compose**: `docker compose config --quiet` from the repository root.
+- **E2E Smoke**: starts the Go simulation and API services, launches the Vite frontend through Playwright, and runs the Chromium smoke flow.
 
 ## Frontend Data Layer
 
@@ -251,6 +253,31 @@ npm run build
 cd ../..
 docker compose config --quiet
 ```
+
+## E2E Smoke Tests
+
+Playwright smoke tests live in `apps/web/tests/e2e`.
+
+The current smoke verifies:
+
+- Dashboard loads with live platform sections.
+- Process page loads with valve, pump, and flow telemetry.
+- `V-101` accepts a simulation-only set-position command.
+- `P-101` accepts a simulation-only start command after normalizing state if needed.
+- Events page shows command-related entries and filters remain usable.
+- Alarms page loads active/history sections and can acknowledge an active alarm when one exists.
+
+Local commands:
+
+```bash
+cd apps/web
+npm run test:e2e:install
+npm run test:e2e
+npm run test:e2e:headed
+npm run test:e2e:ui
+```
+
+For local runs, API and simulation should be reachable at `http://127.0.0.1:8080` and `http://127.0.0.1:8081`; the Playwright config starts only the Vite frontend dev server. CI starts the Go backend services before running the smoke.
 
 ## API Contract / Schemas
 
