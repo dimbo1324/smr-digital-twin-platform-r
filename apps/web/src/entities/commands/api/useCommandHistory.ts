@@ -1,31 +1,27 @@
-import { useCallback, useEffect, useState } from "react";
-import type { CommandRecord } from "@/entities/commands/model/types";
-import { getRecentCommands } from "@/entities/commands/api/commandsApi";
-import type { EventRecord } from "@/entities/events/model/types";
-import { getRecentEvents } from "@/entities/events/api/eventsApi";
+import { useQueryClient } from "@tanstack/react-query";
+import { useRecentCommands } from "@/entities/commands/api/useRecentCommands";
+import { useRecentEvents } from "@/entities/events/api/useRecentEvents";
+import { queryKeys } from "@/shared/api/query-keys";
 
 export function useCommandHistory(refreshMs = 2500) {
-  const [commands, setCommands] = useState<CommandRecord[]>([]);
-  const [events, setEvents] = useState<EventRecord[]>([]);
-  const [state, setState] = useState<"loading" | "connected" | "degraded">("loading");
+  const queryClient = useQueryClient();
+  const commands = useRecentCommands(refreshMs);
+  const events = useRecentEvents(refreshMs);
 
-  const refresh = useCallback(() => {
-    Promise.all([getRecentCommands(), getRecentEvents()])
-      .then(([nextCommands, nextEvents]) => {
-        setCommands(nextCommands);
-        setEvents(nextEvents);
-        setState("connected");
-      })
-      .catch(() => {
-        setState("degraded");
-      });
-  }, []);
+  const state: "loading" | "connected" | "degraded" =
+    commands.state === "loading" || events.state === "loading"
+      ? "loading"
+      : commands.state === "degraded" || events.state === "degraded"
+        ? "degraded"
+        : "connected";
 
-  useEffect(() => {
-    refresh();
-    const interval = window.setInterval(refresh, refreshMs);
-    return () => window.clearInterval(interval);
-  }, [refresh, refreshMs]);
-
-  return { commands, events, state, refresh };
+  return {
+    commands: commands.commands,
+    events: events.events,
+    state,
+    refresh: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.commands.recent });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.events.recent });
+    },
+  };
 }

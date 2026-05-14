@@ -39,6 +39,7 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 - GitHub Actions CI quality gates for Go API, Go simulation, frontend, and Docker Compose config validation.
 - OpenAPI 3.1 contract and JSON Schema reference files under `packages/schemas`.
 - Generated frontend API schema types committed under `apps/web/src/shared/api/generated`.
+- TanStack Query frontend data layer with typed REST hooks, query keys, polling intervals, and mutation invalidation.
 - Explicit safety boundary in docs and UI copy.
 
 ## Partially Implemented
@@ -140,7 +141,7 @@ See [MVP Domain Model](docs/mvp-domain-model.md) for the current contract and pl
 
 | Area | Current / planned stack |
 | --- | --- |
-| Frontend / HMI | React, TypeScript, Vite, Tailwind CSS, shadcn-style UI primitives, Recharts |
+| Frontend / HMI | React, TypeScript, Vite, Tailwind CSS, shadcn-style UI primitives, Recharts, TanStack Query |
 | Backend | Go, REST, structured logging, simulation gateway |
 | Simulation | Go synthetic telemetry engine |
 | Messaging | MQTT planned, not implemented |
@@ -217,6 +218,18 @@ Automated CI jobs:
 - **Web**: `npm ci`, `npm run typecheck`, `npm run lint`, and `npm run build` in `apps/web`.
 - **API types**: `npm run api:types` regenerates frontend contract types before frontend checks.
 - **Compose**: `docker compose config --quiet` from the repository root.
+
+## Frontend Data Layer
+
+The frontend API layer uses the generated OpenAPI TypeScript types with a small typed REST client and TanStack Query hooks.
+
+Current behavior:
+
+- `VITE_API_BASE_URL` configures the API gateway URL, with `http://localhost:8080` as the local fallback.
+- Live simulation data still uses REST polling, not WebSocket or SSE.
+- Query keys are centralized in `apps/web/src/shared/api/query-keys.ts`.
+- Mutations for simulation-only commands, alarm acknowledgement, and scenarios invalidate related telemetry, alarm, event, command, and scenario queries.
+- Runtime API validation is not implemented yet; OpenAPI is currently the contract and frontend type source.
 
 Local equivalents:
 

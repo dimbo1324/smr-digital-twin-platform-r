@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import type { Equipment } from "@/entities/equipment/model/types";
 import { getAssets } from "@/entities/equipment/api/assetsApi";
+import { queryKeys } from "@/shared/api/query-keys";
 
 export interface AssetsState {
   state: "loading" | "connected" | "degraded";
@@ -9,29 +10,25 @@ export interface AssetsState {
   degraded?: boolean;
 }
 
-export function useAssets(refreshMs = 5000): AssetsState & { refresh: () => void } {
-  const [state, setState] = useState<AssetsState>({ state: "loading", assets: [] });
+export function useAssets(refreshMs = 60_000): AssetsState & { refresh: () => void } {
+  const query = useQuery({
+    queryKey: queryKeys.assets.all,
+    queryFn: ({ signal }) => getAssets(signal),
+    refetchInterval: refreshMs,
+    staleTime: 30_000,
+  });
 
-  const refresh = useCallback(() => {
-    getAssets()
-      .then((result) => {
-        setState({
-          state: result.meta.degraded ? "degraded" : "connected",
-          assets: result.assets,
-          source: result.meta.source,
-          degraded: result.meta.degraded,
-        });
-      })
-      .catch(() => {
-        setState((current) => ({ ...current, state: "degraded" }));
-      });
-  }, []);
+  const state: AssetsState["state"] = query.isLoading
+    ? "loading"
+    : query.isError || query.data?.meta.degraded
+      ? "degraded"
+      : "connected";
 
-  useEffect(() => {
-    refresh();
-    const interval = window.setInterval(refresh, refreshMs);
-    return () => window.clearInterval(interval);
-  }, [refresh, refreshMs]);
-
-  return { ...state, refresh };
+  return {
+    state,
+    assets: query.data?.assets ?? [],
+    source: query.data?.meta.source,
+    degraded: query.data?.meta.degraded,
+    refresh: () => void query.refetch(),
+  };
 }

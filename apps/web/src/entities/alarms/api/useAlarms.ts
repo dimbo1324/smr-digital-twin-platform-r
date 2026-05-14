@@ -1,49 +1,46 @@
-import { useCallback, useEffect, useState } from "react";
-import type { Alarm } from "@/entities/alarms/model/types";
-import { acknowledgeAlarm, getActiveAlarms, getAlarmHistory } from "@/entities/alarms/api/alarmsApi";
+import { useState } from "react";
+import { useAcknowledgeAlarm } from "@/entities/alarms/api/useAcknowledgeAlarm";
+import { useActiveAlarms } from "@/entities/alarms/api/useActiveAlarms";
+import { useAlarmHistory } from "@/entities/alarms/api/useAlarmHistory";
 
 export function useAlarms(refreshMs = 2000) {
-  const [activeAlarms, setActiveAlarms] = useState<Alarm[]>([]);
-  const [history, setHistory] = useState<Alarm[]>([]);
-  const [state, setState] = useState<"loading" | "connected" | "degraded">("loading");
-  const [acknowledgingId, setAcknowledgingId] = useState<string | undefined>();
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | undefined>();
+  const active = useActiveAlarms(refreshMs);
+  const history = useAlarmHistory(5000);
+  const acknowledgeMutation = useAcknowledgeAlarm();
 
-  const refresh = useCallback(() => {
-    Promise.all([getActiveAlarms(), getAlarmHistory()])
-      .then(([nextActive, nextHistory]) => {
-        setActiveAlarms(nextActive);
-        setHistory(nextHistory);
-        setState("connected");
+  const state: "loading" | "connected" | "degraded" =
+    active.state === "loading" || history.state === "loading"
+      ? "loading"
+      : active.state === "degraded" || history.state === "degraded"
+        ? "degraded"
+        : "connected";
+
+  const acknowledge = (id: string) => {
+    setFeedback(undefined);
+    return acknowledgeMutation
+      .mutateAsync({ id })
+      .then((alarm) => {
+        setFeedback({ type: "success", message: `Alarm ${alarm.code ?? alarm.id} acknowledged.` });
+        return alarm;
       })
-      .catch(() => setState("degraded"));
-  }, []);
+      .catch((error: unknown) => {
+        const message = error instanceof Error ? error.message : "Failed to acknowledge alarm";
+        setFeedback({ type: "error", message });
+        throw error;
+      });
+  };
 
-  useEffect(() => {
-    refresh();
-    const interval = window.setInterval(refresh, refreshMs);
-    return () => window.clearInterval(interval);
-  }, [refresh, refreshMs]);
-
-  const acknowledge = useCallback(
-    (id: string) => {
-      setAcknowledgingId(id);
-      setFeedback(undefined);
-      return acknowledgeAlarm(id)
-        .then((alarm) => {
-          setFeedback({ type: "success", message: `Alarm ${alarm.code ?? alarm.id} acknowledged.` });
-          refresh();
-          return alarm;
-        })
-        .catch((error: unknown) => {
-          const message = error instanceof Error ? error.message : "Failed to acknowledge alarm";
-          setFeedback({ type: "error", message });
-          throw error;
-        })
-        .finally(() => setAcknowledgingId(undefined));
+  return {
+    activeAlarms: active.activeAlarms,
+    history: history.history,
+    state,
+    acknowledgingId: acknowledgeMutation.variables?.id,
+    feedback,
+    refresh: () => {
+      active.refresh();
+      history.refresh();
     },
-    [refresh],
-  );
-
-  return { activeAlarms, history, state, acknowledgingId, feedback, refresh, acknowledge };
+    acknowledge,
+  };
 }

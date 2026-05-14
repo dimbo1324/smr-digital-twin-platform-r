@@ -6,8 +6,8 @@ export interface AssetsResult {
   meta: ApiMeta;
 }
 
-export async function getAssets(): Promise<AssetsResult> {
-  const response = await apiGet<Asset[]>("/api/v1/assets");
+export async function getAssets(signal?: AbortSignal): Promise<AssetsResult> {
+  const response = await apiGet<Asset[]>("/api/v1/assets", { signal });
   return {
     assets: response.data.map((asset) => toEquipment(asset, response.meta.source)),
     meta: response.meta,

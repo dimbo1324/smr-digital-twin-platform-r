@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { getRecentEvents } from "@/entities/events/api/eventsApi";
+import { getActiveAlarms } from "@/entities/alarms/api/alarmsApi";
 import { queryKeys } from "@/shared/api/query-keys";
 
-export function useRecentEvents(refreshMs = 2500) {
+export function useActiveAlarms(refreshMs = 2000) {
   const query = useQuery({
-    queryKey: queryKeys.events.recent,
-    queryFn: ({ signal }) => getRecentEvents(signal),
+    queryKey: queryKeys.alarms.active,
+    queryFn: ({ signal }) => getActiveAlarms(signal),
     refetchInterval: refreshMs,
   });
 
@@ -16,7 +16,7 @@ export function useRecentEvents(refreshMs = 2500) {
       : "connected";
 
   return {
-    events: query.data ?? [],
+    activeAlarms: query.data ?? [],
     state,
     refresh: () => void query.refetch(),
   };
