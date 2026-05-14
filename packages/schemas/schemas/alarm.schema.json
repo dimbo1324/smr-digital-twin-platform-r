@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://smr-twin.local/schemas/alarm.schema.json",
+  "title": "AlarmInstance",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string" },
+    "ruleId": { "type": "string" },
+    "assetId": { "type": "string" },
+    "tag": { "type": "string" },
+    "code": { "type": "string" },
+    "title": { "type": "string" },
+    "message": { "type": "string" },
+    "severity": { "type": "string", "enum": ["INFO", "WARNING", "HIGH", "ALARM", "CRITICAL"] },
+    "status": { "type": "string", "enum": ["ACTIVE", "ACKNOWLEDGED", "CLEARED"] },
+    "value": { "type": "number" },
+    "lastValue": { "type": "number" },
+    "threshold": { "type": "number" },
+    "unit": { "type": "string" },
+    "source": { "type": "string" },
+    "startedAt": { "type": "string", "format": "date-time" },
+    "activeAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" },
+    "acknowledgedAt": { "type": "string", "format": "date-time" },
+    "acknowledgedBy": { "type": "string" },
+    "clearedAt": { "type": "string", "format": "date-time" },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    }
+  },
+  "required": ["id", "ruleId", "assetId", "tag", "code", "title", "message", "severity", "status", "value", "lastValue", "threshold", "unit", "source", "startedAt", "activeAt", "updatedAt"],
+  "additionalProperties": false
+}

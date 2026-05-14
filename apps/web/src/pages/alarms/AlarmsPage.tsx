@@ -16,9 +16,7 @@ import {
 } from "@/shared/ui/table";
 
 const severityVariant: Record<Alarm["severity"], "outline" | "warning" | "destructive"> = {
-  LOW: "outline",
   INFO: "outline",
-  MEDIUM: "warning",
   WARNING: "warning",
   HIGH: "destructive",
   ALARM: "destructive",

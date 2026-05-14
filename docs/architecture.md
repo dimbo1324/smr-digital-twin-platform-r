@@ -13,6 +13,23 @@ The frontend calls only `apps/api`. The simulation service remains an internal b
 
 The simulation engine is synthetic and deterministic. It generates telemetry for portfolio/demo workflows only and is not a real plant model.
 
+## API Contract Layer
+
+The current contract layer is machine-readable but intentionally lightweight:
+
+```mermaid
+flowchart LR
+    OpenAPI["packages/schemas/openapi.yaml"] --> Generator["apps/web npm run api:types"]
+    Generator --> TSTypes["apps/web/src/shared/api/generated/schema.ts"]
+    TSTypes --> FrontendAPI["Frontend API/entity type aliases"]
+    GoAPI["apps/api handlers and DTOs"] -. kept aligned manually .-> OpenAPI
+    SimulationDTOs["apps/simulation DTOs"] -. proxied by API .-> OpenAPI
+```
+
+`packages/schemas/openapi.yaml` documents implemented REST endpoints only. The frontend generated types reduce drift for core DTOs such as `Asset`, `TelemetryPoint`, `Command`, `AlarmInstance`, `Event`, `SystemStatus`, `Scenario`, and API envelopes.
+
+This is not an OpenAPI-first backend rewrite. Go server stubs, generated Go clients, and runtime request/response validation are not implemented yet. The API gateway remains the runtime contract boundary for the frontend.
+
 ## Domain Layers
 
 The current MVP separates domain concerns into two layers:

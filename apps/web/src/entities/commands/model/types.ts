@@ -1,40 +1,9 @@
-export type CommandTargetTag = "V-101" | "P-101";
+import type { components } from "@/shared/api/generated/schema";
 
-export type CommandType = "OPEN" | "CLOSE" | "STOP" | "SET_POSITION" | "START";
-
-export type CommandStatus =
-  | "RECEIVED"
-  | "ACCEPTED"
-  | "REJECTED"
-  | "IN_PROGRESS"
-  | "COMPLETED"
-  | "FAILED";
-
-export interface CommandPayload {
-  positionPercent?: number;
-  reason?: string;
-}
-
-export interface CommandRequest {
-  targetTag: CommandTargetTag;
-  commandType: CommandType;
-  payload?: CommandPayload;
-}
-
-export interface CommandRecord {
-  id: string;
-  targetTag: CommandTargetTag;
-  commandType: CommandType;
-  source: string;
-  requestedBy: string;
-  payload: CommandPayload;
-  status: CommandStatus;
-  requestedAt: string;
-  acceptedAt?: string;
-  completedAt?: string;
-  rejectedAt?: string;
-  resultMessage?: string;
-  errorCode?: string;
-  errorMessage?: string;
-  correlationId?: string;
-}
+export type Command = components["schemas"]["Command"];
+export type CommandRequest = components["schemas"]["CommandRequest"];
+export type CommandPayload = components["schemas"]["CommandPayload"];
+export type CommandTargetTag = CommandRequest["targetTag"];
+export type CommandType = Command["commandType"];
+export type CommandStatus = Command["status"];
+export type CommandRecord = Command;

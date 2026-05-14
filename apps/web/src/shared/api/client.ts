@@ -1,10 +1,6 @@
-export interface ApiMeta {
-  requestId?: string;
-  timestamp: string;
-  count?: number;
-  source?: string;
-  degraded?: boolean;
-}
+import type { components } from "@/shared/api/generated/schema";
+
+export type ApiMeta = components["schemas"]["ApiMeta"];
 
 export interface ApiEnvelope<T> {
   data: T;

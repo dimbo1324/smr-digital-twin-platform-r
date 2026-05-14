@@ -1,4 +1,4 @@
-.PHONY: help dev dev-up dev-down down status test lint api-dev api-run api-build api-test api-vet simulation-run simulation-build simulation-test simulation-vet web-build web-lint web-typecheck
+.PHONY: help dev dev-up dev-down down status test lint api-dev api-run api-build api-test api-vet simulation-run simulation-build simulation-test simulation-vet web-api-types web-build web-lint web-typecheck
 
 WEB_RUN = docker compose run --rm --no-deps web sh -c
 
@@ -17,6 +17,7 @@ help:
 	@echo "  make simulation-run   - run the Go simulation service locally"
 	@echo "  make simulation-build - build the Go simulation service"
 	@echo "  make simulation-test  - run simulation tests"
+	@echo "  make web-api-types    - regenerate frontend API contract types"
 	@echo "  make web-build        - build the frontend in the web container"
 	@echo "  make web-lint         - lint the frontend in the web container"
 	@echo "  make web-typecheck    - typecheck the frontend in the web container"
@@ -34,7 +35,7 @@ down: dev-down
 status:
 	docker compose ps
 
-test: api-test simulation-test web-typecheck web-lint web-build
+test: api-test simulation-test web-api-types web-typecheck web-lint web-build
 
 lint: api-vet simulation-vet web-lint
 
@@ -63,6 +64,9 @@ simulation-test:
 
 simulation-vet:
 	cd apps/simulation && go vet ./...
+
+web-api-types:
+	$(WEB_RUN) "npm install && npm run api:types"
 
 web-build:
 	$(WEB_RUN) "npm install && npm run build"

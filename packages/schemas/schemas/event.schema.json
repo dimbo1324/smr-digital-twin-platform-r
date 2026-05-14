@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://smr-twin.local/schemas/event.schema.json",
+  "title": "Event",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "type": {
+      "type": "string",
+      "enum": ["COMMAND_RECEIVED", "COMMAND_ACCEPTED", "COMMAND_REJECTED", "COMMAND_STARTED", "COMMAND_COMPLETED", "COMMAND_FAILED", "EQUIPMENT_STATE_CHANGED", "ALARM_ACTIVATED", "ALARM_ACKNOWLEDGED", "ALARM_CLEARED", "SYSTEM_STATUS_CHANGED", "SIMULATION_STATE_UPDATED", "SCENARIO_STARTED", "SCENARIO_COMPLETED"]
+    },
+    "source": { "type": "string" },
+    "severity": { "type": "string", "enum": ["INFO", "WARNING", "ERROR", "CRITICAL"] },
+    "targetTag": { "type": "string" },
+    "commandId": { "type": "string" },
+    "alarmId": { "type": "string" },
+    "message": { "type": "string" },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    }
+  },
+  "required": ["id", "timestamp", "type", "source", "severity", "message"],
+  "additionalProperties": false
+}

@@ -4,6 +4,7 @@
   "version": "0.1.0-mvp-shell",
   "type": "module",
   "scripts": {
+    "api:types": "node scripts/generate-api-types.mjs",
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",

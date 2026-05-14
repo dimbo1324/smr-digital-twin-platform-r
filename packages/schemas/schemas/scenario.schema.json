@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://smr-twin.local/schemas/scenario.schema.json",
+  "title": "Scenario",
+  "type": "object",
+  "properties": {
+    "name": { "type": "string" },
+    "title": { "type": "string" },
+    "description": { "type": "string" },
+    "simulationOnly": { "type": "boolean" }
+  },
+  "required": ["name", "title", "description", "simulationOnly"],
+  "additionalProperties": false
+}

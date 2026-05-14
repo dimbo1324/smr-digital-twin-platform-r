@@ -1,14 +1,4 @@
-export type EventSeverity = "INFO" | "NOTICE" | "WARNING" | "ERROR" | "CRITICAL";
+import type { components } from "@/shared/api/generated/schema";
 
-export interface EventRecord {
-  id: string;
-  timestamp: string;
-  type: string;
-  source: string;
-  severity: EventSeverity;
-  targetTag?: string;
-  commandId?: string;
-  alarmId?: string;
-  message: string;
-  metadata?: Record<string, string>;
-}
+export type EventRecord = components["schemas"]["Event"];
+export type EventSeverity = EventRecord["severity"];

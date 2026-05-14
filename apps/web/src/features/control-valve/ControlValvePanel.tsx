@@ -2,7 +2,7 @@ import { useState } from "react";
 import { CheckCircle2, Clock3, Power, Send, SlidersHorizontal, XCircle } from "lucide-react";
 import type { CommandRecord, CommandType } from "@/entities/commands/model/types";
 import { sendCommand } from "@/entities/commands/api/commandsApi";
-import type { TelemetryPoint } from "@/entities/telemetry/model/types";
+import type { TelemetryDisplayPoint } from "@/entities/telemetry/model/types";
 import {
   findTelemetryByTag,
   formatTelemetryAge,
@@ -20,7 +20,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 type DataState = "loading" | "connected" | "degraded";
 
 export interface ControlValvePanelProps {
-  telemetryPoints: TelemetryPoint[];
+  telemetryPoints: TelemetryDisplayPoint[];
   dataState: DataState;
   onCommandComplete?: () => void;
 }

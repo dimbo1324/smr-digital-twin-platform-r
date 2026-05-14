@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://smr-twin.local/schemas/asset.schema.json",
+  "title": "Asset",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string" },
+    "tag": { "type": "string" },
+    "name": { "type": "string" },
+    "type": { "type": "string" },
+    "status": { "type": "string" },
+    "area": { "type": "string" },
+    "unit": { "type": "string" },
+    "safetyClass": { "type": "string" },
+    "description": { "type": "string" },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "site": { "type": "string" },
+        "unit": { "type": "string" }
+      },
+      "additionalProperties": { "type": "string" }
+    },
+    "keyMetrics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "value": { "type": "number" },
+          "unit": { "type": "string" }
+        },
+        "required": ["name", "value", "unit"],
+        "additionalProperties": false
+      }
+    },
+    "updatedAt": { "type": "string", "format": "date-time" }
+  },
+  "required": ["id", "tag", "name", "type", "status"],
+  "additionalProperties": false
+}

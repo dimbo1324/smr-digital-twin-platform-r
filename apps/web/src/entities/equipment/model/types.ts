@@ -1,3 +1,8 @@
+import type { components } from "@/shared/api/generated/schema";
+
+export type Asset = components["schemas"]["Asset"];
+export type AssetMetric = components["schemas"]["AssetMetric"];
+
 export type EquipmentType =
   | "tank"
   | "pump"
@@ -7,12 +12,6 @@ export type EquipmentType =
   | "controller";
 
 export type EquipmentStatus = "offline" | "mock" | "warning" | "normal";
-
-export interface EquipmentMetric {
-  name: string;
-  value: number;
-  unit: string;
-}
 
 export interface Equipment {
   id: string;
@@ -25,5 +24,5 @@ export interface Equipment {
   telemetryTags: string[];
   source?: string;
   updatedAt?: string;
-  keyMetrics?: EquipmentMetric[];
+  keyMetrics?: AssetMetric[];
 }

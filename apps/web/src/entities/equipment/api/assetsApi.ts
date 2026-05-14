@@ -1,29 +1,5 @@
-import type { Equipment, EquipmentStatus, EquipmentType } from "@/entities/equipment/model/types";
+import type { Asset, Equipment, EquipmentStatus, EquipmentType } from "@/entities/equipment/model/types";
 import { apiGet, type ApiMeta } from "@/shared/api/client";
-
-interface ApiAssetMetric {
-  name: string;
-  value: number;
-  unit: string;
-}
-
-interface ApiAsset {
-  id: string;
-  tag: string;
-  name: string;
-  type: string;
-  status: string;
-  area?: string;
-  unit?: string;
-  safetyClass?: string;
-  description?: string;
-  keyMetrics?: ApiAssetMetric[];
-  updatedAt?: string;
-  metadata?: {
-    site?: string;
-    unit?: string;
-  };
-}
 
 export interface AssetsResult {
   assets: Equipment[];
@@ -31,14 +7,14 @@ export interface AssetsResult {
 }
 
 export async function getAssets(): Promise<AssetsResult> {
-  const response = await apiGet<ApiAsset[]>("/api/v1/assets");
+  const response = await apiGet<Asset[]>("/api/v1/assets");
   return {
     assets: response.data.map((asset) => toEquipment(asset, response.meta.source)),
     meta: response.meta,
   };
 }
 
-function toEquipment(asset: ApiAsset, source?: string): Equipment {
+function toEquipment(asset: Asset, source?: string): Equipment {
   return {
     id: asset.id,
     tag: asset.tag,
@@ -89,7 +65,7 @@ function normalizeEquipmentStatus(status: string): EquipmentStatus {
   }
 }
 
-function telemetryTagsForAsset(asset: ApiAsset): string[] {
+function telemetryTagsForAsset(asset: Asset): string[] {
   if (asset.tag.startsWith("TT-") || asset.tag.startsWith("PT-") || asset.tag.startsWith("FT-") || asset.tag.startsWith("LT-")) {
     return [asset.tag];
   }

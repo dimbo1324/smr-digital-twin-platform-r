@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://smr-twin.local/schemas/system-status.schema.json",
+  "title": "SystemStatus",
+  "type": "object",
+  "properties": {
+    "platform": { "type": "string" },
+    "mode": { "type": "string" },
+    "environment": { "type": "string" },
+    "controlBoundary": { "type": "string" },
+    "dataSource": { "type": "string" },
+    "backendApi": { "$ref": "#/$defs/componentStatus" },
+    "mqttBroker": { "$ref": "#/$defs/componentStatus" },
+    "simulationService": { "$ref": "#/$defs/componentStatus" },
+    "historian": { "$ref": "#/$defs/componentStatus" },
+    "simulationConnected": { "type": "boolean" },
+    "simulationMode": { "type": "string" },
+    "simulationHealth": { "type": "string" },
+    "lastSimulationTimestamp": { "type": "string" },
+    "safetyDisclaimer": { "type": "string" },
+    "version": { "type": "string" },
+    "timestamp": { "type": "string", "format": "date-time" }
+  },
+  "required": ["platform", "mode", "environment", "controlBoundary", "dataSource", "backendApi", "mqttBroker", "simulationService", "historian", "simulationConnected", "safetyDisclaimer", "version", "timestamp"],
+  "additionalProperties": false,
+  "$defs": {
+    "componentStatus": {
+      "type": "object",
+      "properties": {
+        "status": { "type": "string" },
+        "latencyMs": { "type": "integer" }
+      },
+      "required": ["status"],
+      "additionalProperties": false
+    }
+  }
+}

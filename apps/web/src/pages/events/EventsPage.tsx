@@ -20,7 +20,6 @@ type SortOrder = "newest" | "oldest";
 
 const severityVariant: Record<string, "outline" | "warning" | "destructive"> = {
   INFO: "outline",
-  NOTICE: "outline",
   WARNING: "warning",
   ERROR: "destructive",
   CRITICAL: "destructive",

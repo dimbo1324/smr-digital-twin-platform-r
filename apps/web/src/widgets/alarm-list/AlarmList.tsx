@@ -14,9 +14,7 @@ const severityVariant: Record<
   AlarmSeverity,
   "outline" | "warning" | "destructive"
 > = {
-  LOW: "outline",
   INFO: "outline",
-  MEDIUM: "warning",
   WARNING: "warning",
   HIGH: "destructive",
   ALARM: "destructive",
