@@ -169,7 +169,7 @@ export interface components {
       "acknowledgedAt"?: string;
       "acknowledgedBy"?: string;
       "clearedAt"?: string;
-      "metadata"?: { [key: string]: string };
+      "metadata"?: { [key: string]: unknown };
     };
     "AcknowledgeAlarmRequest": {
       "acknowledgedBy"?: string;
@@ -185,7 +185,7 @@ export interface components {
       "commandId"?: string;
       "alarmId"?: string;
       "message": string;
-      "metadata"?: { [key: string]: string };
+      "metadata"?: { [key: string]: unknown };
     };
     "Scenario": {
       "name": string;

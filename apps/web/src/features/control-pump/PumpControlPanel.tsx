@@ -62,6 +62,8 @@ export function PumpControlPanel({
         const message =
           error instanceof ApiError
             ? `${error.code ?? "COMMAND_FAILED"}: ${error.message}`
+            : error instanceof Error
+              ? error.message
             : "Command request failed";
         setFeedback({ state: "error", message });
       });

@@ -18,7 +18,7 @@
     "message": { "type": "string" },
     "metadata": {
       "type": "object",
-      "additionalProperties": { "type": "string" }
+      "additionalProperties": true
     }
   },
   "required": ["id", "timestamp", "type", "source", "severity", "message"],

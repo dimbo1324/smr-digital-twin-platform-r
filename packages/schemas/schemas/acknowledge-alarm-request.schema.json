@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://smr-twin.local/schemas/acknowledge-alarm-request.schema.json",
+  "title": "AcknowledgeAlarmRequest",
+  "type": "object",
+  "properties": {
+    "acknowledgedBy": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "comment": { "type": "string", "maxLength": 500 }
+  },
+  "additionalProperties": false
+}

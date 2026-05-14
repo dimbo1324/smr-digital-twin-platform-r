@@ -25,4 +25,24 @@ The generator is intentionally lightweight and dependency-free for this mileston
 - Keep `Asset`, `TelemetryPoint`, `Command`, `AlarmInstance`, `Event`, and `SystemStatus` aligned with the Go API and simulation service.
 - Update generated frontend types whenever `openapi.yaml` changes.
 
-Runtime request/response validation and Go server code generation are not implemented yet.
+## Runtime Validation
+
+The frontend HTTP client uses selected JSON Schema files for dev/test runtime validation. It validates `data` payloads from API envelopes and risky request bodies such as simulation commands and alarm acknowledgements.
+
+From `apps/web`:
+
+```bash
+npm run api:validate-schemas
+```
+
+This compiles all `schemas/*.schema.json` files and fails fast if a schema is malformed.
+
+When changing API payloads:
+
+1. Update `openapi.yaml`.
+2. Update the matching `schemas/*.schema.json` file.
+3. Run `npm run api:types`.
+4. Run `npm run api:validate-schemas`.
+5. Keep runtime validation mappings in `apps/web/src/shared/api/validation/schemas.ts` aligned.
+
+Go server code generation and Go runtime validation from JSON Schema are not implemented yet.

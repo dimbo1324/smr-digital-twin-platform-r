@@ -41,6 +41,7 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 - OpenAPI 3.1 contract and JSON Schema reference files under `packages/schemas`.
 - Generated frontend API schema types committed under `apps/web/src/shared/api/generated`.
 - TanStack Query frontend data layer with typed REST hooks, query keys, polling intervals, and mutation invalidation.
+- Runtime API validation in the frontend HTTP client for dev/test contract drift detection.
 - Explicit safety boundary in docs and UI copy.
 
 ## Partially Implemented
@@ -51,7 +52,7 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 - **Process UI**: process-loop values are bound to live API telemetry when available. Valve and pump controls call simulation-only command endpoints; other process controls remain planned.
 - **Scenario controls**: predefined synthetic scenarios can be started/stopped through the API. Declarative YAML/JSON scenario definitions are planned.
 - **Assets**: API exposes current simulation assets and fallback process-loop assets. Persistent asset registry is planned.
-- **API contract layer**: OpenAPI and generated TypeScript types exist for core DTOs. Go server code generation and runtime request/response validation are not implemented yet.
+- **API contract layer**: OpenAPI and generated TypeScript types exist for core DTOs. Frontend runtime validation exists for selected dev/test request and response payloads; Go server code generation is not implemented yet.
 
 ## Planned Next
 
@@ -218,6 +219,7 @@ Automated CI jobs:
 - **Simulation**: `go test ./...` and `go vet ./...` in `apps/simulation`.
 - **Web**: `npm ci`, `npm run typecheck`, `npm run lint`, and `npm run build` in `apps/web`.
 - **API types**: `npm run api:types` regenerates frontend contract types before frontend checks.
+- **API schemas**: `npm run api:validate-schemas` compiles JSON Schema contract files.
 - **Compose**: `docker compose config --quiet` from the repository root.
 - **E2E Smoke**: starts the Go simulation and API services, launches the Vite frontend through Playwright, and runs the Chromium smoke flow.
 
@@ -231,7 +233,7 @@ Current behavior:
 - Live simulation data still uses REST polling, not WebSocket or SSE.
 - Query keys are centralized in `apps/web/src/shared/api/query-keys.ts`.
 - Mutations for simulation-only commands, alarm acknowledgement, and scenarios invalidate related telemetry, alarm, event, command, and scenario queries.
-- Runtime API validation is not implemented yet; OpenAPI is currently the contract and frontend type source.
+- Runtime API validation can run in `warn` or `strict` mode for selected request/response payloads.
 
 Local equivalents:
 
@@ -297,6 +299,24 @@ npm run api:types
 ```
 
 This contract layer is documentation and frontend type source for the current API gateway. Runtime schema validation and generated Go server stubs are not implemented yet.
+
+## Runtime API Validation
+
+The frontend HTTP client validates selected API payloads against JSON Schema during development, tests, and CI.
+
+Modes are controlled by `VITE_API_RUNTIME_VALIDATION`:
+
+- `off`: validation is disabled.
+- `warn`: validation errors are written to `console.warn`, and UI flow continues.
+- `strict`: validation errors throw `ApiValidationError`, so React Query and Playwright can catch contract drift.
+
+Default behavior:
+
+- local development defaults to `warn`;
+- production builds default to `off`;
+- the CI Playwright smoke job runs with `VITE_API_RUNTIME_VALIDATION=strict`.
+
+This is a dev/test contract-hardening layer, not a production security gateway. Backend command and alarm handlers still perform their own request validation for simulation operations.
 
 ## Available Services
 
@@ -369,7 +389,7 @@ curl http://localhost:8081/api/v1/simulation/events/recent
 - Data source switching in UI is not a real runtime integration switch yet.
 - Frontend bundle currently builds as a single large SPA chunk.
 - Dashboard data is live for the local simulator, but it still uses REST polling and in-memory simulation sources.
-- API schemas are contract documentation and frontend type source only; runtime schema validation is not implemented yet.
+- Runtime validation is dev/test focused and currently lives in the frontend HTTP client; Go runtime validation from JSON Schema is not implemented yet.
 - Go server/client code generation is not implemented yet.
 - The simulation is synthetic and intentionally not a real reactor physics model.
 

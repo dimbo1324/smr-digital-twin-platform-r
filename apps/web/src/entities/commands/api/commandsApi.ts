@@ -2,7 +2,7 @@ import type { CommandRecord, CommandRequest } from "@/entities/commands/model/ty
 import { apiGet, apiPost } from "@/shared/api/client";
 
 export async function sendCommand(request: CommandRequest): Promise<CommandRecord> {
-  const response = await apiPost<CommandRecord, CommandRequest>("/api/v1/commands", {
+  const commandRequest = {
     ...request,
     source: "frontend",
     requestedBy: "demo-engineer",
@@ -10,11 +10,18 @@ export async function sendCommand(request: CommandRequest): Promise<CommandRecor
       reason: "operator_demo",
       ...request.payload,
     },
+  };
+  const response = await apiPost<CommandRecord, CommandRequest>("/api/v1/commands", commandRequest, {
+    requestSchema: "CommandRequest",
+    responseSchema: "Command",
   });
   return response.data;
 }
 
 export async function getRecentCommands(signal?: AbortSignal): Promise<CommandRecord[]> {
-  const response = await apiGet<CommandRecord[]>("/api/v1/commands/recent", { signal });
+  const response = await apiGet<CommandRecord[]>("/api/v1/commands/recent", {
+    signal,
+    responseSchema: "CommandList",
+  });
   return response.data;
 }

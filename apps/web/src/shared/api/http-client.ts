@@ -1,4 +1,9 @@
 import type { components } from "@/shared/api/generated/schema";
+import {
+  validateApiRequest,
+  validateApiResponse,
+} from "@/shared/api/validation/api-validation";
+import type { ApiSchemaName } from "@/shared/api/validation/schemas";
 
 type ApiMeta = components["schemas"]["ApiMeta"];
 
@@ -29,7 +34,7 @@ export function getApiBaseUrl() {
 
 export async function apiGet<T>(
   path: string,
-  options: { signal?: AbortSignal } = {},
+  options: { signal?: AbortSignal; responseSchema?: ApiSchemaName } = {},
 ): Promise<ApiEnvelope<T>> {
   const response = await fetch(`${getApiBaseUrl()}${path}`, {
     method: "GET",
@@ -43,14 +48,20 @@ export async function apiGet<T>(
     throw await toApiError(response);
   }
 
-  return response.json() as Promise<ApiEnvelope<T>>;
+  const payload = (await response.json()) as ApiEnvelope<T>;
+  await validateApiResponse(options.responseSchema, payload.data, path);
+  return payload;
 }
 
 export async function apiPost<TResponse, TBody = unknown>(
   path: string,
   body?: TBody,
-  options: { signal?: AbortSignal } = {},
+  options: { signal?: AbortSignal; requestSchema?: ApiSchemaName; responseSchema?: ApiSchemaName } = {},
 ): Promise<ApiEnvelope<TResponse>> {
+  if (body !== undefined) {
+    await validateApiRequest(options.requestSchema, body, path);
+  }
+
   const headers: HeadersInit = {
     Accept: "application/json",
   };
@@ -69,7 +80,9 @@ export async function apiPost<TResponse, TBody = unknown>(
     throw await toApiError(response);
   }
 
-  return response.json() as Promise<ApiEnvelope<TResponse>>;
+  const payload = (await response.json()) as ApiEnvelope<TResponse>;
+  await validateApiResponse(options.responseSchema, payload.data, path);
+  return payload;
 }
 
 async function toApiError(response: Response): Promise<ApiClientError> {
