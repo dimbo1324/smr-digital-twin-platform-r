@@ -11,7 +11,11 @@ export type SystemStatusState =
 export function useSystemStatus(): SystemStatusState {
   const query = useQuery({
     queryKey: queryKeys.system.status,
-    queryFn: ({ signal }) => apiGet<SystemStatus>("/api/v1/system/status", { signal }),
+    queryFn: ({ signal }) =>
+      apiGet<SystemStatus>("/api/v1/system/status", {
+        signal,
+        responseSchema: "SystemStatus",
+      }),
     refetchInterval: 10_000,
     staleTime: 5_000,
   });

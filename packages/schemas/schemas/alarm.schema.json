@@ -26,7 +26,7 @@
     "clearedAt": { "type": "string", "format": "date-time" },
     "metadata": {
       "type": "object",
-      "additionalProperties": { "type": "string" }
+      "additionalProperties": true
     }
   },
   "required": ["id", "ruleId", "assetId", "tag", "code", "title", "message", "severity", "status", "value", "lastValue", "threshold", "unit", "source", "startedAt", "activeAt", "updatedAt"],

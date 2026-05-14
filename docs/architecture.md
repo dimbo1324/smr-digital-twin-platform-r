@@ -38,13 +38,16 @@ Frontend REST access is centralized around generated contract types, a typed HTT
 flowchart LR
     Schemas["OpenAPI schemas"] --> Generated["Generated TypeScript types"]
     Generated --> HTTP["Typed REST client"]
-    HTTP --> Hooks["TanStack Query hooks"]
+    HTTP --> Validation["Runtime schema validation"]
+    Validation --> Hooks["TanStack Query hooks"]
     Hooks --> UI["Pages and widgets"]
     Mutations["Command / alarm / scenario mutations"] --> Invalidations["Query invalidation"]
     Invalidations --> Hooks
 ```
 
 The current live transport is still REST polling. Query intervals are set per data type: telemetry is refreshed most frequently, while system status, events, commands, alarm history, assets, and scenarios use slower refresh or cache windows. Mutations do not perform optimistic updates yet; they invalidate related query keys so the UI reflects the API and simulation state after the backend accepts the operation.
+
+Runtime API validation is available in the frontend HTTP client for selected request and response payloads. It is controlled by `VITE_API_RUNTIME_VALIDATION=off|warn|strict`; local development defaults to `warn`, production defaults to `off`, and CI e2e smoke runs in `strict` mode. This catches contract drift between real JSON payloads and JSON Schema/OpenAPI definitions during development and tests without turning the frontend into a production security gateway.
 
 ## Browser Smoke Quality Gate
 

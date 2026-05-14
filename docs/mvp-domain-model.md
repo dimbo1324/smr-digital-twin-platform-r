@@ -12,7 +12,7 @@ Core API DTOs are also represented in the machine-readable contract layer:
 - `packages/schemas/schemas/*.schema.json`
 - `apps/web/src/shared/api/generated/schema.ts`
 
-The generated frontend types are used for core API shapes such as `Asset`, `TelemetryPoint`, `Command`, `AlarmInstance`, `Event`, `SystemStatus`, `Scenario`, and response metadata. Runtime schema validation and generated Go server code are not implemented yet.
+The generated frontend types are used for core API shapes such as `Asset`, `TelemetryPoint`, `Command`, `AlarmInstance`, `Event`, `SystemStatus`, `Scenario`, and response metadata. Runtime schema validation is implemented in the frontend HTTP client for selected dev/test API boundaries. Generated Go server code and Go runtime validation from JSON Schema are not implemented yet.
 
 The frontend data layer consumes those generated types through a typed REST client and TanStack Query hooks. REST polling remains the current real-time mechanism; WebSocket/SSE transport is planned for a later milestone.
 

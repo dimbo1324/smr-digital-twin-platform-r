@@ -21,7 +21,11 @@ export interface LiveTelemetryState {
 export function useLatestTelemetry(refreshMs = 1000): LiveTelemetryState {
   const query = useQuery({
     queryKey: queryKeys.telemetry.latest,
-    queryFn: ({ signal }) => apiGet<TelemetryPoint[]>("/api/v1/telemetry/latest", { signal }),
+    queryFn: ({ signal }) =>
+      apiGet<TelemetryPoint[]>("/api/v1/telemetry/latest", {
+        signal,
+        responseSchema: "TelemetryPointList",
+      }),
     refetchInterval: refreshMs,
   });
 
@@ -45,7 +49,7 @@ export function useTelemetryHistory(windowValue: string, refreshMs = 5000) {
     queryFn: ({ signal }) =>
       apiGet<SimulationTelemetrySnapshot[]>(
         `/api/v1/telemetry/history?window=${encodeURIComponent(windowValue)}`,
-        { signal },
+        { signal, responseSchema: "TelemetrySnapshotList" },
       ),
     refetchInterval: refreshMs,
   });
@@ -66,7 +70,11 @@ export function useTelemetryHistory(windowValue: string, refreshMs = 5000) {
 export function useActiveSimulationAlarms(refreshMs = 2000) {
   const query = useQuery({
     queryKey: queryKeys.alarms.active,
-    queryFn: ({ signal }) => apiGet<SimulationAlarm[]>("/api/v1/alarms/active", { signal }),
+    queryFn: ({ signal }) =>
+      apiGet<SimulationAlarm[]>("/api/v1/alarms/active", {
+        signal,
+        responseSchema: "AlarmInstanceList",
+      }),
     refetchInterval: refreshMs,
   });
 

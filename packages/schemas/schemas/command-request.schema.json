@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://smr-twin.local/schemas/command-request.schema.json",
+  "title": "CommandRequest",
+  "type": "object",
+  "properties": {
+    "targetTag": { "type": "string", "enum": ["V-101", "P-101"] },
+    "commandType": { "type": "string", "enum": ["OPEN", "CLOSE", "STOP", "SET_POSITION", "START"] },
+    "source": { "type": "string", "enum": ["frontend", "api", "scenario", "system"] },
+    "requestedBy": { "type": "string" },
+    "correlationId": { "type": "string" },
+    "payload": {
+      "type": "object",
+      "properties": {
+        "positionPercent": { "type": "number", "minimum": 0, "maximum": 100 },
+        "reason": { "type": "string", "maxLength": 240 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["targetTag", "commandType"],
+  "additionalProperties": false
+}

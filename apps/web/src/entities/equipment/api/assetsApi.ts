@@ -7,7 +7,10 @@ export interface AssetsResult {
 }
 
 export async function getAssets(signal?: AbortSignal): Promise<AssetsResult> {
-  const response = await apiGet<Asset[]>("/api/v1/assets", { signal });
+  const response = await apiGet<Asset[]>("/api/v1/assets", {
+    signal,
+    responseSchema: "AssetList",
+  });
   return {
     assets: response.data.map((asset) => toEquipment(asset, response.meta.source)),
     meta: response.meta,
