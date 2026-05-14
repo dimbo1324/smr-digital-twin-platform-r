@@ -34,7 +34,7 @@ export function DashboardPage() {
   const telemetrySource = liveTelemetry.state === "connected" ? "Simulation API" : "Waiting/offline";
 
   return (
-    <PageShell>
+    <PageShell data-testid="dashboard-page">
       <section className="overflow-hidden rounded-3xl border border-border/70 bg-gradient-to-br from-card via-surface-elevated to-primary/10 p-6 shadow-panel lg:p-8">
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-end">
           <div>
@@ -63,7 +63,7 @@ export function DashboardPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-border/70 bg-background/40 p-5">
+          <div className="rounded-3xl border border-border/70 bg-background/40 p-5" data-testid="dashboard-status-card">
             <div className="flex items-center gap-3">
               <div className="rounded-2xl bg-success/10 p-3 text-success">
                 <ShieldCheck className="h-6 w-6" aria-hidden="true" />

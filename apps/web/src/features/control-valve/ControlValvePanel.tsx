@@ -83,7 +83,7 @@ export function ControlValvePanel({
   };
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden" data-testid="control-valve-panel">
       <CardHeader>
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -100,7 +100,7 @@ export function ControlValvePanel({
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-sm text-muted-foreground">Current position</p>
-              <p className="mt-1 text-4xl font-semibold text-foreground">
+              <p className="mt-1 text-4xl font-semibold text-foreground" data-testid="valve-position">
                 {Math.round(valvePosition * 10) / 10}%
               </p>
             </div>
@@ -132,7 +132,7 @@ export function ControlValvePanel({
           </div>
 
           <div className="mt-4 grid gap-2 text-xs text-muted-foreground sm:grid-cols-4">
-            <StatusItem label="State" value={valveState ?? "UNKNOWN"} variant="mock" />
+            <StatusItem label="State" value={valveState ?? "UNKNOWN"} variant="mock" testId="valve-state" />
             <StatusItem label="Quality" value={valvePoint?.quality ?? "MISSING"} />
             <StatusItem label="Source" value={sourceLabel} variant={sourceVariant} />
             <StatusItem label="Updated" value={ageLabel} />
@@ -144,14 +144,29 @@ export function ControlValvePanel({
         </div>
 
         <div className="mt-4 grid gap-2 sm:grid-cols-3">
-          <Button variant="outline" disabled={!canSend} onClick={() => submitValveCommand("OPEN")}>
+          <Button
+            variant="outline"
+            disabled={!canSend}
+            onClick={() => submitValveCommand("OPEN")}
+            data-testid="valve-open-button"
+          >
             <Power className="h-4 w-4" aria-hidden="true" />
             Open
           </Button>
-          <Button variant="outline" disabled={!canSend} onClick={() => submitValveCommand("STOP")}>
+          <Button
+            variant="outline"
+            disabled={!canSend}
+            onClick={() => submitValveCommand("STOP")}
+            data-testid="valve-stop-button"
+          >
             Stop
           </Button>
-          <Button variant="outline" disabled={!canSend} onClick={() => submitValveCommand("CLOSE")}>
+          <Button
+            variant="outline"
+            disabled={!canSend}
+            onClick={() => submitValveCommand("CLOSE")}
+            data-testid="valve-close-button"
+          >
             Close
           </Button>
         </div>
@@ -179,10 +194,12 @@ export function ControlValvePanel({
                 onChange={(event) => setRequestedPosition(Number(event.target.value))}
                 className="h-10 w-24 rounded-full border border-border/80 bg-card/70 px-3 text-sm text-foreground"
                 disabled={isPending}
+                data-testid="valve-set-position-input"
               />
               <Button
                 disabled={!canSend || positionInvalid}
                 onClick={() => submitValveCommand("SET_POSITION", requestedPosition)}
+                data-testid="valve-apply-position-button"
               >
                 <Send className="h-4 w-4" aria-hidden="true" />
                 Apply
@@ -208,7 +225,10 @@ function CommandFeedbackView({ feedback }: { feedback: CommandFeedback }) {
   const isError = feedback.state === "error";
   const isSuccess = feedback.state === "success";
   return (
-    <div className="mt-4 flex items-start gap-2 rounded-2xl border border-border/70 bg-surface-subtle/70 p-3 text-sm text-foreground">
+    <div
+      className="mt-4 flex items-start gap-2 rounded-2xl border border-border/70 bg-surface-subtle/70 p-3 text-sm text-foreground"
+      data-testid="valve-command-feedback"
+    >
       {isError ? (
         <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-danger" aria-hidden="true" />
       ) : isSuccess ? (
@@ -225,13 +245,15 @@ function StatusItem({
   label,
   value,
   variant = "outline",
+  testId,
 }: {
   label: string;
   value: string;
   variant?: "outline" | "success" | "warning" | "mock";
+  testId?: string;
 }) {
   return (
-    <div className="rounded-xl border border-border/70 bg-card/50 px-3 py-2">
+    <div className="rounded-xl border border-border/70 bg-card/50 px-3 py-2" data-testid={testId}>
       <div className="flex items-center gap-1.5">
         <Clock3 className="h-3 w-3" aria-hidden="true" />
         <span>{label}</span>

@@ -46,6 +46,20 @@ flowchart LR
 
 The current live transport is still REST polling. Query intervals are set per data type: telemetry is refreshed most frequently, while system status, events, commands, alarm history, assets, and scenarios use slower refresh or cache windows. Mutations do not perform optimistic updates yet; they invalidate related query keys so the UI reflects the API and simulation state after the backend accepts the operation.
 
+## Browser Smoke Quality Gate
+
+The CI pipeline includes a Playwright Chromium smoke job for the main simulator workflow:
+
+```mermaid
+flowchart LR
+    CI["GitHub Actions e2e job"] --> SIM["Go simulation service"]
+    CI --> API["Go API gateway"]
+    CI --> WEB["Vite frontend via Playwright webServer"]
+    WEB --> FLOW["Dashboard -> Process -> Commands -> Events -> Alarms"]
+```
+
+The smoke test is intentionally narrow. It checks that the browser can load the main pages, submit simulation-only `V-101` and `P-101` commands through the UI, observe command-related events, and keep alarm/event views usable. It does not replace deeper component tests, visual regression, multi-browser certification, or production SCADA validation.
+
 ## Domain Layers
 
 The current MVP separates domain concerns into two layers:

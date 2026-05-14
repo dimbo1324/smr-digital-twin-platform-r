@@ -28,7 +28,7 @@ export function ProcessPage() {
   );
 
   return (
-    <PageShell>
+    <PageShell data-testid="process-page">
       <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="rounded-3xl border border-border/70 bg-card/80 p-6 shadow-panel">
           <Badge variant={liveTelemetry.state === "connected" ? "success" : "mock"}>

@@ -68,7 +68,7 @@ export function PumpControlPanel({
   };
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden" data-testid="pump-control-panel">
       <CardHeader>
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -85,7 +85,9 @@ export function PumpControlPanel({
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-sm text-muted-foreground">Current state</p>
-              <p className="mt-1 text-3xl font-semibold text-foreground">{pumpState}</p>
+              <p className="mt-1 text-3xl font-semibold text-foreground" data-testid="pump-state">
+                {pumpState}
+              </p>
             </div>
             <div className="rounded-2xl border border-border/70 bg-card/80 p-3 text-foreground shadow-[0_14px_34px_hsl(var(--foreground)/0.08)]">
               <Gauge className="h-6 w-6" aria-hidden="true" />
@@ -93,7 +95,7 @@ export function PumpControlPanel({
           </div>
 
           <div className="mt-4 grid gap-2 text-xs text-muted-foreground sm:grid-cols-3">
-            <StatusItem label="RPM" value={formatTelemetryValue(pumpRpmPoint)} />
+            <StatusItem label="RPM" value={formatTelemetryValue(pumpRpmPoint)} testId="pump-rpm" />
             <StatusItem label="Source" value={telemetrySourceLabel(pumpStatePoint)} variant={pumpStatePoint?.source === "simulation" ? "success" : "mock"} />
             <StatusItem label="Updated" value={formatTelemetryAge(getTelemetryAge(telemetryPoints, "P-101.STATE"))} />
           </div>
@@ -104,11 +106,16 @@ export function PumpControlPanel({
         </div>
 
         <div className="mt-4 grid gap-2 sm:grid-cols-2">
-          <Button disabled={!canSend} onClick={() => submitPumpCommand("START")}>
+          <Button disabled={!canSend} onClick={() => submitPumpCommand("START")} data-testid="pump-start-button">
             <Play className="h-4 w-4" aria-hidden="true" />
             Start
           </Button>
-          <Button variant="outline" disabled={!canSend} onClick={() => submitPumpCommand("STOP")}>
+          <Button
+            variant="outline"
+            disabled={!canSend}
+            onClick={() => submitPumpCommand("STOP")}
+            data-testid="pump-stop-button"
+          >
             <Square className="h-4 w-4" aria-hidden="true" />
             Stop
           </Button>
@@ -128,7 +135,10 @@ function CommandFeedbackView({ feedback }: { feedback: CommandFeedback }) {
   const isError = feedback.state === "error";
   const isSuccess = feedback.state === "success";
   return (
-    <div className="mt-4 flex items-start gap-2 rounded-2xl border border-border/70 bg-surface-subtle/70 p-3 text-sm text-foreground">
+    <div
+      className="mt-4 flex items-start gap-2 rounded-2xl border border-border/70 bg-surface-subtle/70 p-3 text-sm text-foreground"
+      data-testid="pump-command-feedback"
+    >
       {isError ? (
         <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-danger" aria-hidden="true" />
       ) : isSuccess ? (
@@ -145,13 +155,15 @@ function StatusItem({
   label,
   value,
   variant = "outline",
+  testId,
 }: {
   label: string;
   value: string;
   variant?: "outline" | "success" | "mock";
+  testId?: string;
 }) {
   return (
-    <div className="rounded-xl border border-border/70 bg-card/50 px-3 py-2">
+    <div className="rounded-xl border border-border/70 bg-card/50 px-3 py-2" data-testid={testId}>
       <span>{label}</span>
       <Badge variant={variant} className="mt-2">
         {value}

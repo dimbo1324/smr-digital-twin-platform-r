@@ -200,7 +200,7 @@ export function ProcessDiagram({ telemetryPoints, dataState }: ProcessDiagramPro
         : "Fallback telemetry";
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden" data-testid="process-diagram">
       <CardHeader className="flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <CardTitle>Process Mnemonic</CardTitle>
@@ -237,7 +237,7 @@ export function ProcessDiagram({ telemetryPoints, dataState }: ProcessDiagramPro
         <div className="mt-5 grid gap-3 md:grid-cols-3">
           <SensorBadge telemetryPoints={telemetryPoints} tag="TT-101" label="Temperature" />
           <SensorBadge telemetryPoints={telemetryPoints} tag="PT-101" label="Pressure" />
-          <SensorBadge telemetryPoints={telemetryPoints} tag="FT-101" label="Flow" />
+          <SensorBadge telemetryPoints={telemetryPoints} tag="FT-101" label="Flow" testId="flow-value" />
         </div>
       </CardContent>
     </Card>
@@ -248,16 +248,21 @@ function SensorBadge({
   telemetryPoints,
   tag,
   label,
+  testId,
 }: {
   telemetryPoints: TelemetryDisplayPoint[];
   tag: string;
   label: string;
+  testId?: string;
 }) {
   const point = findTelemetryByTag(telemetryPoints, tag);
   const status = pointStatus(point, "offline");
 
   return (
-    <div className="rounded-2xl border border-border/70 bg-surface-elevated/70 p-4 transition-[background-color,border-color,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-surface-elevated/90 hover:shadow-panel">
+    <div
+      className="rounded-2xl border border-border/70 bg-surface-elevated/70 p-4 transition-[background-color,border-color,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-surface-elevated/90 hover:shadow-panel"
+      data-testid={testId}
+    >
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="font-mono text-xs text-muted-foreground">{tag}</p>
