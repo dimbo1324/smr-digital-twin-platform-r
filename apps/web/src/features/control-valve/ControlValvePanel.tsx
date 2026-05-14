@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { CheckCircle2, Clock3, Power, Send, SlidersHorizontal, XCircle } from "lucide-react";
 import type { CommandRecord, CommandType } from "@/entities/commands/model/types";
-import { sendCommand } from "@/entities/commands/api/commandsApi";
+import { useSendCommand } from "@/entities/commands/api/useSendCommand";
 import type { TelemetryDisplayPoint } from "@/entities/telemetry/model/types";
 import {
   findTelemetryByTag,
@@ -45,24 +45,26 @@ export function ControlValvePanel({
   const valvePosition = clampValvePosition(rawPosition);
   const [requestedPosition, setRequestedPosition] = useState(Math.round(valvePosition));
   const [feedback, setFeedback] = useState<CommandFeedback>({ state: "idle" });
+  const commandMutation = useSendCommand();
   const valveState = getTextTelemetryValue(telemetryPoints, "V-101.STATE", "UNKNOWN");
   const sourceLabel = telemetrySourceLabel(valvePoint);
   const ageLabel = formatTelemetryAge(getTelemetryAge(telemetryPoints, "V-101.POS"));
   const sourceVariant = valvePoint?.source === "simulation" ? "success" : dataState === "degraded" ? "warning" : "mock";
-  const isPending = feedback.state === "pending";
+  const isPending = feedback.state === "pending" || commandMutation.isPending;
   const canSend = dataState === "connected" && !isPending;
   const positionInvalid = requestedPosition < 0 || requestedPosition > 100;
 
   const submitValveCommand = (commandType: CommandType, positionPercent?: number) => {
     setFeedback({ state: "pending", message: `${commandType} command is being sent...` });
-    sendCommand({
-      targetTag: "V-101",
-      commandType,
-      payload:
-        commandType === "SET_POSITION"
-          ? { positionPercent, reason: "operator_demo" }
-          : { reason: "operator_demo" },
-    })
+    commandMutation
+      .mutateAsync({
+        targetTag: "V-101",
+        commandType,
+        payload:
+          commandType === "SET_POSITION"
+            ? { positionPercent, reason: "operator_demo" }
+            : { reason: "operator_demo" },
+      })
       .then((command) => {
         setFeedback({
           state: "success",

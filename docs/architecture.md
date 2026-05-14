@@ -30,6 +30,22 @@ flowchart LR
 
 This is not an OpenAPI-first backend rewrite. Go server stubs, generated Go clients, and runtime request/response validation are not implemented yet. The API gateway remains the runtime contract boundary for the frontend.
 
+## Frontend Data Layer
+
+Frontend REST access is centralized around generated contract types, a typed HTTP client, and TanStack Query hooks:
+
+```mermaid
+flowchart LR
+    Schemas["OpenAPI schemas"] --> Generated["Generated TypeScript types"]
+    Generated --> HTTP["Typed REST client"]
+    HTTP --> Hooks["TanStack Query hooks"]
+    Hooks --> UI["Pages and widgets"]
+    Mutations["Command / alarm / scenario mutations"] --> Invalidations["Query invalidation"]
+    Invalidations --> Hooks
+```
+
+The current live transport is still REST polling. Query intervals are set per data type: telemetry is refreshed most frequently, while system status, events, commands, alarm history, assets, and scenarios use slower refresh or cache windows. Mutations do not perform optimistic updates yet; they invalidate related query keys so the UI reflects the API and simulation state after the backend accepts the operation.
+
 ## Domain Layers
 
 The current MVP separates domain concerns into two layers:

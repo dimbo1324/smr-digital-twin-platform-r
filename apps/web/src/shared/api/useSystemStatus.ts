@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import type { SystemStatus } from "@/entities/system/model/types";
 import { apiGet } from "@/shared/api/client";
+import { queryKeys } from "@/shared/api/query-keys";
 
 export type SystemStatusState =
   | { state: "checking"; status?: undefined }
@@ -8,30 +9,20 @@ export type SystemStatusState =
   | { state: "offline"; status?: undefined };
 
 export function useSystemStatus(): SystemStatusState {
-  const [systemStatus, setSystemStatus] = useState<SystemStatusState>({
-    state: "checking",
+  const query = useQuery({
+    queryKey: queryKeys.system.status,
+    queryFn: ({ signal }) => apiGet<SystemStatus>("/api/v1/system/status", { signal }),
+    refetchInterval: 10_000,
+    staleTime: 5_000,
   });
 
-  useEffect(() => {
-    const controller = new AbortController();
+  if (query.data) {
+    return { state: "connected", status: query.data.data };
+  }
 
-    apiGet<SystemStatus>("/api/v1/system/status", controller.signal)
-      .then((response) => {
-        setSystemStatus({
-          state: "connected",
-          status: response.data,
-        });
-      })
-      .catch((error: unknown) => {
-        if (error instanceof DOMException && error.name === "AbortError") {
-          return;
-        }
+  if (query.isLoading) {
+    return { state: "checking" };
+  }
 
-        setSystemStatus({ state: "offline" });
-      });
-
-    return () => controller.abort();
-  }, []);
-
-  return systemStatus;
+  return { state: "offline" };
 }

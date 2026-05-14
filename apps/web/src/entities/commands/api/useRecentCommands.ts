@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { getRecentEvents } from "@/entities/events/api/eventsApi";
+import { getRecentCommands } from "@/entities/commands/api/commandsApi";
 import { queryKeys } from "@/shared/api/query-keys";
 
-export function useRecentEvents(refreshMs = 2500) {
+export function useRecentCommands(refreshMs = 2500) {
   const query = useQuery({
-    queryKey: queryKeys.events.recent,
-    queryFn: ({ signal }) => getRecentEvents(signal),
+    queryKey: queryKeys.commands.recent,
+    queryFn: ({ signal }) => getRecentCommands(signal),
     refetchInterval: refreshMs,
   });
 
@@ -16,7 +16,7 @@ export function useRecentEvents(refreshMs = 2500) {
       : "connected";
 
   return {
-    events: query.data ?? [],
+    commands: query.data ?? [],
     state,
     refresh: () => void query.refetch(),
   };

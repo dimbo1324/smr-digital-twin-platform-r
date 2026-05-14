@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { CheckCircle2, Gauge, Play, Square, XCircle } from "lucide-react";
 import type { CommandRecord, CommandType } from "@/entities/commands/model/types";
-import { sendCommand } from "@/entities/commands/api/commandsApi";
+import { useSendCommand } from "@/entities/commands/api/useSendCommand";
 import type { TelemetryDisplayPoint } from "@/entities/telemetry/model/types";
 import {
   findTelemetryByTag,
@@ -39,15 +39,17 @@ export function PumpControlPanel({
   const pumpRpmPoint = findTelemetryByTag(telemetryPoints, "P-101.RPM");
   const pumpState = getTextTelemetryValue(telemetryPoints, "P-101.STATE", "UNKNOWN");
   const [feedback, setFeedback] = useState<CommandFeedback>({ state: "idle" });
-  const canSend = dataState === "connected" && feedback.state !== "pending";
+  const commandMutation = useSendCommand();
+  const canSend = dataState === "connected" && feedback.state !== "pending" && !commandMutation.isPending;
 
   const submitPumpCommand = (commandType: CommandType) => {
     setFeedback({ state: "pending", message: `${commandType} command is being sent...` });
-    sendCommand({
-      targetTag: "P-101",
-      commandType,
-      payload: { reason: "operator_demo" },
-    })
+    commandMutation
+      .mutateAsync({
+        targetTag: "P-101",
+        commandType,
+        payload: { reason: "operator_demo" },
+      })
       .then((command) => {
         setFeedback({
           state: "success",

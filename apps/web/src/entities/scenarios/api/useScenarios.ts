@@ -1,12 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { getRecentEvents } from "@/entities/events/api/eventsApi";
+import { getScenarios } from "@/entities/scenarios/api/scenariosApi";
 import { queryKeys } from "@/shared/api/query-keys";
 
-export function useRecentEvents(refreshMs = 2500) {
+export function useScenarios() {
   const query = useQuery({
-    queryKey: queryKeys.events.recent,
-    queryFn: ({ signal }) => getRecentEvents(signal),
-    refetchInterval: refreshMs,
+    queryKey: queryKeys.scenarios.all,
+    queryFn: ({ signal }) => getScenarios(signal),
+    staleTime: 30_000,
   });
 
   const state: "loading" | "connected" | "degraded" = query.isLoading
@@ -16,7 +16,7 @@ export function useRecentEvents(refreshMs = 2500) {
       : "connected";
 
   return {
-    events: query.data ?? [],
+    scenarios: query.data ?? [],
     state,
     refresh: () => void query.refetch(),
   };
