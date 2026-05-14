@@ -1,8 +1,11 @@
-export type TelemetryQuality = "GOOD" | "BAD" | "UNCERTAIN";
+import type { components } from "@/shared/api/generated/schema";
+
+export type TelemetryPoint = components["schemas"]["TelemetryPoint"];
+export type TelemetryQuality = TelemetryPoint["quality"];
 
 export type TelemetryStatus = "offline" | "mock" | "warning" | "normal";
 
-export interface TelemetryPoint {
+export interface TelemetryDisplayPoint {
   tag: string;
   label: string;
   value: number | string;

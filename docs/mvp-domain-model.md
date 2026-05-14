@@ -6,6 +6,14 @@ This document defines the current MVP domain vocabulary for SMR Twin Platform. I
 
 SMR Twin Platform is a simulation-only digital twin platform for SMR energy systems. No real plant control is implemented or intended.
 
+Core API DTOs are also represented in the machine-readable contract layer:
+
+- `packages/schemas/openapi.yaml`
+- `packages/schemas/schemas/*.schema.json`
+- `apps/web/src/shared/api/generated/schema.ts`
+
+The generated frontend types are used for core API shapes such as `Asset`, `TelemetryPoint`, `Command`, `AlarmInstance`, `Event`, `SystemStatus`, `Scenario`, and response metadata. Runtime schema validation and generated Go server code are not implemented yet.
+
 ## Safety Boundary
 
 - All telemetry is synthetic.
@@ -73,6 +81,8 @@ The MVP asset shape is:
 
 Current implementation exposes simulation-generated assets through the API when the simulation service is reachable, with labelled in-memory fallback process-loop assets when it is not. A persistent asset registry is planned.
 
+The OpenAPI/JSON Schema contract tracks the API-facing asset shape. Frontend UI view-models can still adapt this shape for card layout, telemetry tag mapping, and status badge variants.
+
 ## Telemetry Model
 
 The MVP telemetry point shape is:
@@ -99,7 +109,7 @@ Current API telemetry points include the common fields used by the frontend:
 - `timestamp`
 - `source`
 
-`area` and `assetTag` are planned contract extensions for richer filtering and asset binding.
+`area` and `assetTag` are included in the schema as optional contract extension fields for richer filtering and asset binding. Current API responses may omit them.
 
 Current process-loop telemetry:
 
@@ -210,6 +220,8 @@ Current severities:
 - `CRITICAL`
 
 The current implementation stores recent command, alarm, and simulation events in memory and exposes them through the Events page. A persistent event/audit store is planned.
+
+The event schema describes the unified event stream only. It does not imply persistent audit storage or compliance-grade retention.
 
 ## Command Model
 

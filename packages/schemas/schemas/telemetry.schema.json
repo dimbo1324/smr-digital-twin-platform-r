@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://smr-twin.local/schemas/telemetry.schema.json",
+  "title": "TelemetryPoint",
+  "type": "object",
+  "properties": {
+    "tag": { "type": "string" },
+    "name": { "type": "string" },
+    "value": { "type": "number" },
+    "valueText": { "type": "string" },
+    "unit": { "type": "string" },
+    "quality": { "type": "string", "enum": ["GOOD", "BAD", "UNCERTAIN"] },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "source": { "type": "string" },
+    "area": { "type": "string" },
+    "assetTag": { "type": "string" },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "required": ["tag", "name", "unit", "quality", "timestamp", "source"],
+  "additionalProperties": false
+}

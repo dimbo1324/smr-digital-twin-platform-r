@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import type { TelemetryPoint, TelemetryQuality, TelemetryStatus } from "@/entities/telemetry/model/types";
+import type {
+  TelemetryDisplayPoint,
+  TelemetryPoint,
+  TelemetryQuality,
+  TelemetryStatus,
+} from "@/entities/telemetry/model/types";
 import type {
   SimulationAlarm,
   SimulationScenario,
@@ -8,20 +13,9 @@ import type {
 } from "@/entities/simulation/model/types";
 import { apiGet, apiPost } from "@/shared/api/client";
 
-interface ApiTelemetryPoint {
-  tag: string;
-  name: string;
-  value?: number;
-  valueText?: string;
-  unit: string;
-  quality: TelemetryQuality;
-  timestamp: string;
-  source: string;
-}
-
 export interface LiveTelemetryState {
   state: "loading" | "connected" | "degraded";
-  points: TelemetryPoint[];
+  points: TelemetryDisplayPoint[];
   updatedAt?: string;
 }
 
@@ -31,7 +25,7 @@ export function useLatestTelemetry(refreshMs = 1000): LiveTelemetryState {
   useEffect(() => {
     let mounted = true;
     const load = () => {
-      apiGet<ApiTelemetryPoint[]>("/api/v1/telemetry/latest")
+      apiGet<TelemetryPoint[]>("/api/v1/telemetry/latest")
         .then((response) => {
           if (!mounted) {
             return;
@@ -164,7 +158,7 @@ export function useSimulationScenarios() {
   return { scenarios, status, state, actions };
 }
 
-function toTelemetryPoint(point: ApiTelemetryPoint): TelemetryPoint {
+function toTelemetryPoint(point: TelemetryPoint): TelemetryDisplayPoint {
   const value = point.value ?? point.valueText ?? "N/A";
   return {
     tag: point.tag,

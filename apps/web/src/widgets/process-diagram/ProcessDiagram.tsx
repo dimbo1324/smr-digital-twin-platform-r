@@ -9,7 +9,7 @@ import {
   SlidersHorizontal,
   Thermometer,
 } from "lucide-react";
-import type { TelemetryPoint, TelemetryStatus } from "@/entities/telemetry/model/types";
+import type { TelemetryDisplayPoint, TelemetryStatus } from "@/entities/telemetry/model/types";
 import {
   findTelemetryByTag,
   formatTelemetryValue,
@@ -33,7 +33,7 @@ interface ProcessNode {
 }
 
 export interface ProcessDiagramProps {
-  telemetryPoints: TelemetryPoint[];
+  telemetryPoints: TelemetryDisplayPoint[];
   dataState: DataState;
 }
 
@@ -54,11 +54,11 @@ const statusBadgeVariant: Record<
   normal: "success",
 };
 
-function pointStatus(point: TelemetryPoint | undefined, fallback: TelemetryStatus): TelemetryStatus {
+function pointStatus(point: TelemetryDisplayPoint | undefined, fallback: TelemetryStatus): TelemetryStatus {
   return point?.status ?? fallback;
 }
 
-function pointSourceVariant(point: TelemetryPoint | undefined): SourceVariant {
+function pointSourceVariant(point: TelemetryDisplayPoint | undefined): SourceVariant {
   if (!point) {
     return "offline";
   }
@@ -70,7 +70,7 @@ function pointSourceVariant(point: TelemetryPoint | undefined): SourceVariant {
   return point.source?.includes("mock") ? "mock" : "warning";
 }
 
-function buildNodes(telemetryPoints: TelemetryPoint[]): ProcessNode[] {
+function buildNodes(telemetryPoints: TelemetryDisplayPoint[]): ProcessNode[] {
   const tankLevel = findTelemetryByTag(telemetryPoints, "LT-101");
   const pumpState = findTelemetryByTag(telemetryPoints, "P-101.STATE");
   const pumpRpm = findTelemetryByTag(telemetryPoints, "P-101.RPM");
@@ -249,7 +249,7 @@ function SensorBadge({
   tag,
   label,
 }: {
-  telemetryPoints: TelemetryPoint[];
+  telemetryPoints: TelemetryDisplayPoint[];
   tag: string;
   label: string;
 }) {

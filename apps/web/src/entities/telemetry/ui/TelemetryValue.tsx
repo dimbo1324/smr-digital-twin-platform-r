@@ -1,4 +1,4 @@
-import type { TelemetryPoint, TelemetryStatus } from "@/entities/telemetry/model/types";
+import type { TelemetryDisplayPoint, TelemetryStatus } from "@/entities/telemetry/model/types";
 import { Badge } from "@/shared/ui/badge";
 import { Card, CardContent } from "@/shared/ui/card";
 import { cn } from "@/shared/lib/cn";
@@ -14,7 +14,7 @@ const statusVariant: Record<
 };
 
 export interface TelemetryValueProps {
-  point: TelemetryPoint;
+  point: TelemetryDisplayPoint;
 }
 
 interface TelemetryScale {
@@ -38,7 +38,7 @@ function clampPercent(value: number) {
   return Math.min(100, Math.max(0, value));
 }
 
-function getTelemetryScale(point: TelemetryPoint): TelemetryScale | null {
+function getTelemetryScale(point: TelemetryDisplayPoint): TelemetryScale | null {
   if (typeof point.value !== "number" || Number.isNaN(point.value)) {
     return null;
   }

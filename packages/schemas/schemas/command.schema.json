@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://smr-twin.local/schemas/command.schema.json",
+  "title": "Command",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string" },
+    "targetTag": { "type": "string", "enum": ["V-101", "P-101"] },
+    "commandType": { "type": "string", "enum": ["OPEN", "CLOSE", "STOP", "SET_POSITION", "START"] },
+    "source": { "type": "string", "enum": ["frontend", "api", "scenario", "system"] },
+    "requestedBy": { "type": "string" },
+    "payload": {
+      "type": "object",
+      "properties": {
+        "positionPercent": { "type": "number", "minimum": 0, "maximum": 100 },
+        "reason": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "status": { "type": "string", "enum": ["RECEIVED", "ACCEPTED", "REJECTED", "IN_PROGRESS", "COMPLETED", "FAILED"] },
+    "requestedAt": { "type": "string", "format": "date-time" },
+    "acceptedAt": { "type": "string", "format": "date-time" },
+    "completedAt": { "type": "string", "format": "date-time" },
+    "rejectedAt": { "type": "string", "format": "date-time" },
+    "resultMessage": { "type": "string" },
+    "errorCode": { "type": "string" },
+    "errorMessage": { "type": "string" },
+    "correlationId": { "type": "string" }
+  },
+  "required": ["id", "targetTag", "commandType", "source", "requestedBy", "payload", "status", "requestedAt"],
+  "additionalProperties": false
+}

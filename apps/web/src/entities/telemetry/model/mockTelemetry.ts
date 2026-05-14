@@ -1,8 +1,8 @@
-import type { TelemetryPoint, TrendSample } from "@/entities/telemetry/model/types";
+import type { TelemetryDisplayPoint, TrendSample } from "@/entities/telemetry/model/types";
 
 const mockTimestamp = "2026-05-04T09:45:00+03:00";
 
-export const mockTelemetryPoints: TelemetryPoint[] = [
+export const mockTelemetryPoints: TelemetryDisplayPoint[] = [
   {
     tag: "TT-101",
     label: "Temperature",
@@ -115,11 +115,11 @@ export const mockTelemetryPoints: TelemetryPoint[] = [
   },
 ];
 
-export function getMockTelemetryPoint(tag: string): TelemetryPoint | undefined {
+export function getMockTelemetryPoint(tag: string): TelemetryDisplayPoint | undefined {
   return mockTelemetryPoints.find((point) => point.tag === tag);
 }
 
-export function formatTelemetryValue(point: TelemetryPoint | undefined): string {
+export function formatTelemetryValue(point: TelemetryDisplayPoint | undefined): string {
   if (!point) {
     return "N/A";
   }

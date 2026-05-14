@@ -16,6 +16,7 @@ Current milestone:
 - alarm lifecycle proxy endpoints for active, history, and acknowledge workflows
 - recent in-memory command/alarm/event proxy endpoints
 - SMR Unit Overview and Thermal Process Loop telemetry through `/api/v1/telemetry/latest`
+- OpenAPI/JSON Schema contract documentation under `packages/schemas`
 - structured request logging
 - CORS for the Vite frontend dev server
 - graceful HTTP shutdown
@@ -73,6 +74,13 @@ make api-build
 | `SIMULATION_TIMEOUT_MS` | `1500` |
 
 ## Endpoints
+
+The implemented gateway endpoints are documented in the repository contract:
+
+- `packages/schemas/openapi.yaml`
+- `packages/schemas/schemas/*.schema.json`
+
+The OpenAPI contract is currently used for documentation and generated frontend TypeScript types. This service does not yet use generated Go server stubs or runtime schema validation.
 
 ```bash
 curl http://localhost:8080/health

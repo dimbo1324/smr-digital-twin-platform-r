@@ -13,7 +13,7 @@ import {
 import type { Alarm, AlarmSeverity } from "@/entities/alarms/model/types";
 import type { CommandRecord, CommandStatus } from "@/entities/commands/model/types";
 import type { EventRecord, EventSeverity } from "@/entities/events/model/types";
-import type { TelemetryPoint, TelemetryQuality } from "@/entities/telemetry/model/types";
+import type { TelemetryDisplayPoint, TelemetryQuality } from "@/entities/telemetry/model/types";
 import { TREND_TELEMETRY_TAGS } from "@/entities/telemetry/model/processTags";
 import {
   findTelemetryByTag,
@@ -61,10 +61,7 @@ const severityRank: Record<string, number> = {
   HIGH: 4,
   WARNING: 3,
   ALARM: 3,
-  MEDIUM: 2,
-  LOW: 1,
   INFO: 0,
-  NOTICE: 0,
 };
 
 export function DashboardLiveOverview({
@@ -408,7 +405,7 @@ function TelemetryMetric({
 }: {
   label: string;
   tag: string;
-  point?: TelemetryPoint;
+  point?: TelemetryDisplayPoint;
   age: string;
 }) {
   return (
@@ -569,7 +566,7 @@ function highestAlarmSeverity(alarms: Alarm[]): AlarmSeverity | undefined {
   return [...alarms].sort((left, right) => (severityRank[right.severity] ?? 0) - (severityRank[left.severity] ?? 0))[0]?.severity;
 }
 
-function telemetrySource(point: TelemetryPoint): string {
+function telemetrySource(point: TelemetryDisplayPoint): string {
   if (point.source === "simulation") {
     return "Simulation / Synthetic";
   }
@@ -621,7 +618,7 @@ function alarmBadge(severity: string) {
     return "destructive";
   }
 
-  if (severity === "WARNING" || severity === "MEDIUM") {
+  if (severity === "WARNING") {
     return "warning";
   }
 

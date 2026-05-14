@@ -6,15 +6,15 @@ export const mockEvents: EventRecord[] = [
     timestamp: "09:45:00",
     severity: "INFO",
     source: "web-shell",
-    type: "UI_READY",
+    type: "SYSTEM_STATUS_CHANGED",
     message: "Frontend shell loaded in mock environment.",
   },
   {
     id: "evt-002",
     timestamp: "09:44:32",
-    severity: "NOTICE",
+    severity: "INFO",
     source: "telemetry-mock",
-    type: "SNAPSHOT_REFRESH",
+    type: "SIMULATION_STATE_UPDATED",
     message: "Mock telemetry snapshot refreshed.",
   },
   {
@@ -22,7 +22,7 @@ export const mockEvents: EventRecord[] = [
     timestamp: "09:43:18",
     severity: "WARNING",
     source: "simulation",
-    type: "SIMULATION_OFFLINE",
+    type: "SYSTEM_STATUS_CHANGED",
     message: "Simulation service is not connected in MVP shell.",
   },
 ];

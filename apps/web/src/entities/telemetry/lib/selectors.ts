@@ -1,14 +1,14 @@
-import type { TelemetryPoint, TelemetryQuality } from "@/entities/telemetry/model/types";
+import type { TelemetryDisplayPoint, TelemetryQuality } from "@/entities/telemetry/model/types";
 
 export function findTelemetryByTag(
-  points: TelemetryPoint[],
+  points: TelemetryDisplayPoint[],
   tag: string,
-): TelemetryPoint | undefined {
+): TelemetryDisplayPoint | undefined {
   return points.find((point) => point.tag === tag);
 }
 
 export function getNumericTelemetryValue(
-  points: TelemetryPoint[],
+  points: TelemetryDisplayPoint[],
   tag: string,
   fallback?: number,
 ): number | undefined {
@@ -17,7 +17,7 @@ export function getNumericTelemetryValue(
 }
 
 export function getTextTelemetryValue(
-  points: TelemetryPoint[],
+  points: TelemetryDisplayPoint[],
   tag: string,
   fallback?: string,
 ): string | undefined {
@@ -26,13 +26,13 @@ export function getTextTelemetryValue(
 }
 
 export function getTelemetryQuality(
-  points: TelemetryPoint[],
+  points: TelemetryDisplayPoint[],
   tag: string,
 ): TelemetryQuality | undefined {
   return findTelemetryByTag(points, tag)?.quality;
 }
 
-export function getTelemetryAge(points: TelemetryPoint[], tag: string): number | undefined {
+export function getTelemetryAge(points: TelemetryDisplayPoint[], tag: string): number | undefined {
   const timestamp = findTelemetryByTag(points, tag)?.timestamp;
   if (!timestamp) {
     return undefined;
@@ -42,7 +42,7 @@ export function getTelemetryAge(points: TelemetryPoint[], tag: string): number |
   return Number.isFinite(ageMs) ? Math.max(0, ageMs) : undefined;
 }
 
-export function formatTelemetryValue(point: TelemetryPoint | undefined): string {
+export function formatTelemetryValue(point: TelemetryDisplayPoint | undefined): string {
   if (!point) {
     return "N/A";
   }
@@ -73,7 +73,7 @@ export function formatTelemetryAge(ageMs: number | undefined): string {
   return `${minutes}m ago`;
 }
 
-export function telemetrySourceLabel(point: TelemetryPoint | undefined): string {
+export function telemetrySourceLabel(point: TelemetryDisplayPoint | undefined): string {
   if (!point) {
     return "missing";
   }

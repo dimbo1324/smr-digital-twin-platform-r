@@ -37,6 +37,8 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 - In-memory command history and event/audit trail for simulation command attempts.
 - Frontend valve and pump control panels with pending, success, and error states.
 - GitHub Actions CI quality gates for Go API, Go simulation, frontend, and Docker Compose config validation.
+- OpenAPI 3.1 contract and JSON Schema reference files under `packages/schemas`.
+- Generated frontend API schema types committed under `apps/web/src/shared/api/generated`.
 - Explicit safety boundary in docs and UI copy.
 
 ## Partially Implemented
@@ -47,6 +49,7 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 - **Process UI**: process-loop values are bound to live API telemetry when available. Valve and pump controls call simulation-only command endpoints; other process controls remain planned.
 - **Scenario controls**: predefined synthetic scenarios can be started/stopped through the API. Declarative YAML/JSON scenario definitions are planned.
 - **Assets**: API exposes current simulation assets and fallback process-loop assets. Persistent asset registry is planned.
+- **API contract layer**: OpenAPI and generated TypeScript types exist for core DTOs. Go server code generation and runtime request/response validation are not implemented yet.
 
 ## Planned Next
 
@@ -212,6 +215,7 @@ Automated CI jobs:
 - **API**: `go test ./...` and `go vet ./...` in `apps/api`.
 - **Simulation**: `go test ./...` and `go vet ./...` in `apps/simulation`.
 - **Web**: `npm ci`, `npm run typecheck`, `npm run lint`, and `npm run build` in `apps/web`.
+- **API types**: `npm run api:types` regenerates frontend contract types before frontend checks.
 - **Compose**: `docker compose config --quiet` from the repository root.
 
 Local equivalents:
@@ -226,6 +230,7 @@ go test ./...
 go vet ./...
 
 cd ../web
+npm run api:types
 npm run typecheck
 npm run lint
 npm run build
@@ -233,6 +238,25 @@ npm run build
 cd ../..
 docker compose config --quiet
 ```
+
+## API Contract / Schemas
+
+The current REST API contract is documented in:
+
+- `packages/schemas/openapi.yaml`
+- `packages/schemas/schemas/*.schema.json`
+
+Frontend contract types are generated into:
+
+- `apps/web/src/shared/api/generated/schema.ts`
+
+Regenerate frontend API types from `apps/web`:
+
+```bash
+npm run api:types
+```
+
+This contract layer is documentation and frontend type source for the current API gateway. Runtime schema validation and generated Go server stubs are not implemented yet.
 
 ## Available Services
 
@@ -305,13 +329,15 @@ curl http://localhost:8081/api/v1/simulation/events/recent
 - Data source switching in UI is not a real runtime integration switch yet.
 - Frontend bundle currently builds as a single large SPA chunk.
 - Dashboard data is live for the local simulator, but it still uses REST polling and in-memory simulation sources.
+- API schemas are contract documentation and frontend type source only; runtime schema validation is not implemented yet.
+- Go server/client code generation is not implemented yet.
 - The simulation is synthetic and intentionally not a real reactor physics model.
 
 ## Roadmap
 
 1. Stabilize architecture truth, domain levels, live process UI, and dev commands.
 2. Add simulation-only command layer for valve and pump with event/audit trail.
-3. Add dashboard/event stream polish, schema generation, and Playwright smoke coverage.
+3. Add React Query API layer and Playwright smoke coverage.
 4. Add MQTT bridge for simulated telemetry.
 5. Add PID/manual-auto control in simulation-only mode.
 6. Add persistent historian and trend APIs.
