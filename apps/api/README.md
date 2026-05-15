@@ -80,7 +80,7 @@ The implemented gateway endpoints are documented in the repository contract:
 - `packages/schemas/openapi.yaml`
 - `packages/schemas/schemas/*.schema.json`
 
-The OpenAPI contract is currently used for documentation and generated frontend TypeScript types. This service does not yet use generated Go server stubs or runtime schema validation.
+The OpenAPI contract is currently used for documentation, generated frontend TypeScript types, and frontend dev/test runtime validation. This service does not yet use generated Go server stubs or Go runtime validation from JSON Schema.
 
 ```bash
 curl http://localhost:8080/health
@@ -96,8 +96,8 @@ curl -X POST http://localhost:8080/api/v1/alarms/alarm-id/acknowledge \
 curl -X POST http://localhost:8080/api/v1/commands \
   -H "Content-Type: application/json" \
   -d '{"targetTag":"V-101","commandType":"OPEN","payload":{"reason":"operator_demo"}}'
-curl http://localhost:8080/api/v1/commands/recent
-curl http://localhost:8080/api/v1/events/recent
+curl "http://localhost:8080/api/v1/commands/recent?limit=50"
+curl "http://localhost:8080/api/v1/events/recent?limit=50"
 curl http://localhost:8080/api/v1/simulation/scenarios
 curl -X POST http://localhost:8080/api/v1/simulation/scenarios/high_temperature/start
 curl -X POST http://localhost:8080/api/v1/simulation/scenarios/stop
@@ -202,11 +202,11 @@ The command affects only in-memory simulation state. It does not control real eq
 
 ### `GET /api/v1/commands/recent`
 
-Returns recent in-memory command records from the simulation service.
+Returns recent in-memory command records from the simulation service. Optional `limit` query parameter: `1..200`; records are newest-first.
 
 ### `GET /api/v1/events/recent`
 
-Returns recent in-memory command, alarm, equipment, and simulation events from the simulation service.
+Returns recent in-memory command, alarm, equipment, scenario, and simulation events from the simulation service. Optional `limit` query parameter: `1..200`; records are newest-first.
 
 ### Simulation Proxy Endpoints
 

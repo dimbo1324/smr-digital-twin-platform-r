@@ -18,8 +18,8 @@ export async function sendCommand(request: CommandRequest): Promise<CommandRecor
   return response.data;
 }
 
-export async function getRecentCommands(signal?: AbortSignal): Promise<CommandRecord[]> {
-  const response = await apiGet<CommandRecord[]>("/api/v1/commands/recent", {
+export async function getRecentCommands(signal?: AbortSignal, limit = 50): Promise<CommandRecord[]> {
+  const response = await apiGet<CommandRecord[]>(`/api/v1/commands/recent?limit=${limit}`, {
     signal,
     responseSchema: "CommandList",
   });

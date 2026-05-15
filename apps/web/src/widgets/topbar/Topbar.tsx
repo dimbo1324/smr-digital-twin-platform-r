@@ -47,7 +47,7 @@ export function Topbar() {
       ? `${systemStatus.status.environment} Environment`
       : "Demo Environment";
   const lastSyncLabel =
-    systemStatus.state === "connected" ? "Last sync: backend API" : "Last sync: offline fallback";
+    systemStatus.state === "connected" ? "Last sync: backend API" : "Last sync: API unavailable";
 
   return (
     <header className="sticky top-0 z-20 border-b border-border/70 bg-background/70 backdrop-blur-2xl">

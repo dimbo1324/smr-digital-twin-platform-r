@@ -194,6 +194,7 @@ The current in-memory event/audit shape is:
 - `message`
 - `targetTag`
 - `commandId`
+- `alarmId`
 - `timestamp`
 - `metadata`
 

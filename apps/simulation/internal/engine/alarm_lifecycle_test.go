@@ -1,6 +1,8 @@
 package engine
 
 import (
+	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -51,6 +53,30 @@ func TestAlarmAcknowledgeCreatesEvent(t *testing.T) {
 	}
 	if countEvents(engine, model.EventTypeAlarmAcknowledged) != 1 {
 		t.Fatalf("expected ALARM_ACKNOWLEDGED event")
+	}
+}
+
+func TestAcknowledgeAlarmRejectsOverlongComment(t *testing.T) {
+	engine := newTestEngine()
+	highTemperature := engine.Snapshot()
+	highTemperature.PrimaryTemperatureC = 307
+	highTemperature.Timestamp = time.Now().UTC()
+	evaluateAlarmSnapshot(engine, highTemperature)
+
+	alarm := engine.ActiveAlarms()[0]
+	_, err := engine.AcknowledgeAlarm(alarm.ID, model.AlarmAcknowledgeRequest{
+		AcknowledgedBy: "test-operator",
+		Comment:        strings.Repeat("x", maxAckCommentLen+1),
+	})
+	if err == nil {
+		t.Fatal("expected overlong comment validation error")
+	}
+	var alarmErr *AlarmError
+	if !errors.As(err, &alarmErr) {
+		t.Fatalf("expected AlarmError, got %T", err)
+	}
+	if alarmErr.Code != "INVALID_PAYLOAD" {
+		t.Fatalf("expected INVALID_PAYLOAD, got %s", alarmErr.Code)
 	}
 }
 

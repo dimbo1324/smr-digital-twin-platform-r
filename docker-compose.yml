@@ -14,6 +14,12 @@ services:
       - web_node_modules:/workspace/apps/web/node_modules
     depends_on:
       - api
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:5173 >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 30s
 
   api:
     build:
@@ -29,6 +35,12 @@ services:
       - "8080:8080"
     depends_on:
       - simulation
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/health >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
 
   simulation:
     build:
@@ -41,6 +53,12 @@ services:
       SIM_SEED: 42
     ports:
       - "8081:8081"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8081/health >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
 
 volumes:
   web_node_modules:

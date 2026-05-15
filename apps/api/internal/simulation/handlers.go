@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/api/internal/assets"
@@ -194,7 +195,11 @@ func (g *Gateway) SubmitCommand(w http.ResponseWriter, r *http.Request) {
 }
 
 func (g *Gateway) RecentCommands(w http.ResponseWriter, r *http.Request) {
-	commands, err := g.client.RecentCommands(r.Context())
+	limit, ok := parseRecentLimit(w, r)
+	if !ok {
+		return
+	}
+	commands, err := g.client.RecentCommands(r.Context(), limit)
 	if err != nil {
 		g.writeSimulationCommandError(w, r, err)
 		return
@@ -203,12 +208,29 @@ func (g *Gateway) RecentCommands(w http.ResponseWriter, r *http.Request) {
 }
 
 func (g *Gateway) RecentEvents(w http.ResponseWriter, r *http.Request) {
-	events, err := g.client.RecentEvents(r.Context())
+	limit, ok := parseRecentLimit(w, r)
+	if !ok {
+		return
+	}
+	events, err := g.client.RecentEvents(r.Context(), limit)
 	if err != nil {
 		g.writeSimulationCommandError(w, r, err)
 		return
 	}
 	httpapi.WriteData(w, r, http.StatusOK, events, httpapi.MetaOptions{Count: len(events), Source: "simulation"})
+}
+
+func parseRecentLimit(w http.ResponseWriter, r *http.Request) (int, bool) {
+	raw := r.URL.Query().Get("limit")
+	if raw == "" {
+		return 0, true
+	}
+	limit, err := strconv.Atoi(raw)
+	if err != nil || limit < 1 || limit > 200 {
+		httpapi.WriteError(w, r, http.StatusBadRequest, "INVALID_LIMIT", "limit must be an integer between 1 and 200")
+		return 0, false
+	}
+	return limit, true
 }
 
 func (g *Gateway) writeSimulationCommandError(w http.ResponseWriter, r *http.Request, err error) {

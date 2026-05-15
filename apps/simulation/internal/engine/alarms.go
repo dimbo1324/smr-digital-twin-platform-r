@@ -10,6 +10,11 @@ import (
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/model"
 )
 
+const (
+	maxAcknowledgedByLen = 120
+	maxAckCommentLen     = 500
+)
+
 type AlarmError struct {
 	Code       string
 	Message    string
@@ -38,6 +43,12 @@ func (e *Engine) AcknowledgeAlarm(id string, request model.AlarmAcknowledgeReque
 
 	if id == "" {
 		return model.Alarm{}, &AlarmError{Code: "ALARM_NOT_FOUND", Message: "Alarm was not found", HTTPStatus: http.StatusNotFound}
+	}
+	if len(request.AcknowledgedBy) > maxAcknowledgedByLen {
+		return model.Alarm{}, &AlarmError{Code: "INVALID_PAYLOAD", Message: "acknowledgedBy must be 120 characters or fewer", HTTPStatus: http.StatusBadRequest}
+	}
+	if len(request.Comment) > maxAckCommentLen {
+		return model.Alarm{}, &AlarmError{Code: "INVALID_PAYLOAD", Message: "comment must be 500 characters or fewer", HTTPStatus: http.StatusBadRequest}
 	}
 
 	now := time.Now().UTC()

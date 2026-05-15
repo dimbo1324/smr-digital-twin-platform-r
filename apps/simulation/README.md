@@ -49,8 +49,8 @@ curl -X POST http://localhost:8081/api/v1/simulation/alarms/alarm-id/acknowledge
 curl -X POST http://localhost:8081/api/v1/simulation/commands \
   -H "Content-Type: application/json" \
   -d '{"targetTag":"V-101","commandType":"SET_POSITION","source":"frontend","requestedBy":"demo-engineer","payload":{"positionPercent":75}}'
-curl http://localhost:8081/api/v1/simulation/commands/recent
-curl http://localhost:8081/api/v1/simulation/events/recent
+curl "http://localhost:8081/api/v1/simulation/commands/recent?limit=50"
+curl "http://localhost:8081/api/v1/simulation/events/recent?limit=50"
 curl http://localhost:8081/api/v1/simulation/scenarios
 curl -X POST http://localhost:8081/api/v1/simulation/scenarios/high_temperature/start
 curl -X POST http://localhost:8081/api/v1/simulation/scenarios/stop
@@ -69,6 +69,7 @@ curl -X POST http://localhost:8081/api/v1/simulation/reset
 - `trip`
 
 All scenarios are synthetic demonstrations for portfolio and UI validation.
+Starting and stopping a predefined scenario writes `SCENARIO_STARTED` and `SCENARIO_COMPLETED` records to the same in-memory event stream used by commands and alarms.
 
 ## Alarm Lifecycle
 
@@ -160,7 +161,7 @@ Recent commands and events are exposed through:
 - `GET /api/v1/simulation/commands/recent`
 - `GET /api/v1/simulation/events/recent`
 
-This trail is in-memory only and resets when the simulation service restarts. It is not a persistent compliance audit store.
+Both endpoints accept an optional `limit` query parameter from `1` to `200` and return newest records first. This trail is in-memory only and resets when the simulation service restarts. It is not a persistent compliance audit store.
 
 ## Test
 

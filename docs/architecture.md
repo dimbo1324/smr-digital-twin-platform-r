@@ -28,7 +28,7 @@ flowchart LR
 
 `packages/schemas/openapi.yaml` documents implemented REST endpoints only. The frontend generated types reduce drift for core DTOs such as `Asset`, `TelemetryPoint`, `Command`, `AlarmInstance`, `Event`, `SystemStatus`, `Scenario`, and API envelopes.
 
-This is not an OpenAPI-first backend rewrite. Go server stubs, generated Go clients, and runtime request/response validation are not implemented yet. The API gateway remains the runtime contract boundary for the frontend.
+This is not an OpenAPI-first backend rewrite. Go server stubs, generated Go clients, and Go runtime validation from JSON Schema are not implemented yet. Frontend dev/test runtime validation is implemented in the typed HTTP client for selected request and response payloads. The API gateway remains the runtime contract boundary for the frontend.
 
 ## Frontend Data Layer
 

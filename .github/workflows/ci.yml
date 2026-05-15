@@ -8,6 +8,7 @@ on:
       - "refactor/**"
       - "ci/**"
       - "test/**"
+      - "codex/**"
   pull_request:
     branches:
       - main
@@ -86,6 +87,10 @@ jobs:
 
       - name: Generate API contract types
         run: npm run api:types
+
+      - name: Verify generated API types are committed
+        working-directory: .
+        run: git diff --exit-code apps/web/src/shared/api/generated/schema.ts
 
       - name: Validate API JSON schemas
         run: npm run api:validate-schemas
@@ -190,4 +195,19 @@ jobs:
         with:
           name: playwright-report
           path: apps/web/playwright-report/
+          retention-days: 7
+
+      - name: Collect backend service logs
+        if: failure()
+        run: |
+          mkdir -p e2e-logs
+          cp /tmp/api.log e2e-logs/api.log || true
+          cp /tmp/simulation.log e2e-logs/simulation.log || true
+
+      - name: Upload backend service logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-service-logs
+          path: e2e-logs/
           retention-days: 7

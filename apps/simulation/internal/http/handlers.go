@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/config"
@@ -163,13 +164,21 @@ func (h *Handler) SubmitCommand(w http.ResponseWriter, r *http.Request) {
 	writeData(w, command, 0)
 }
 
-func (h *Handler) RecentCommands(w http.ResponseWriter, _ *http.Request) {
-	commands := h.engine.RecentCommands()
+func (h *Handler) RecentCommands(w http.ResponseWriter, r *http.Request) {
+	limit, ok := parseRecentLimit(w, r)
+	if !ok {
+		return
+	}
+	commands := h.engine.RecentCommandsLimited(limit)
 	writeData(w, commands, len(commands))
 }
 
-func (h *Handler) RecentEvents(w http.ResponseWriter, _ *http.Request) {
-	events := h.engine.RecentEvents()
+func (h *Handler) RecentEvents(w http.ResponseWriter, r *http.Request) {
+	limit, ok := parseRecentLimit(w, r)
+	if !ok {
+		return
+	}
+	events := h.engine.RecentEventsLimited(limit)
 	writeData(w, events, len(events))
 }
 
@@ -189,6 +198,19 @@ func parseWindow(raw string) (time.Duration, error) {
 	default:
 		return 0, errors.New("invalid window")
 	}
+}
+
+func parseRecentLimit(w http.ResponseWriter, r *http.Request) (int, bool) {
+	raw := r.URL.Query().Get("limit")
+	if raw == "" {
+		return 0, true
+	}
+	limit, err := strconv.Atoi(raw)
+	if err != nil || limit < 1 || limit > 200 {
+		writeError(w, http.StatusBadRequest, "INVALID_LIMIT", "limit must be an integer between 1 and 200")
+		return 0, false
+	}
+	return limit, true
 }
 
 func writeData(w http.ResponseWriter, data any, count int) {

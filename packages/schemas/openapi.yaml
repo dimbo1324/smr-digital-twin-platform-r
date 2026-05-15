@@ -164,6 +164,15 @@
       "get": {
         "tags": ["Commands"],
         "summary": "List recent in-memory command records",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Maximum number of newest command records to return.",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 200 }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Recent command records",
@@ -173,6 +182,7 @@
               }
             }
           },
+          "400": { "$ref": "#/components/responses/Error" },
           "503": { "$ref": "#/components/responses/Error" }
         }
       }
@@ -181,6 +191,15 @@
       "get": {
         "tags": ["Events"],
         "summary": "List recent unified in-memory events",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Maximum number of newest event records to return.",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 200 }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Recent command, alarm, equipment, and simulation events",
@@ -190,6 +209,7 @@
               }
             }
           },
+          "400": { "$ref": "#/components/responses/Error" },
           "503": { "$ref": "#/components/responses/Error" }
         }
       }
@@ -530,7 +550,7 @@
         "type": "object",
         "properties": {
           "positionPercent": { "type": "number", "minimum": 0, "maximum": 100 },
-          "reason": { "type": "string" }
+          "reason": { "type": "string", "maxLength": 240 }
         },
         "additionalProperties": false
       },
@@ -603,8 +623,8 @@
       "AcknowledgeAlarmRequest": {
         "type": "object",
         "properties": {
-          "acknowledgedBy": { "type": "string" },
-          "comment": { "type": "string" }
+          "acknowledgedBy": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "comment": { "type": "string", "maxLength": 500 }
         },
         "additionalProperties": false
       },

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://smr-twin.local/schemas/simulation-status.schema.json",
+  "title": "SimulationStatus",
+  "type": "object",
+  "properties": {
+    "running": { "type": "boolean" },
+    "mode": { "type": "string" },
+    "health": { "type": "string" },
+    "activeScenario": { "type": "string" },
+    "tickMs": { "type": "integer" },
+    "historySize": { "type": "integer" },
+    "snapshotCount": { "type": "integer" },
+    "lastSimulationTimestamp": { "type": "string" },
+    "simulationOnly": { "type": "boolean" }
+  },
+  "required": [
+    "running",
+    "mode",
+    "health",
+    "activeScenario",
+    "tickMs",
+    "historySize",
+    "snapshotCount",
+    "lastSimulationTimestamp",
+    "simulationOnly"
+  ],
+  "additionalProperties": false
+}
