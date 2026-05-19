@@ -9,6 +9,9 @@ export const PROCESS_LOOP_TELEMETRY_TAGS = [
   { tag: "P-101.RPM", label: "Pump Speed" },
   { tag: "HX-101.STATE", label: "Heat Exchanger State" },
   { tag: "TIC-101.MODE", label: "PID Controller Mode" },
+  { tag: "TIC-101.SETPOINT", label: "PID Setpoint" },
+  { tag: "TIC-101.OUTPUT", label: "PID Output" },
+  { tag: "TIC-101.STATUS", label: "PID Status" },
 ] as const;
 
 export const TREND_TELEMETRY_TAGS = [

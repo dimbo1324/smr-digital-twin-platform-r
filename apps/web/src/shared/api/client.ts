@@ -3,6 +3,7 @@ export {
   ApiClientError,
   ApiClientError as ApiError,
   apiGet,
+  apiPatch,
   apiPost,
   getApiBaseUrl,
   type ApiEnvelope,

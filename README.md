@@ -34,7 +34,8 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 - Trends summary cards backed by latest API telemetry and chart history backed by in-memory simulation history.
 - Simulation-only command layer for `V-101` and `P-101` through the API gateway.
 - Simulation-only `TIC-101` control modes for command arbitration: `MANUAL`, `AUTO`, and `DISABLED`.
-- Command arbitration for direct `V-101` commands, with `AUTO` reserved for future simulated PID authority.
+- Command arbitration for direct `V-101` commands, with `AUTO` assigning authority to the simulation-only `TIC-101` PID controller.
+- Simulation-only `TIC-101` PID controller for the synthetic `TT-101 -> V-101.POS` thermal loop.
 - Valve `V-101` and pump `P-101` state machines that update synthetic telemetry.
 - In-memory command history and event/audit trail for simulation command attempts.
 - Frontend valve and pump control panels with pending, success, and error states.
@@ -58,12 +59,10 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 
 ## Planned Next
 
-- Expanded command arbitration for user, scenario, PID, and system sources.
 - Persistent command history and audit storage.
 - Alarm shelving and richer operator workflow.
 - Persistent event/audit storage.
 - MQTT bridge for simulated telemetry.
-- PID control module and manual/auto arbitration.
 - Persistent historian with PostgreSQL/TimescaleDB or another time-series store.
 - WebSocket or SSE real-time transport.
 - Report export.
@@ -75,7 +74,6 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 - MQTT broker or MQTT ingestion.
 - Kafka, Redpanda, or NATS.
 - PostgreSQL, TimescaleDB, InfluxDB, Redis, or MinIO persistence.
-- PID controller.
 - Production auth/RBAC.
 - PDF/Excel report export.
 - Kubernetes or Helm deployment.
@@ -125,7 +123,7 @@ Lower-level process-loop tags used by the HMI mnemonic and future command layer:
 - `PT-101` loop pressure
 - `FT-101` loop flow
 - `LT-101` tank level
-- `TIC-101` manual/auto/disabled arbitration status, with PID output still not implemented
+- `TIC-101` manual/auto/disabled arbitration status and simulation-only PID output telemetry
 
 See [MVP Domain Model](docs/mvp-domain-model.md) for the current contract and planned extensions.
 
@@ -138,7 +136,7 @@ See [MVP Domain Model](docs/mvp-domain-model.md) for the current contract and pl
 - No connection to real plant networks or physical actuators.
 - Simulation commands apply only to in-memory simulated assets.
 - Manual/auto/disabled mode changes apply only to in-memory `TIC-101` simulation state.
-- `AUTO` mode reserves `V-101` for future simulated PID authority but does not generate PID output yet.
+- `AUTO` mode lets the simulation-only `TIC-101` PID controller apply an in-memory `V-101.POS` target.
 - Command history and event/audit records are in-memory only at this stage.
 - Alarm acknowledge/clear actions apply only to synthetic in-memory alarm instances.
 - UI and API copy must preserve the distinction between monitoring, simulation, advisory concepts, and real control.
@@ -357,7 +355,11 @@ curl "http://localhost:8080/api/v1/telemetry/history?window=15m"
 curl http://localhost:8080/api/v1/control/status
 curl -X POST http://localhost:8080/api/v1/control/mode \
   -H "Content-Type: application/json" \
-  -d '{"mode":"AUTO","requestedBy":"demo-operator","reason":"Prepare for future simulated PID demo"}'
+  -d '{"mode":"AUTO","requestedBy":"demo-operator","reason":"Enable simulation-only PID demo"}'
+curl http://localhost:8080/api/v1/pid/status
+curl -X PATCH http://localhost:8080/api/v1/pid/config \
+  -H "Content-Type: application/json" \
+  -d '{"setpoint":288,"kp":0.9,"ki":0.05,"kd":0.1,"requestedBy":"demo-operator"}'
 curl http://localhost:8080/api/v1/alarms/active
 curl http://localhost:8080/api/v1/alarms/history
 curl -X POST http://localhost:8080/api/v1/alarms/alarm-id/acknowledge \
@@ -384,6 +386,10 @@ curl http://localhost:8081/api/v1/simulation/control/status
 curl -X POST http://localhost:8081/api/v1/simulation/control/mode \
   -H "Content-Type: application/json" \
   -d '{"mode":"MANUAL","requestedBy":"demo-operator"}'
+curl http://localhost:8081/api/v1/simulation/pid/status
+curl -X PATCH http://localhost:8081/api/v1/simulation/pid/config \
+  -H "Content-Type: application/json" \
+  -d '{"setpoint":288,"kp":0.9,"ki":0.05,"kd":0.1,"requestedBy":"demo-operator"}'
 curl http://localhost:8081/api/v1/simulation/alarms/active
 curl http://localhost:8081/api/v1/simulation/alarms/history
 curl -X POST http://localhost:8081/api/v1/simulation/alarms/alarm-id/acknowledge \
@@ -404,7 +410,7 @@ curl "http://localhost:8081/api/v1/simulation/events/recent?limit=50"
 - Alarm lifecycle and history are in-memory and reset with the simulation service.
 - Command support is limited to simulated `V-101` valve and `P-101` pump assets.
 - Command arbitration currently applies primarily to the `TIC-101` / `V-101` control loop; `P-101` remains manually controllable.
-- `AUTO` mode is a preparation state for future simulated PID and does not calculate PID output yet.
+- `AUTO` mode lets the simulation-only `TIC-101` PID calculate an in-memory `V-101.POS` target.
 - Events are recent in-memory command/alarm/simulation records, not a persistent event log service.
 - Data source switching in UI is not a real runtime integration switch yet.
 - Frontend uses route-level code splitting; deeper vendor/chart chunk tuning can be added later if needed.
@@ -419,7 +425,7 @@ curl "http://localhost:8081/api/v1/simulation/events/recent?limit=50"
 2. Add simulation-only command layer for valve and pump with event/audit trail.
 3. Add OpenAPI schemas, generated frontend types, React Query API layer, runtime validation, and Playwright smoke coverage.
 4. Harden API contract tooling, simulation domain boundaries, and quality gates.
-5. Add PID control in simulation-only mode on top of manual/auto arbitration.
+5. Add persistent historian storage for telemetry, events, and command audit.
 6. Add MQTT bridge for simulated telemetry.
 7. Add persistent historian and trend APIs.
 8. Add report export.

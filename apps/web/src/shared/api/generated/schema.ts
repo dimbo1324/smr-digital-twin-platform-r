@@ -118,6 +118,15 @@ export interface components {
       "health": string;
       "simulationOnly": boolean;
       "scenario": string;
+      "pidSetpointC": number;
+      "pidProcessValueC": number;
+      "pidErrorC": number;
+      "pidOutputPct": number;
+      "pidPTermPct": number;
+      "pidITermPct": number;
+      "pidDTermPct": number;
+      "pidStatus": string;
+      "pidSaturated": boolean;
     };
     "CommandPayload": {
       "positionPercent"?: number;
@@ -182,7 +191,7 @@ export interface components {
     "Event": {
       "id": string;
       "timestamp": string;
-      "type": "COMMAND_RECEIVED" | "COMMAND_ACCEPTED" | "COMMAND_REJECTED" | "COMMAND_STARTED" | "COMMAND_COMPLETED" | "COMMAND_FAILED" | "EQUIPMENT_STATE_CHANGED" | "ALARM_ACTIVATED" | "ALARM_ACKNOWLEDGED" | "ALARM_CLEARED" | "SYSTEM_STATUS_CHANGED" | "SIMULATION_STATE_UPDATED" | "SCENARIO_STARTED" | "SCENARIO_COMPLETED" | "CONTROL_MODE_CHANGED" | "CONTROL_AUTHORITY_CHANGED" | "COMMAND_REJECTED_BY_ARBITRATION";
+      "type": "COMMAND_RECEIVED" | "COMMAND_ACCEPTED" | "COMMAND_REJECTED" | "COMMAND_STARTED" | "COMMAND_COMPLETED" | "COMMAND_FAILED" | "EQUIPMENT_STATE_CHANGED" | "ALARM_ACTIVATED" | "ALARM_ACKNOWLEDGED" | "ALARM_CLEARED" | "SYSTEM_STATUS_CHANGED" | "SIMULATION_STATE_UPDATED" | "SCENARIO_STARTED" | "SCENARIO_COMPLETED" | "CONTROL_MODE_CHANGED" | "CONTROL_AUTHORITY_CHANGED" | "COMMAND_REJECTED_BY_ARBITRATION" | "PID_ENABLED" | "PID_DISABLED" | "PID_SETPOINT_CHANGED" | "PID_TUNING_CHANGED" | "PID_OUTPUT_UPDATED" | "PID_OUTPUT_SATURATED" | "PID_OUTPUT_RELEASED" | "PID_STATUS_CHANGED";
       "source": string;
       "severity": "INFO" | "WARNING" | "ERROR" | "CRITICAL";
       "targetTag"?: string;
@@ -285,6 +294,47 @@ export interface components {
     };
     "ControlStatusResponse": {
       "data": components["schemas"]["ControlStatus"];
+      "meta": components["schemas"]["ApiMeta"];
+    };
+    "PIDStatus": {
+      "controllerTag": string;
+      "mode": components["schemas"]["ControlMode"];
+      "authority": components["schemas"]["ControlAuthority"];
+      "active": boolean;
+      "pidImplemented": boolean;
+      "processVariableTag": string;
+      "processValue": number;
+      "setpoint": number;
+      "manipulatedVariableTag": string;
+      "output": number;
+      "outputMin": number;
+      "outputMax": number;
+      "kp": number;
+      "ki": number;
+      "kd": number;
+      "error": number;
+      "pTerm": number;
+      "iTerm": number;
+      "dTerm": number;
+      "integral": number;
+      "derivative": number;
+      "saturated": boolean;
+      "status": string;
+      "updatedAt": string;
+      "safetyDisclaimer": string;
+    };
+    "PIDConfigUpdateRequest": {
+      "setpoint"?: number;
+      "kp"?: number;
+      "ki"?: number;
+      "kd"?: number;
+      "outputMin"?: number;
+      "outputMax"?: number;
+      "requestedBy"?: string;
+      "reason"?: string;
+    };
+    "PIDStatusResponse": {
+      "data": components["schemas"]["PIDStatus"];
       "meta": components["schemas"]["ApiMeta"];
     };
   };

@@ -7,7 +7,9 @@ import { TelemetryValue } from "@/entities/telemetry/ui/TelemetryValue";
 import { ControlValvePanel } from "@/features/control-valve/ControlValvePanel";
 import { ControlModePanel } from "@/features/control-mode/ControlModePanel";
 import { PumpControlPanel } from "@/features/control-pump/PumpControlPanel";
+import { PidControllerPanel } from "@/features/pid-controller/PidControllerPanel";
 import { useControlStatus } from "@/entities/control/api/useControlStatus";
+import { usePidStatus } from "@/entities/pid/api/usePidStatus";
 import { useCommandHistory } from "@/entities/commands/api/useCommandHistory";
 import { CommandEventPanel } from "@/widgets/command-event-panel/CommandEventPanel";
 import { ProcessDiagram } from "@/widgets/process-diagram/ProcessDiagram";
@@ -20,6 +22,7 @@ export function ProcessPage() {
   const liveTelemetry = useLatestTelemetry();
   const assets = useAssets();
   const control = useControlStatus();
+  const pid = usePidStatus();
   const commandHistory = useCommandHistory();
   const telemetryPoints =
     liveTelemetry.points.length > 0 ? liveTelemetry.points : mockTelemetryPoints;
@@ -48,7 +51,7 @@ export function ProcessPage() {
 
         <div className="grid gap-3 rounded-3xl border border-border/70 bg-surface-elevated/70 p-5">
           <ProcessFact label="Loop" value="SMR synthetic energy loop" />
-          <ProcessFact label="Command state" value={control.controlStatus?.mode === "MANUAL" ? "Manual valve commands enabled" : "Valve commands gated by TIC-101"} />
+          <ProcessFact label="Command state" value={control.controlStatus?.mode === "AUTO" ? "PID owns V-101 in AUTO" : control.controlStatus?.mode === "MANUAL" ? "Manual valve commands enabled" : "Valve commands gated by TIC-101"} />
           <ProcessFact label="Telemetry source" value={liveTelemetry.state === "connected" ? "Backend -> Simulation" : "Local fallback"} />
           <ProcessFact label="Asset source" value={assetSourceLabel(assets.state, assets.source)} />
         </div>
@@ -75,6 +78,7 @@ export function ProcessPage() {
 
         <div className="grid gap-6">
           <ControlModePanel controlStatus={control.controlStatus} state={control.state} />
+          <PidControllerPanel pidStatus={pid.pidStatus} state={pid.state} />
           <ControlValvePanel
             telemetryPoints={telemetryPoints}
             dataState={liveTelemetry.state}

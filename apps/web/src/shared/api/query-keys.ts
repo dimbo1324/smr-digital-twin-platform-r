@@ -13,6 +13,9 @@ export const queryKeys = {
   control: {
     status: ["control", "status"] as const,
   },
+  pid: {
+    status: ["pid", "status"] as const,
+  },
   commands: {
     recent: ["commands", "recent"] as const,
   },

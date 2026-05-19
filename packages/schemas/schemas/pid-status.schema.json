@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PIDStatus",
+  "type": "object",
+  "properties": {
+    "controllerTag": {
+      "type": "string",
+      "example": "TIC-101"
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "MANUAL",
+        "AUTO",
+        "DISABLED"
+      ]
+    },
+    "authority": {
+      "type": "string",
+      "enum": [
+        "USER",
+        "SCENARIO",
+        "PID",
+        "SYSTEM",
+        "NONE"
+      ]
+    },
+    "active": {
+      "type": "boolean"
+    },
+    "pidImplemented": {
+      "type": "boolean",
+      "const": true
+    },
+    "processVariableTag": {
+      "type": "string",
+      "example": "TT-101"
+    },
+    "processValue": {
+      "type": "number"
+    },
+    "setpoint": {
+      "type": "number"
+    },
+    "manipulatedVariableTag": {
+      "type": "string",
+      "example": "V-101.POS"
+    },
+    "output": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "outputMin": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "outputMax": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "kp": {
+      "type": "number",
+      "minimum": 0
+    },
+    "ki": {
+      "type": "number",
+      "minimum": 0
+    },
+    "kd": {
+      "type": "number",
+      "minimum": 0
+    },
+    "error": {
+      "type": "number"
+    },
+    "pTerm": {
+      "type": "number"
+    },
+    "iTerm": {
+      "type": "number"
+    },
+    "dTerm": {
+      "type": "number"
+    },
+    "integral": {
+      "type": "number"
+    },
+    "derivative": {
+      "type": "number"
+    },
+    "saturated": {
+      "type": "boolean"
+    },
+    "status": {
+      "type": "string"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "safetyDisclaimer": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "controllerTag",
+    "mode",
+    "authority",
+    "active",
+    "pidImplemented",
+    "processVariableTag",
+    "processValue",
+    "setpoint",
+    "manipulatedVariableTag",
+    "output",
+    "outputMin",
+    "outputMax",
+    "kp",
+    "ki",
+    "kd",
+    "error",
+    "pTerm",
+    "iTerm",
+    "dTerm",
+    "integral",
+    "derivative",
+    "saturated",
+    "status",
+    "updatedAt",
+    "safetyDisclaimer"
+  ],
+  "additionalProperties": false
+}

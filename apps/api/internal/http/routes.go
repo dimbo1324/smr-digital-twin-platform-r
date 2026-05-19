@@ -24,6 +24,8 @@ func (s *Server) routes() http.Handler {
 	mux.Handle("GET /api/v1/telemetry/history", s.handlers.TelemetryHistory)
 	mux.Handle("GET /api/v1/control/status", s.handlers.ControlStatus)
 	mux.Handle("POST /api/v1/control/mode", s.handlers.SetControlMode)
+	mux.Handle("GET /api/v1/pid/status", s.handlers.PIDStatus)
+	mux.Handle("PATCH /api/v1/pid/config", s.handlers.UpdatePIDConfig)
 	mux.Handle("GET /api/v1/alarms/active", s.handlers.ActiveAlarms)
 	mux.Handle("GET /api/v1/alarms/history", s.handlers.AlarmHistory)
 	mux.Handle("POST /api/v1/alarms/{alarmID}/acknowledge", s.handlers.AcknowledgeAlarm)

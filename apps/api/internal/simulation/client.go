@@ -60,6 +60,14 @@ func (c *Client) SetControlMode(ctx context.Context, request ModeChangeRequest) 
 	return postJSON[ControlStatus](ctx, c, "/api/v1/simulation/control/mode", request)
 }
 
+func (c *Client) PIDStatus(ctx context.Context) (PIDStatus, error) {
+	return get[PIDStatus](ctx, c, "/api/v1/simulation/pid/status")
+}
+
+func (c *Client) UpdatePIDConfig(ctx context.Context, request PIDConfigUpdateRequest) (PIDStatus, error) {
+	return patchJSON[PIDStatus](ctx, c, "/api/v1/simulation/pid/config", request)
+}
+
 func (c *Client) ActiveAlarms(ctx context.Context) ([]Alarm, error) {
 	return get[[]Alarm](ctx, c, "/api/v1/simulation/alarms/active")
 }
@@ -119,6 +127,10 @@ func post[T any](ctx context.Context, c *Client, path string) (T, error) {
 
 func postJSON[T any](ctx context.Context, c *Client, path string, body any) (T, error) {
 	return doWithBody[T](ctx, c, http.MethodPost, path, body)
+}
+
+func patchJSON[T any](ctx context.Context, c *Client, path string, body any) (T, error) {
+	return doWithBody[T](ctx, c, http.MethodPatch, path, body)
 }
 
 func do[T any](ctx context.Context, c *Client, method, path string) (T, error) {

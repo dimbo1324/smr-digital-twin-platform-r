@@ -108,10 +108,24 @@ This is intentionally not a real control path. Commands mutate only in-memory si
 `TIC-101` currently owns the simulation-only control mode for the `TT-101 -> V-101.POS` loop:
 
 - `MANUAL`: direct user/frontend commands to `V-101` are allowed.
-- `AUTO`: `V-101` is reserved for future simulated PID authority. PID output is not implemented yet, and direct user/frontend valve commands are rejected by arbitration.
+- `AUTO`: `V-101` is owned by the simulation-only `TIC-101` PID controller. Direct user/frontend valve commands are rejected by arbitration.
 - `DISABLED`: direct user/frontend valve commands are rejected because control output is disabled.
 
 `P-101` remains manually controllable in this milestone. Scenario and system operations are preserved as simulation overrides. Mode changes and arbitration rejections are recorded in the unified in-memory event stream using `CONTROL_MODE_CHANGED`, `CONTROL_AUTHORITY_CHANGED`, and `COMMAND_REJECTED_BY_ARBITRATION`.
+
+## TIC-101 PID Loop
+
+`TIC-101` is a synthetic teaching controller for the thermal process loop. It is active only in `AUTO` mode:
+
+```mermaid
+flowchart LR
+    TT101["TT-101 synthetic temperature"] --> TIC101["TIC-101 PID"]
+    TIC101 --> V101["V-101.POS target"]
+    V101 --> Flow["Synthetic FT-101 flow"]
+    Flow --> Temp["Synthetic TT-101 response"]
+```
+
+The PID implementation includes conservative `Kp/Ki/Kd` tuning, setpoint validation, output limits from `0..100%`, integral clamping for basic anti-windup, and a startup bias from the current valve position when entering `AUTO`. It controls only in-memory simulation state and is not a real plant controller.
 
 ## Dashboard Live Overview
 
@@ -161,4 +175,4 @@ Alarm and event storage is in-memory inside `apps/simulation`. The API is a prox
 - Alarm lifecycle and event history are in-memory.
 - Process commands are implemented only for simulated `V-101` and `P-101` assets.
 - Command/event history is in-memory and not an immutable audit store.
-- MQTT, TSDB persistence, PID control, report export, auth/RBAC, and Kubernetes are not part of the current milestone.
+- MQTT, TSDB persistence, report export, auth/RBAC, and Kubernetes are not part of the current milestone.

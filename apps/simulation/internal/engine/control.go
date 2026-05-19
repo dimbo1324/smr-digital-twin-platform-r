@@ -43,6 +43,7 @@ func (e *Engine) SetControlMode(request model.ModeChangeRequest) (model.ControlS
 	previousMode := e.state.control.mode
 	previousAuthority := e.state.control.authority
 	nextAuthority := authorityForMode(request.Mode)
+	wasPIDActive := e.state.pid.state.Active
 
 	e.state.control.mode = request.Mode
 	e.state.control.authority = nextAuthority
@@ -50,6 +51,7 @@ func (e *Engine) SetControlMode(request model.ModeChangeRequest) (model.ControlS
 	e.state.control.updatedAt = now
 	e.state.control.updatedBy = request.RequestedBy
 	e.state.snapshot.PIDControllerMode = string(request.Mode)
+	e.handlePIDModeTransitionLocked(previousMode, request.Mode, now, request.RequestedBy)
 
 	if previousMode != request.Mode {
 		e.appendEventLocked(
@@ -86,6 +88,7 @@ func (e *Engine) SetControlMode(request model.ModeChangeRequest) (model.ControlS
 			},
 		)
 	}
+	e.appendPIDModeEventLocked(wasPIDActive, e.state.pid.state.Active, request.Mode, now)
 
 	return e.controlStatusLocked(), nil
 }
@@ -135,7 +138,7 @@ func (e *Engine) controlStatusLocked() model.ControlStatus {
 		Mode:                   e.state.control.mode,
 		Authority:              e.state.control.authority,
 		Enabled:                e.state.control.mode != model.ControlModeDisabled,
-		PIDImplemented:         false,
+		PIDImplemented:         true,
 		Reason:                 e.state.control.reason,
 		UpdatedAt:              e.state.control.updatedAt,
 		UpdatedBy:              e.state.control.updatedBy,

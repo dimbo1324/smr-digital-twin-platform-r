@@ -1,6 +1,6 @@
 # SMR Twin Simulation Service
 
-Go simulation-only telemetry engine for the SMR Twin Platform MVP. It generates deterministic synthetic telemetry, in-memory history, alarm lifecycle state, recent events, control mode arbitration, and scenario states for the backend API.
+Go simulation-only telemetry engine for the SMR Twin Platform MVP. It generates deterministic synthetic telemetry, in-memory history, alarm lifecycle state, recent events, control mode arbitration, a synthetic TIC-101 PID loop, and scenario states for the backend API.
 
 The service exposes two synthetic telemetry layers:
 
@@ -11,7 +11,7 @@ This service is not connected to real equipment. It does not implement real nucl
 
 The current command layer is simulation-only. Commands mutate only in-memory `V-101` and `P-101` state and are recorded in an in-memory command/event trail.
 
-`TIC-101` owns a simulation-only control mode for the future `TT-101 -> V-101.POS` loop. `MANUAL` allows direct `V-101` commands, `AUTO` reserves the valve for future simulated PID authority, and `DISABLED` blocks direct valve commands. PID output is not implemented yet.
+`TIC-101` owns a simulation-only PID loop for the synthetic `TT-101 -> V-101.POS` process. `MANUAL` allows direct `V-101` commands, `AUTO` lets PID apply an in-memory valve target, and `DISABLED` blocks direct valve commands. This is not real plant control.
 
 ## Run
 
@@ -47,6 +47,10 @@ curl http://localhost:8081/api/v1/simulation/control/status
 curl -X POST http://localhost:8081/api/v1/simulation/control/mode \
   -H "Content-Type: application/json" \
   -d '{"mode":"MANUAL","requestedBy":"demo-operator"}'
+curl http://localhost:8081/api/v1/simulation/pid/status
+curl -X PATCH http://localhost:8081/api/v1/simulation/pid/config \
+  -H "Content-Type: application/json" \
+  -d '{"setpoint":288,"kp":0.9,"ki":0.05,"kd":0.1,"requestedBy":"demo-operator"}'
 curl http://localhost:8081/api/v1/simulation/alarms/active
 curl http://localhost:8081/api/v1/simulation/alarms/history
 curl -X POST http://localhost:8081/api/v1/simulation/alarms/alarm-id/acknowledge \
@@ -137,10 +141,10 @@ The service validates targets, command types, valve position payloads, and `TIC-
 Arbitration behavior:
 
 - `MANUAL`: direct frontend/user valve commands are allowed.
-- `AUTO`: direct frontend/user valve commands are rejected with `CONTROL_MODE_AUTO`.
+- `AUTO`: direct frontend/user valve commands are rejected with `CONTROL_MODE_AUTO` while the synthetic PID owns `V-101.POS`.
 - `DISABLED`: direct frontend/user valve commands are rejected with `CONTROL_DISABLED`.
 
-`P-101` remains manually controllable in this milestone. Scenario/system sources are preserved as simulation overrides. Mode changes emit `CONTROL_MODE_CHANGED` and `CONTROL_AUTHORITY_CHANGED`; arbitration rejections emit `COMMAND_REJECTED_BY_ARBITRATION`.
+`P-101` remains manually controllable in this milestone. Scenario/system sources are preserved as simulation overrides. Mode changes emit `CONTROL_MODE_CHANGED` and `CONTROL_AUTHORITY_CHANGED`; arbitration rejections emit `COMMAND_REJECTED_BY_ARBITRATION`. PID setpoint/tuning/output state changes emit `PID_*` events without logging every tick.
 
 ## State Machines
 

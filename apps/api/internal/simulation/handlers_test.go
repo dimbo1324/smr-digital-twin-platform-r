@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 	"time"
 
@@ -241,6 +242,63 @@ func TestSetControlModeInvalidModePreservesSimulationError(t *testing.T) {
 	}
 }
 
+func TestPIDStatusProxiesSimulation(t *testing.T) {
+	server := fakeSimulationServer()
+	defer server.Close()
+	gateway := newTestGateway(server.URL, true)
+
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/api/v1/pid/status", nil)
+	gateway.PIDStatus(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", recorder.Code)
+	}
+	payload := decodeMap(t, recorder.Body.Bytes())
+	data := payload["data"].(map[string]any)
+	if data["controllerTag"] != "TIC-101" {
+		t.Fatalf("expected TIC-101 PID status, got %v", data["controllerTag"])
+	}
+}
+
+func TestUpdatePIDConfigProxiesRequest(t *testing.T) {
+	server := fakeSimulationServer()
+	defer server.Close()
+	gateway := newTestGateway(server.URL, true)
+
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodPatch, "/api/v1/pid/config", bytes.NewReader([]byte(`{"setpoint":288,"kp":1.1}`)))
+	gateway.UpdatePIDConfig(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", recorder.Code)
+	}
+	payload := decodeMap(t, recorder.Body.Bytes())
+	data := payload["data"].(map[string]any)
+	if data["setpoint"] != float64(288) {
+		t.Fatalf("expected setpoint 288, got %v", data["setpoint"])
+	}
+}
+
+func TestUpdatePIDConfigInvalidPreservesSimulationError(t *testing.T) {
+	server := fakeSimulationServer()
+	defer server.Close()
+	gateway := newTestGateway(server.URL, true)
+
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodPatch, "/api/v1/pid/config", bytes.NewReader([]byte(`{"setpoint":500}`)))
+	gateway.UpdatePIDConfig(recorder, request)
+
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("expected status 400, got %d", recorder.Code)
+	}
+	payload := decodeMap(t, recorder.Body.Bytes())
+	errPayload := payload["error"].(map[string]any)
+	if errPayload["code"] != "INVALID_PID_CONFIG" {
+		t.Fatalf("expected INVALID_PID_CONFIG, got %v", errPayload["code"])
+	}
+}
+
 func TestSubmitCommandProxiesRequest(t *testing.T) {
 	server := fakeSimulationServer()
 	defer server.Close()
@@ -373,6 +431,25 @@ func fakeSimulationServer() *httptest.Server {
 				return
 			}
 			_, _ = w.Write([]byte(`{"data":{"controllerTag":"TIC-101","controlledVariableTag":"TT-101","manipulatedVariableTag":"V-101.POS","mode":"` + request.Mode + `","authority":"PID","enabled":true,"pidImplemented":false,"reason":"test","updatedAt":"2026-05-12T12:00:00Z","updatedBy":"` + request.RequestedBy + `","safetyDisclaimer":"Simulation-only interface. No real plant control."},"meta":{"timestamp":"2026-05-12T12:00:00Z","source":"simulation","simulationOnly":true}}`))
+		case r.URL.Path == "/api/v1/simulation/pid/status":
+			_, _ = w.Write([]byte(`{"data":{"controllerTag":"TIC-101","mode":"MANUAL","authority":"USER","active":false,"pidImplemented":true,"processVariableTag":"TT-101","processValue":286.4,"setpoint":286,"manipulatedVariableTag":"V-101.POS","output":64,"outputMin":0,"outputMax":100,"kp":0.8,"ki":0.05,"kd":0.1,"error":-0.4,"pTerm":-0.32,"iTerm":0,"dTerm":0,"integral":0,"derivative":0,"saturated":false,"status":"Manual","updatedAt":"2026-05-12T12:00:00Z","safetyDisclaimer":"Simulation-only interface. No real plant control."},"meta":{"timestamp":"2026-05-12T12:00:00Z","source":"simulation","simulationOnly":true}}`))
+		case r.URL.Path == "/api/v1/simulation/pid/config":
+			var request PIDConfigUpdateRequest
+			_ = json.NewDecoder(r.Body).Decode(&request)
+			if request.Setpoint != nil && *request.Setpoint > 310 {
+				w.WriteHeader(http.StatusBadRequest)
+				_, _ = w.Write([]byte(`{"error":{"code":"INVALID_PID_CONFIG","message":"setpoint must be between 270 and 310 C"},"meta":{"timestamp":"2026-05-12T12:00:00Z","source":"simulation","simulationOnly":true}}`))
+				return
+			}
+			setpoint := 286.0
+			if request.Setpoint != nil {
+				setpoint = *request.Setpoint
+			}
+			kp := 0.8
+			if request.Kp != nil {
+				kp = *request.Kp
+			}
+			_, _ = w.Write([]byte(`{"data":{"controllerTag":"TIC-101","mode":"MANUAL","authority":"USER","active":false,"pidImplemented":true,"processVariableTag":"TT-101","processValue":286.4,"setpoint":` + strconv.FormatFloat(setpoint, 'f', -1, 64) + `,"manipulatedVariableTag":"V-101.POS","output":64,"outputMin":0,"outputMax":100,"kp":` + strconv.FormatFloat(kp, 'f', -1, 64) + `,"ki":0.05,"kd":0.1,"error":-0.4,"pTerm":-0.32,"iTerm":0,"dTerm":0,"integral":0,"derivative":0,"saturated":false,"status":"Manual","updatedAt":"2026-05-12T12:00:00Z","safetyDisclaimer":"Simulation-only interface. No real plant control."},"meta":{"timestamp":"2026-05-12T12:00:00Z","source":"simulation","simulationOnly":true}}`))
 		case r.URL.Path == "/api/v1/simulation/alarms/active":
 			_, _ = w.Write([]byte(`{"data":[{"id":"alarm-1","ruleId":"TEST","assetId":"primary-loop","tag":"primary-loop","code":"TEST","title":"Test","message":"Synthetic alarm","severity":"WARNING","status":"ACTIVE","value":1,"lastValue":1,"threshold":1,"unit":"%","source":"alarm-evaluator","startedAt":"2026-05-12T12:00:00Z","activeAt":"2026-05-12T12:00:00Z","updatedAt":"2026-05-12T12:00:00Z"}],"meta":{"timestamp":"2026-05-12T12:00:00Z","source":"simulation","simulationOnly":true,"count":1}}`))
 		case r.URL.Path == "/api/v1/simulation/alarms/history":
