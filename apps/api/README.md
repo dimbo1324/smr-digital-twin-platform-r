@@ -13,6 +13,7 @@ Current milestone:
 - optional simulation service gateway integration
 - telemetry history, alarms, and scenario proxy endpoints
 - simulation-only command proxy endpoints for `V-101` and `P-101`
+- simulation-only control mode endpoints for `TIC-101` manual/auto/disabled arbitration
 - alarm lifecycle proxy endpoints for active, history, and acknowledge workflows
 - recent in-memory command/alarm/event proxy endpoints
 - SMR Unit Overview and Thermal Process Loop telemetry through `/api/v1/telemetry/latest`
@@ -88,6 +89,10 @@ curl http://localhost:8080/api/v1/system/status
 curl http://localhost:8080/api/v1/assets
 curl http://localhost:8080/api/v1/telemetry/latest
 curl "http://localhost:8080/api/v1/telemetry/history?window=15m"
+curl http://localhost:8080/api/v1/control/status
+curl -X POST http://localhost:8080/api/v1/control/mode \
+  -H "Content-Type: application/json" \
+  -d '{"mode":"AUTO","requestedBy":"demo-operator","reason":"Prepare for future simulated PID demo"}'
 curl http://localhost:8080/api/v1/alarms/active
 curl http://localhost:8080/api/v1/alarms/history
 curl -X POST http://localhost:8080/api/v1/alarms/alarm-id/acknowledge \
@@ -154,6 +159,13 @@ The current telemetry contract includes both unit overview tags such as `SMR-POW
 - `GET /api/v1/alarms/history` returns cleared in-memory alarm instances.
 - `POST /api/v1/alarms/{id}/acknowledge` acknowledges an active synthetic alarm instance.
 
+### Control Mode Endpoints
+
+- `GET /api/v1/control/status` returns current `TIC-101` mode, authority, controlled variable, manipulated variable, and simulation-only safety disclaimer.
+- `POST /api/v1/control/mode` switches `TIC-101` between `MANUAL`, `AUTO`, and `DISABLED`.
+
+`AUTO` mode reserves `V-101` for future simulated PID authority. PID output is not implemented yet. Direct frontend/user `V-101` commands are rejected in `AUTO` and `DISABLED`; `P-101` commands remain manually controllable.
+
 Example acknowledgement request:
 
 ```json
@@ -168,6 +180,8 @@ Acknowledgement affects only in-memory simulation state. Unknown alarms return `
 ### `POST /api/v1/commands`
 
 Submits a simulation-only command to `apps/simulation`. The API normalizes missing `source` to `frontend`, missing `requestedBy` to `demo-engineer`, and forwards the command to the simulation service.
+
+Direct `V-101` commands are also checked by simulation command arbitration. In `AUTO` and `DISABLED`, the simulation service returns structured rejection errors such as `CONTROL_MODE_AUTO` or `CONTROL_DISABLED`.
 
 Supported targets:
 

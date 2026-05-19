@@ -11,12 +11,21 @@ type state struct {
 	activeScenario model.ScenarioName
 	valve          valveRuntime
 	pump           pumpRuntime
+	control        controlRuntime
 	commands       []model.Command
 	events         []model.Event
 	running        bool
 	tickCount      int64
 	commandSeq     int64
 	eventSeq       int64
+}
+
+type controlRuntime struct {
+	mode      model.ControlMode
+	authority model.ControlAuthority
+	reason    string
+	updatedAt time.Time
+	updatedBy string
 }
 
 type valveRuntime struct {
@@ -69,7 +78,7 @@ func initialState(now time.Time) state {
 			PumpState:              string(model.PumpStateRunning),
 			PumpRPM:                1800,
 			HeatExchangerState:     "Online",
-			PIDControllerMode:      "Disabled",
+			PIDControllerMode:      string(model.ControlModeManual),
 			Timestamp:              now,
 			Mode:                   model.ModeNormal,
 			Health:                 model.HealthOK,
@@ -90,6 +99,13 @@ func initialState(now time.Time) state {
 			rpm:       1800,
 			targetRPM: 1800,
 			updatedAt: now,
+		},
+		control: controlRuntime{
+			mode:      model.ControlModeManual,
+			authority: model.ControlAuthorityUser,
+			reason:    "Operator manual control",
+			updatedAt: now,
+			updatedBy: "system",
 		},
 	}
 }

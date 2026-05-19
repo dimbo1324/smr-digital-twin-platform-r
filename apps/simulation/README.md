@@ -1,6 +1,6 @@
 # SMR Twin Simulation Service
 
-Go simulation-only telemetry engine for the SMR Twin Platform MVP. It generates deterministic synthetic telemetry, in-memory history, alarm lifecycle state, recent events, and scenario states for the backend API.
+Go simulation-only telemetry engine for the SMR Twin Platform MVP. It generates deterministic synthetic telemetry, in-memory history, alarm lifecycle state, recent events, control mode arbitration, and scenario states for the backend API.
 
 The service exposes two synthetic telemetry layers:
 
@@ -10,6 +10,8 @@ The service exposes two synthetic telemetry layers:
 This service is not connected to real equipment. It does not implement real nuclear operating procedures, safety automation, or plant control.
 
 The current command layer is simulation-only. Commands mutate only in-memory `V-101` and `P-101` state and are recorded in an in-memory command/event trail.
+
+`TIC-101` owns a simulation-only control mode for the future `TT-101 -> V-101.POS` loop. `MANUAL` allows direct `V-101` commands, `AUTO` reserves the valve for future simulated PID authority, and `DISABLED` blocks direct valve commands. PID output is not implemented yet.
 
 ## Run
 
@@ -41,6 +43,10 @@ curl http://localhost:8081/api/v1/simulation/status
 curl http://localhost:8081/api/v1/simulation/assets
 curl http://localhost:8081/api/v1/simulation/telemetry/latest
 curl "http://localhost:8081/api/v1/simulation/telemetry/history?window=15m"
+curl http://localhost:8081/api/v1/simulation/control/status
+curl -X POST http://localhost:8081/api/v1/simulation/control/mode \
+  -H "Content-Type: application/json" \
+  -d '{"mode":"MANUAL","requestedBy":"demo-operator"}'
 curl http://localhost:8081/api/v1/simulation/alarms/active
 curl http://localhost:8081/api/v1/simulation/alarms/history
 curl -X POST http://localhost:8081/api/v1/simulation/alarms/alarm-id/acknowledge \
@@ -126,7 +132,15 @@ Example request:
 }
 ```
 
-The service validates targets, command types, and valve position payloads before mutating state. Rejected commands are recorded in the recent command/event trail.
+The service validates targets, command types, valve position payloads, and `TIC-101` control arbitration before mutating state. Rejected commands are recorded in the recent command/event trail.
+
+Arbitration behavior:
+
+- `MANUAL`: direct frontend/user valve commands are allowed.
+- `AUTO`: direct frontend/user valve commands are rejected with `CONTROL_MODE_AUTO`.
+- `DISABLED`: direct frontend/user valve commands are rejected with `CONTROL_DISABLED`.
+
+`P-101` remains manually controllable in this milestone. Scenario/system sources are preserved as simulation overrides. Mode changes emit `CONTROL_MODE_CHANGED` and `CONTROL_AUTHORITY_CHANGED`; arbitration rejections emit `COMMAND_REJECTED_BY_ARBITRATION`.
 
 ## State Machines
 

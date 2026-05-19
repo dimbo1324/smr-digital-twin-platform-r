@@ -74,7 +74,7 @@ The API should preserve both layers. Unit overview telemetry must not replace pr
 
 ## Simulation Command Flow
 
-The current command path is REST plus polling:
+The current command path is REST plus polling. Direct `V-101` commands now pass through the `TIC-101` simulation-only control arbitrator before reaching the actuator state machine:
 
 ```mermaid
 sequenceDiagram
@@ -87,6 +87,7 @@ sequenceDiagram
     UI->>API: "POST /api/v1/commands"
     API->>SIM: "POST /api/v1/simulation/commands"
     SIM->>ENG: "SubmitCommand(command)"
+    ENG->>ENG: "Arbitrate TIC-101 mode for V-101"
     ENG->>ENG: "Validate and mutate in-memory V-101/P-101 state"
     ENG->>TEL: "Update synthetic process telemetry on tick"
     UI->>API: "Poll /api/v1/telemetry/latest"
@@ -101,6 +102,16 @@ Command history and events are stored in an in-memory ring buffer inside `apps/s
 - `GET /api/v1/events/recent`
 
 This is intentionally not a real control path. Commands mutate only in-memory simulated assets and exist to validate the digital twin interaction loop.
+
+## Manual / Auto Command Arbitration
+
+`TIC-101` currently owns the simulation-only control mode for the `TT-101 -> V-101.POS` loop:
+
+- `MANUAL`: direct user/frontend commands to `V-101` are allowed.
+- `AUTO`: `V-101` is reserved for future simulated PID authority. PID output is not implemented yet, and direct user/frontend valve commands are rejected by arbitration.
+- `DISABLED`: direct user/frontend valve commands are rejected because control output is disabled.
+
+`P-101` remains manually controllable in this milestone. Scenario and system operations are preserved as simulation overrides. Mode changes and arbitration rejections are recorded in the unified in-memory event stream using `CONTROL_MODE_CHANGED`, `CONTROL_AUTHORITY_CHANGED`, and `COMMAND_REJECTED_BY_ARBITRATION`.
 
 ## Dashboard Live Overview
 

@@ -16,6 +16,7 @@ export function useSendCommand() {
         queryClient.invalidateQueries({ queryKey: queryKeys.events.recent }),
         queryClient.invalidateQueries({ queryKey: queryKeys.alarms.active }),
         queryClient.invalidateQueries({ queryKey: queryKeys.alarms.history }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.control.status }),
       ]);
     },
   });

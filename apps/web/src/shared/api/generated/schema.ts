@@ -135,7 +135,7 @@ export interface components {
       "id": string;
       "targetTag": "V-101" | "P-101";
       "commandType": "OPEN" | "CLOSE" | "STOP" | "SET_POSITION" | "START";
-      "source": "frontend" | "api" | "scenario" | "system";
+      "source": "frontend" | "api" | "user" | "scenario" | "pid" | "system";
       "requestedBy": string;
       "payload": components["schemas"]["CommandPayload"];
       "status": "RECEIVED" | "ACCEPTED" | "REJECTED" | "IN_PROGRESS" | "COMPLETED" | "FAILED";
@@ -147,6 +147,10 @@ export interface components {
       "errorCode"?: string;
       "errorMessage"?: string;
       "correlationId"?: string;
+      "rejectReason"?: components["schemas"]["CommandRejectReason"];
+      "arbitrationMode"?: components["schemas"]["ControlMode"];
+      "authority"?: components["schemas"]["ControlAuthority"];
+      "rejectedBy"?: string;
     };
     "AlarmInstance": {
       "id": string;
@@ -178,7 +182,7 @@ export interface components {
     "Event": {
       "id": string;
       "timestamp": string;
-      "type": "COMMAND_RECEIVED" | "COMMAND_ACCEPTED" | "COMMAND_REJECTED" | "COMMAND_STARTED" | "COMMAND_COMPLETED" | "COMMAND_FAILED" | "EQUIPMENT_STATE_CHANGED" | "ALARM_ACTIVATED" | "ALARM_ACKNOWLEDGED" | "ALARM_CLEARED" | "SYSTEM_STATUS_CHANGED" | "SIMULATION_STATE_UPDATED" | "SCENARIO_STARTED" | "SCENARIO_COMPLETED";
+      "type": "COMMAND_RECEIVED" | "COMMAND_ACCEPTED" | "COMMAND_REJECTED" | "COMMAND_STARTED" | "COMMAND_COMPLETED" | "COMMAND_FAILED" | "EQUIPMENT_STATE_CHANGED" | "ALARM_ACTIVATED" | "ALARM_ACKNOWLEDGED" | "ALARM_CLEARED" | "SYSTEM_STATUS_CHANGED" | "SIMULATION_STATE_UPDATED" | "SCENARIO_STARTED" | "SCENARIO_COMPLETED" | "CONTROL_MODE_CHANGED" | "CONTROL_AUTHORITY_CHANGED" | "COMMAND_REJECTED_BY_ARBITRATION";
       "source": string;
       "severity": "INFO" | "WARNING" | "ERROR" | "CRITICAL";
       "targetTag"?: string;
@@ -246,6 +250,41 @@ export interface components {
     };
     "SimulationStatusResponse": {
       "data": components["schemas"]["SimulationStatus"];
+      "meta": components["schemas"]["ApiMeta"];
+    };
+    "ControlMode": "MANUAL" | "AUTO" | "DISABLED";
+    "ControlAuthority": "USER" | "SCENARIO" | "PID" | "SYSTEM" | "NONE";
+    "CommandRejectReason": "CONTROL_MODE_AUTO" | "CONTROL_DISABLED" | "UNSUPPORTED_COMMAND_SOURCE" | "UNSUPPORTED_TARGET" | "INVALID_COMMAND" | "INVALID_PAYLOAD" | "TARGET_CONTROLLED_BY_PID" | "UNKNOWN";
+    "ControlStatus": {
+      "controllerTag": string;
+      "controlledVariableTag": string;
+      "manipulatedVariableTag": string;
+      "mode": components["schemas"]["ControlMode"];
+      "authority": components["schemas"]["ControlAuthority"];
+      "enabled": boolean;
+      "pidImplemented": boolean;
+      "reason": string;
+      "updatedAt": string;
+      "updatedBy": string;
+      "safetyDisclaimer": string;
+    };
+    "ModeChangeRequest": {
+      "mode": components["schemas"]["ControlMode"];
+      "requestedBy"?: string;
+      "reason"?: string;
+    };
+    "ArbitrationDecision": {
+      "allowed": boolean;
+      "reason"?: components["schemas"]["CommandRejectReason"];
+      "message"?: string;
+      "mode": components["schemas"]["ControlMode"];
+      "authority": components["schemas"]["ControlAuthority"];
+      "targetTag": string;
+      "commandType": string;
+      "source": string;
+    };
+    "ControlStatusResponse": {
+      "data": components["schemas"]["ControlStatus"];
       "meta": components["schemas"]["ApiMeta"];
     };
   };

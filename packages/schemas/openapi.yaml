@@ -12,26 +12,49 @@
     }
   ],
   "tags": [
-    { "name": "Health" },
-    { "name": "System" },
-    { "name": "Assets" },
-    { "name": "Telemetry" },
-    { "name": "Commands" },
-    { "name": "Alarms" },
-    { "name": "Events" },
-    { "name": "Scenarios" }
+    {
+      "name": "Health"
+    },
+    {
+      "name": "System"
+    },
+    {
+      "name": "Assets"
+    },
+    {
+      "name": "Telemetry"
+    },
+    {
+      "name": "Commands"
+    },
+    {
+      "name": "Control"
+    },
+    {
+      "name": "Alarms"
+    },
+    {
+      "name": "Events"
+    },
+    {
+      "name": "Scenarios"
+    }
   ],
   "paths": {
     "/health": {
       "get": {
-        "tags": ["Health"],
+        "tags": [
+          "Health"
+        ],
         "summary": "Read API health",
         "responses": {
           "200": {
             "description": "API health response",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/HealthResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
               }
             }
           }
@@ -40,58 +63,78 @@
     },
     "/api/v1/system/status": {
       "get": {
-        "tags": ["System"],
+        "tags": [
+          "System"
+        ],
         "summary": "Read platform and integration status",
         "responses": {
           "200": {
             "description": "Current platform status",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/SystemStatusResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/SystemStatusResponse"
+                }
               }
             }
           },
-          "500": { "$ref": "#/components/responses/Error" }
+          "500": {
+            "$ref": "#/components/responses/Error"
+          }
         }
       }
     },
     "/api/v1/assets": {
       "get": {
-        "tags": ["Assets"],
+        "tags": [
+          "Assets"
+        ],
         "summary": "List simulation assets",
         "responses": {
           "200": {
             "description": "Assets returned from simulation or labelled fallback memory source",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/AssetsResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/AssetsResponse"
+                }
               }
             }
           },
-          "500": { "$ref": "#/components/responses/Error" }
+          "500": {
+            "$ref": "#/components/responses/Error"
+          }
         }
       }
     },
     "/api/v1/telemetry/latest": {
       "get": {
-        "tags": ["Telemetry"],
+        "tags": [
+          "Telemetry"
+        ],
         "summary": "Read latest telemetry points",
         "responses": {
           "200": {
             "description": "Latest telemetry points for SMR unit overview and thermal process loop",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/TelemetryLatestResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/TelemetryLatestResponse"
+                }
               }
             }
           },
-          "500": { "$ref": "#/components/responses/Error" }
+          "500": {
+            "$ref": "#/components/responses/Error"
+          }
         }
       }
     },
     "/api/v1/telemetry/history": {
       "get": {
-        "tags": ["Telemetry"],
+        "tags": [
+          "Telemetry"
+        ],
         "summary": "Read in-memory telemetry history snapshots",
         "parameters": [
           {
@@ -99,7 +142,16 @@
             "in": "query",
             "required": false,
             "description": "History window supported by the simulation service.",
-            "schema": { "type": "string", "enum": ["5m", "15m", "30m", "1h"], "default": "15m" }
+            "schema": {
+              "type": "string",
+              "enum": [
+                "5m",
+                "15m",
+                "30m",
+                "1h"
+              ],
+              "default": "15m"
+            }
           }
         ],
         "responses": {
@@ -107,38 +159,52 @@
             "description": "In-memory telemetry snapshots",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/TelemetryHistoryResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/TelemetryHistoryResponse"
+                }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "503": { "$ref": "#/components/responses/Error" }
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error"
+          }
         }
       }
     },
     "/api/v1/commands": {
       "post": {
-        "tags": ["Commands"],
+        "tags": [
+          "Commands"
+        ],
         "summary": "Submit a simulation-only command",
         "description": "Commands mutate only in-memory simulation state for V-101 and P-101. They do not control real equipment.",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/CommandRequest" },
+              "schema": {
+                "$ref": "#/components/schemas/CommandRequest"
+              },
               "examples": {
                 "valveSetPosition": {
                   "value": {
                     "targetTag": "V-101",
                     "commandType": "SET_POSITION",
-                    "payload": { "positionPercent": 75 }
+                    "payload": {
+                      "positionPercent": 75
+                    }
                   }
                 },
                 "pumpStart": {
                   "value": {
                     "targetTag": "P-101",
                     "commandType": "START",
-                    "payload": { "reason": "operator_demo" }
+                    "payload": {
+                      "reason": "operator_demo"
+                    }
                   }
                 }
               }
@@ -150,19 +216,32 @@
             "description": "Command accepted, rejected, completed, or failed by the simulation service",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/CommandResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResponse"
+                }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "422": { "$ref": "#/components/responses/Error" },
-          "503": { "$ref": "#/components/responses/Error" }
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error"
+          }
         }
       }
     },
     "/api/v1/commands/recent": {
       "get": {
-        "tags": ["Commands"],
+        "tags": [
+          "Commands"
+        ],
         "summary": "List recent in-memory command records",
         "parameters": [
           {
@@ -170,7 +249,11 @@
             "in": "query",
             "required": false,
             "description": "Maximum number of newest command records to return.",
-            "schema": { "type": "integer", "minimum": 1, "maximum": 200 }
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            }
           }
         ],
         "responses": {
@@ -178,18 +261,26 @@
             "description": "Recent command records",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/CommandsResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/CommandsResponse"
+                }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "503": { "$ref": "#/components/responses/Error" }
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error"
+          }
         }
       }
     },
     "/api/v1/events/recent": {
       "get": {
-        "tags": ["Events"],
+        "tags": [
+          "Events"
+        ],
         "summary": "List recent unified in-memory events",
         "parameters": [
           {
@@ -197,7 +288,11 @@
             "in": "query",
             "required": false,
             "description": "Maximum number of newest event records to return.",
-            "schema": { "type": "integer", "minimum": 1, "maximum": 200 }
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            }
           }
         ],
         "responses": {
@@ -205,25 +300,35 @@
             "description": "Recent command, alarm, equipment, and simulation events",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/EventsResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/EventsResponse"
+                }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "503": { "$ref": "#/components/responses/Error" }
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error"
+          }
         }
       }
     },
     "/api/v1/alarms/active": {
       "get": {
-        "tags": ["Alarms"],
+        "tags": [
+          "Alarms"
+        ],
         "summary": "List active and acknowledged alarms",
         "responses": {
           "200": {
             "description": "Active or acknowledged alarm instances that are not cleared",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/AlarmsResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/AlarmsResponse"
+                }
               }
             }
           }
@@ -232,14 +337,18 @@
     },
     "/api/v1/alarms/history": {
       "get": {
-        "tags": ["Alarms"],
+        "tags": [
+          "Alarms"
+        ],
         "summary": "List cleared in-memory alarm history",
         "responses": {
           "200": {
             "description": "Cleared alarm instances from in-memory history",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/AlarmsResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/AlarmsResponse"
+                }
               }
             }
           }
@@ -248,21 +357,27 @@
     },
     "/api/v1/alarms/{alarmID}/acknowledge": {
       "post": {
-        "tags": ["Alarms"],
+        "tags": [
+          "Alarms"
+        ],
         "summary": "Acknowledge an active simulation alarm",
         "parameters": [
           {
             "name": "alarmID",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
           "required": false,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/AcknowledgeAlarmRequest" }
+              "schema": {
+                "$ref": "#/components/schemas/AcknowledgeAlarmRequest"
+              }
             }
           }
         },
@@ -271,43 +386,61 @@
             "description": "Acknowledged alarm instance",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/AlarmResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/AlarmResponse"
+                }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "404": { "$ref": "#/components/responses/Error" },
-          "409": { "$ref": "#/components/responses/Error" }
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          }
         }
       }
     },
     "/api/v1/simulation/scenarios": {
       "get": {
-        "tags": ["Scenarios"],
+        "tags": [
+          "Scenarios"
+        ],
         "summary": "List predefined synthetic simulation scenarios",
         "responses": {
           "200": {
             "description": "Predefined simulation scenarios",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ScenariosResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ScenariosResponse"
+                }
               }
             }
           },
-          "503": { "$ref": "#/components/responses/Error" }
+          "503": {
+            "$ref": "#/components/responses/Error"
+          }
         }
       }
     },
     "/api/v1/simulation/scenarios/{scenarioName}/start": {
       "post": {
-        "tags": ["Scenarios"],
+        "tags": [
+          "Scenarios"
+        ],
         "summary": "Start a predefined synthetic scenario",
         "parameters": [
           {
             "name": "scenarioName",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -315,46 +448,134 @@
             "description": "Updated simulation status",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/SimulationStatusResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/SimulationStatusResponse"
+                }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "502": { "$ref": "#/components/responses/Error" }
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "502": {
+            "$ref": "#/components/responses/Error"
+          }
         }
       }
     },
     "/api/v1/simulation/scenarios/stop": {
       "post": {
-        "tags": ["Scenarios"],
+        "tags": [
+          "Scenarios"
+        ],
         "summary": "Stop the active synthetic scenario",
         "responses": {
           "200": {
             "description": "Updated simulation status",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/SimulationStatusResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/SimulationStatusResponse"
+                }
               }
             }
           },
-          "502": { "$ref": "#/components/responses/Error" }
+          "502": {
+            "$ref": "#/components/responses/Error"
+          }
         }
       }
     },
     "/api/v1/simulation/reset": {
       "post": {
-        "tags": ["Scenarios"],
+        "tags": [
+          "Scenarios"
+        ],
         "summary": "Reset the in-memory simulation",
         "responses": {
           "200": {
             "description": "Updated simulation status after reset",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/SimulationStatusResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/SimulationStatusResponse"
+                }
               }
             }
           },
-          "502": { "$ref": "#/components/responses/Error" }
+          "502": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api/v1/control/status": {
+      "get": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Read simulation-only control mode and authority status",
+        "description": "Returns the TIC-101 control mode used by command arbitration for V-101. This is simulation-only and does not control real equipment.",
+        "responses": {
+          "200": {
+            "description": "Current control mode status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ControlStatusResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api/v1/control/mode": {
+      "post": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Set simulation-only control mode",
+        "description": "Switches TIC-101 between MANUAL, AUTO, and DISABLED in memory. AUTO reserves V-101 for future simulated PID control; PID output is not implemented yet.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModeChangeRequest"
+              },
+              "examples": {
+                "auto": {
+                  "value": {
+                    "mode": "AUTO",
+                    "requestedBy": "demo-operator",
+                    "reason": "Prepare for future simulated PID demo"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated control status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ControlStatusResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error"
+          }
         }
       }
     }
@@ -365,7 +586,9 @@
         "description": "Standard API error response",
         "content": {
           "application/json": {
-            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
           }
         }
       }
@@ -374,407 +597,1238 @@
       "ApiMeta": {
         "type": "object",
         "properties": {
-          "requestId": { "type": "string" },
-          "timestamp": { "type": "string", "format": "date-time" },
-          "count": { "type": "integer" },
-          "source": { "type": "string" },
-          "degraded": { "type": "boolean" }
+          "requestId": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "count": {
+            "type": "integer"
+          },
+          "source": {
+            "type": "string"
+          },
+          "degraded": {
+            "type": "boolean"
+          }
         },
-        "required": ["timestamp"],
+        "required": [
+          "timestamp"
+        ],
         "additionalProperties": false
       },
       "ApiError": {
         "type": "object",
         "properties": {
-          "code": { "type": "string" },
-          "message": { "type": "string" }
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
         },
-        "required": ["code", "message"],
+        "required": [
+          "code",
+          "message"
+        ],
         "additionalProperties": false
       },
       "ErrorResponse": {
         "type": "object",
         "properties": {
-          "error": { "$ref": "#/components/schemas/ApiError" },
-          "meta": { "$ref": "#/components/schemas/ApiMeta" }
+          "error": {
+            "$ref": "#/components/schemas/ApiError"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ApiMeta"
+          }
         },
-        "required": ["error", "meta"],
+        "required": [
+          "error",
+          "meta"
+        ],
         "additionalProperties": false
       },
       "HealthResponse": {
         "type": "object",
         "properties": {
-          "status": { "type": "string", "example": "ok" },
-          "service": { "type": "string", "example": "smr-api" },
-          "version": { "type": "string", "example": "0.1.0" },
-          "environment": { "type": "string", "example": "development" },
-          "uptimeSeconds": { "type": "integer" },
-          "timestamp": { "type": "string", "format": "date-time" }
+          "status": {
+            "type": "string",
+            "example": "ok"
+          },
+          "service": {
+            "type": "string",
+            "example": "smr-api"
+          },
+          "version": {
+            "type": "string",
+            "example": "0.1.0"
+          },
+          "environment": {
+            "type": "string",
+            "example": "development"
+          },
+          "uptimeSeconds": {
+            "type": "integer"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
         },
-        "required": ["status", "service", "version", "environment", "uptimeSeconds", "timestamp"],
+        "required": [
+          "status",
+          "service",
+          "version",
+          "environment",
+          "uptimeSeconds",
+          "timestamp"
+        ],
         "additionalProperties": false
       },
       "ComponentStatus": {
         "type": "object",
         "properties": {
-          "status": { "type": "string" },
-          "latencyMs": { "type": "integer" }
+          "status": {
+            "type": "string"
+          },
+          "latencyMs": {
+            "type": "integer"
+          }
         },
-        "required": ["status"],
+        "required": [
+          "status"
+        ],
         "additionalProperties": false
       },
       "SystemStatus": {
         "type": "object",
         "properties": {
-          "platform": { "type": "string" },
-          "mode": { "type": "string", "description": "Current platform mode. The MVP uses simulation_only." },
-          "environment": { "type": "string" },
-          "controlBoundary": { "type": "string", "description": "The MVP uses no_live_control." },
-          "dataSource": { "type": "string", "description": "Honest source label such as synthetic_simulation or in_memory_fallback." },
-          "backendApi": { "$ref": "#/components/schemas/ComponentStatus" },
-          "mqttBroker": { "$ref": "#/components/schemas/ComponentStatus" },
-          "simulationService": { "$ref": "#/components/schemas/ComponentStatus" },
-          "historian": { "$ref": "#/components/schemas/ComponentStatus" },
-          "simulationConnected": { "type": "boolean" },
-          "simulationMode": { "type": "string" },
-          "simulationHealth": { "type": "string" },
-          "lastSimulationTimestamp": { "type": "string" },
-          "safetyDisclaimer": { "type": "string" },
-          "version": { "type": "string" },
-          "timestamp": { "type": "string", "format": "date-time" }
+          "platform": {
+            "type": "string"
+          },
+          "mode": {
+            "type": "string",
+            "description": "Current platform mode. The MVP uses simulation_only."
+          },
+          "environment": {
+            "type": "string"
+          },
+          "controlBoundary": {
+            "type": "string",
+            "description": "The MVP uses no_live_control."
+          },
+          "dataSource": {
+            "type": "string",
+            "description": "Honest source label such as synthetic_simulation or in_memory_fallback."
+          },
+          "backendApi": {
+            "$ref": "#/components/schemas/ComponentStatus"
+          },
+          "mqttBroker": {
+            "$ref": "#/components/schemas/ComponentStatus"
+          },
+          "simulationService": {
+            "$ref": "#/components/schemas/ComponentStatus"
+          },
+          "historian": {
+            "$ref": "#/components/schemas/ComponentStatus"
+          },
+          "simulationConnected": {
+            "type": "boolean"
+          },
+          "simulationMode": {
+            "type": "string"
+          },
+          "simulationHealth": {
+            "type": "string"
+          },
+          "lastSimulationTimestamp": {
+            "type": "string"
+          },
+          "safetyDisclaimer": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
         },
-        "required": ["platform", "mode", "environment", "controlBoundary", "dataSource", "backendApi", "mqttBroker", "simulationService", "historian", "simulationConnected", "safetyDisclaimer", "version", "timestamp"],
+        "required": [
+          "platform",
+          "mode",
+          "environment",
+          "controlBoundary",
+          "dataSource",
+          "backendApi",
+          "mqttBroker",
+          "simulationService",
+          "historian",
+          "simulationConnected",
+          "safetyDisclaimer",
+          "version",
+          "timestamp"
+        ],
         "additionalProperties": false
       },
       "AssetMetric": {
         "type": "object",
         "properties": {
-          "name": { "type": "string" },
-          "value": { "type": "number" },
-          "unit": { "type": "string" }
+          "name": {
+            "type": "string"
+          },
+          "value": {
+            "type": "number"
+          },
+          "unit": {
+            "type": "string"
+          }
         },
-        "required": ["name", "value", "unit"],
+        "required": [
+          "name",
+          "value",
+          "unit"
+        ],
         "additionalProperties": false
       },
       "AssetMetadata": {
         "type": "object",
         "properties": {
-          "site": { "type": "string" },
-          "unit": { "type": "string" }
+          "site": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          }
         },
-        "additionalProperties": { "type": "string" }
+        "additionalProperties": {
+          "type": "string"
+        }
       },
       "Asset": {
         "type": "object",
         "properties": {
-          "id": { "type": "string" },
-          "tag": { "type": "string" },
-          "name": { "type": "string" },
-          "type": { "type": "string" },
-          "status": { "type": "string" },
-          "area": { "type": "string" },
-          "unit": { "type": "string" },
-          "safetyClass": { "type": "string" },
-          "description": { "type": "string" },
-          "metadata": { "$ref": "#/components/schemas/AssetMetadata" },
+          "id": {
+            "type": "string"
+          },
+          "tag": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "area": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "safetyClass": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/AssetMetadata"
+          },
           "keyMetrics": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/AssetMetric" }
+            "items": {
+              "$ref": "#/components/schemas/AssetMetric"
+            }
           },
-          "updatedAt": { "type": "string", "format": "date-time" }
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
         },
-        "required": ["id", "tag", "name", "type", "status"],
+        "required": [
+          "id",
+          "tag",
+          "name",
+          "type",
+          "status"
+        ],
         "additionalProperties": false
       },
       "TelemetryPoint": {
         "type": "object",
         "properties": {
-          "tag": { "type": "string" },
-          "name": { "type": "string" },
-          "value": { "type": "number" },
-          "valueText": { "type": "string" },
-          "unit": { "type": "string" },
-          "quality": { "type": "string", "enum": ["GOOD", "BAD", "UNCERTAIN"] },
-          "timestamp": { "type": "string", "format": "date-time" },
-          "source": { "type": "string" },
-          "area": { "type": "string" },
-          "assetTag": { "type": "string" },
+          "tag": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "value": {
+            "type": "number"
+          },
+          "valueText": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "quality": {
+            "type": "string",
+            "enum": [
+              "GOOD",
+              "BAD",
+              "UNCERTAIN"
+            ]
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "source": {
+            "type": "string"
+          },
+          "area": {
+            "type": "string"
+          },
+          "assetTag": {
+            "type": "string"
+          },
           "metadata": {
             "type": "object",
             "additionalProperties": true
           }
         },
-        "required": ["tag", "name", "unit", "quality", "timestamp", "source"],
+        "required": [
+          "tag",
+          "name",
+          "unit",
+          "quality",
+          "timestamp",
+          "source"
+        ],
         "additionalProperties": false
       },
       "TelemetrySnapshot": {
         "type": "object",
         "properties": {
-          "reactorPowerPct": { "type": "number" },
-          "thermalPowerMw": { "type": "number" },
-          "electricPowerMw": { "type": "number" },
-          "primaryTemperatureC": { "type": "number" },
-          "secondaryTemperatureC": { "type": "number" },
-          "primaryPressureMPa": { "type": "number" },
-          "secondaryPressureMPa": { "type": "number" },
-          "coolantFlowPct": { "type": "number" },
-          "steamGeneratorLevelPct": { "type": "number" },
-          "turbineRpm": { "type": "number" },
-          "generatorLoadPct": { "type": "number" },
-          "condenserVacuumKPa": { "type": "number" },
-          "feedwaterFlowPct": { "type": "number" },
-          "vibrationMmS": { "type": "number" },
-          "radiationLevelUSvH": { "type": "number" },
-          "availabilityPct": { "type": "number" },
-          "efficiencyPct": { "type": "number" },
-          "loopTemperatureC": { "type": "number" },
-          "loopPressureMPa": { "type": "number" },
-          "loopFlowKgS": { "type": "number" },
-          "tankLevelPct": { "type": "number" },
-          "valvePositionPct": { "type": "number" },
-          "valveState": { "type": "string" },
-          "pumpState": { "type": "string" },
-          "pumpRpm": { "type": "number" },
-          "heatExchangerState": { "type": "string" },
-          "pidControllerMode": { "type": "string" },
-          "timestamp": { "type": "string", "format": "date-time" },
-          "mode": { "type": "string" },
-          "health": { "type": "string" },
-          "simulationOnly": { "type": "boolean" },
-          "scenario": { "type": "string" }
+          "reactorPowerPct": {
+            "type": "number"
+          },
+          "thermalPowerMw": {
+            "type": "number"
+          },
+          "electricPowerMw": {
+            "type": "number"
+          },
+          "primaryTemperatureC": {
+            "type": "number"
+          },
+          "secondaryTemperatureC": {
+            "type": "number"
+          },
+          "primaryPressureMPa": {
+            "type": "number"
+          },
+          "secondaryPressureMPa": {
+            "type": "number"
+          },
+          "coolantFlowPct": {
+            "type": "number"
+          },
+          "steamGeneratorLevelPct": {
+            "type": "number"
+          },
+          "turbineRpm": {
+            "type": "number"
+          },
+          "generatorLoadPct": {
+            "type": "number"
+          },
+          "condenserVacuumKPa": {
+            "type": "number"
+          },
+          "feedwaterFlowPct": {
+            "type": "number"
+          },
+          "vibrationMmS": {
+            "type": "number"
+          },
+          "radiationLevelUSvH": {
+            "type": "number"
+          },
+          "availabilityPct": {
+            "type": "number"
+          },
+          "efficiencyPct": {
+            "type": "number"
+          },
+          "loopTemperatureC": {
+            "type": "number"
+          },
+          "loopPressureMPa": {
+            "type": "number"
+          },
+          "loopFlowKgS": {
+            "type": "number"
+          },
+          "tankLevelPct": {
+            "type": "number"
+          },
+          "valvePositionPct": {
+            "type": "number"
+          },
+          "valveState": {
+            "type": "string"
+          },
+          "pumpState": {
+            "type": "string"
+          },
+          "pumpRpm": {
+            "type": "number"
+          },
+          "heatExchangerState": {
+            "type": "string"
+          },
+          "pidControllerMode": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "mode": {
+            "type": "string"
+          },
+          "health": {
+            "type": "string"
+          },
+          "simulationOnly": {
+            "type": "boolean"
+          },
+          "scenario": {
+            "type": "string"
+          }
         },
-        "required": ["reactorPowerPct", "thermalPowerMw", "electricPowerMw", "primaryTemperatureC", "secondaryTemperatureC", "primaryPressureMPa", "secondaryPressureMPa", "coolantFlowPct", "steamGeneratorLevelPct", "turbineRpm", "generatorLoadPct", "condenserVacuumKPa", "feedwaterFlowPct", "vibrationMmS", "radiationLevelUSvH", "availabilityPct", "efficiencyPct", "loopTemperatureC", "loopPressureMPa", "loopFlowKgS", "tankLevelPct", "valvePositionPct", "valveState", "pumpState", "pumpRpm", "heatExchangerState", "pidControllerMode", "timestamp", "mode", "health", "simulationOnly", "scenario"],
+        "required": [
+          "reactorPowerPct",
+          "thermalPowerMw",
+          "electricPowerMw",
+          "primaryTemperatureC",
+          "secondaryTemperatureC",
+          "primaryPressureMPa",
+          "secondaryPressureMPa",
+          "coolantFlowPct",
+          "steamGeneratorLevelPct",
+          "turbineRpm",
+          "generatorLoadPct",
+          "condenserVacuumKPa",
+          "feedwaterFlowPct",
+          "vibrationMmS",
+          "radiationLevelUSvH",
+          "availabilityPct",
+          "efficiencyPct",
+          "loopTemperatureC",
+          "loopPressureMPa",
+          "loopFlowKgS",
+          "tankLevelPct",
+          "valvePositionPct",
+          "valveState",
+          "pumpState",
+          "pumpRpm",
+          "heatExchangerState",
+          "pidControllerMode",
+          "timestamp",
+          "mode",
+          "health",
+          "simulationOnly",
+          "scenario"
+        ],
         "additionalProperties": false
       },
       "CommandPayload": {
         "type": "object",
         "properties": {
-          "positionPercent": { "type": "number", "minimum": 0, "maximum": 100 },
-          "reason": { "type": "string", "maxLength": 240 }
+          "positionPercent": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 240
+          }
         },
         "additionalProperties": false
       },
       "CommandRequest": {
         "type": "object",
         "properties": {
-          "targetTag": { "type": "string", "enum": ["V-101", "P-101"] },
-          "commandType": { "type": "string", "enum": ["OPEN", "CLOSE", "STOP", "SET_POSITION", "START"] },
-          "source": { "type": "string" },
-          "requestedBy": { "type": "string" },
-          "payload": { "$ref": "#/components/schemas/CommandPayload" },
-          "correlationId": { "type": "string" }
+          "targetTag": {
+            "type": "string",
+            "enum": [
+              "V-101",
+              "P-101"
+            ]
+          },
+          "commandType": {
+            "type": "string",
+            "enum": [
+              "OPEN",
+              "CLOSE",
+              "STOP",
+              "SET_POSITION",
+              "START"
+            ]
+          },
+          "source": {
+            "type": "string"
+          },
+          "requestedBy": {
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/CommandPayload"
+          },
+          "correlationId": {
+            "type": "string"
+          }
         },
-        "required": ["targetTag", "commandType"],
+        "required": [
+          "targetTag",
+          "commandType"
+        ],
         "additionalProperties": false
       },
       "Command": {
         "type": "object",
         "properties": {
-          "id": { "type": "string" },
-          "targetTag": { "type": "string", "enum": ["V-101", "P-101"] },
-          "commandType": { "type": "string", "enum": ["OPEN", "CLOSE", "STOP", "SET_POSITION", "START"] },
-          "source": { "type": "string", "enum": ["frontend", "api", "scenario", "system"] },
-          "requestedBy": { "type": "string" },
-          "payload": { "$ref": "#/components/schemas/CommandPayload" },
-          "status": { "type": "string", "enum": ["RECEIVED", "ACCEPTED", "REJECTED", "IN_PROGRESS", "COMPLETED", "FAILED"] },
-          "requestedAt": { "type": "string", "format": "date-time" },
-          "acceptedAt": { "type": "string", "format": "date-time" },
-          "completedAt": { "type": "string", "format": "date-time" },
-          "rejectedAt": { "type": "string", "format": "date-time" },
-          "resultMessage": { "type": "string" },
-          "errorCode": { "type": "string" },
-          "errorMessage": { "type": "string" },
-          "correlationId": { "type": "string" }
+          "id": {
+            "type": "string"
+          },
+          "targetTag": {
+            "type": "string",
+            "enum": [
+              "V-101",
+              "P-101"
+            ]
+          },
+          "commandType": {
+            "type": "string",
+            "enum": [
+              "OPEN",
+              "CLOSE",
+              "STOP",
+              "SET_POSITION",
+              "START"
+            ]
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "frontend",
+              "api",
+              "user",
+              "scenario",
+              "pid",
+              "system"
+            ]
+          },
+          "requestedBy": {
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/CommandPayload"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "RECEIVED",
+              "ACCEPTED",
+              "REJECTED",
+              "IN_PROGRESS",
+              "COMPLETED",
+              "FAILED"
+            ]
+          },
+          "requestedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "acceptedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "rejectedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "resultMessage": {
+            "type": "string"
+          },
+          "errorCode": {
+            "type": "string"
+          },
+          "errorMessage": {
+            "type": "string"
+          },
+          "correlationId": {
+            "type": "string"
+          },
+          "rejectReason": {
+            "$ref": "#/components/schemas/CommandRejectReason"
+          },
+          "arbitrationMode": {
+            "$ref": "#/components/schemas/ControlMode"
+          },
+          "authority": {
+            "$ref": "#/components/schemas/ControlAuthority"
+          },
+          "rejectedBy": {
+            "type": "string"
+          }
         },
-        "required": ["id", "targetTag", "commandType", "source", "requestedBy", "payload", "status", "requestedAt"],
+        "required": [
+          "id",
+          "targetTag",
+          "commandType",
+          "source",
+          "requestedBy",
+          "payload",
+          "status",
+          "requestedAt"
+        ],
         "additionalProperties": false
       },
       "AlarmInstance": {
         "type": "object",
         "properties": {
-          "id": { "type": "string" },
-          "ruleId": { "type": "string" },
-          "assetId": { "type": "string" },
-          "tag": { "type": "string" },
-          "code": { "type": "string" },
-          "title": { "type": "string" },
-          "message": { "type": "string" },
-          "severity": { "type": "string", "enum": ["INFO", "WARNING", "HIGH", "ALARM", "CRITICAL"] },
-          "status": { "type": "string", "enum": ["ACTIVE", "ACKNOWLEDGED", "CLEARED"] },
-          "value": { "type": "number" },
-          "lastValue": { "type": "number" },
-          "threshold": { "type": "number" },
-          "unit": { "type": "string" },
-          "source": { "type": "string" },
-          "startedAt": { "type": "string", "format": "date-time" },
-          "activeAt": { "type": "string", "format": "date-time" },
-          "updatedAt": { "type": "string", "format": "date-time" },
-          "acknowledgedAt": { "type": "string", "format": "date-time" },
-          "acknowledgedBy": { "type": "string" },
-          "clearedAt": { "type": "string", "format": "date-time" },
+          "id": {
+            "type": "string"
+          },
+          "ruleId": {
+            "type": "string"
+          },
+          "assetId": {
+            "type": "string"
+          },
+          "tag": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "INFO",
+              "WARNING",
+              "HIGH",
+              "ALARM",
+              "CRITICAL"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "ACKNOWLEDGED",
+              "CLEARED"
+            ]
+          },
+          "value": {
+            "type": "number"
+          },
+          "lastValue": {
+            "type": "number"
+          },
+          "threshold": {
+            "type": "number"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "activeAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "acknowledgedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "acknowledgedBy": {
+            "type": "string"
+          },
+          "clearedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
           "metadata": {
             "type": "object",
             "additionalProperties": true
           }
         },
-        "required": ["id", "ruleId", "assetId", "tag", "code", "title", "message", "severity", "status", "value", "lastValue", "threshold", "unit", "source", "startedAt", "activeAt", "updatedAt"],
+        "required": [
+          "id",
+          "ruleId",
+          "assetId",
+          "tag",
+          "code",
+          "title",
+          "message",
+          "severity",
+          "status",
+          "value",
+          "lastValue",
+          "threshold",
+          "unit",
+          "source",
+          "startedAt",
+          "activeAt",
+          "updatedAt"
+        ],
         "additionalProperties": false
       },
       "AcknowledgeAlarmRequest": {
         "type": "object",
         "properties": {
-          "acknowledgedBy": { "type": "string", "minLength": 1, "maxLength": 120 },
-          "comment": { "type": "string", "maxLength": 500 }
+          "acknowledgedBy": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "comment": {
+            "type": "string",
+            "maxLength": 500
+          }
         },
         "additionalProperties": false
       },
       "Event": {
         "type": "object",
         "properties": {
-          "id": { "type": "string" },
-          "timestamp": { "type": "string", "format": "date-time" },
+          "id": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
           "type": {
             "type": "string",
-            "enum": ["COMMAND_RECEIVED", "COMMAND_ACCEPTED", "COMMAND_REJECTED", "COMMAND_STARTED", "COMMAND_COMPLETED", "COMMAND_FAILED", "EQUIPMENT_STATE_CHANGED", "ALARM_ACTIVATED", "ALARM_ACKNOWLEDGED", "ALARM_CLEARED", "SYSTEM_STATUS_CHANGED", "SIMULATION_STATE_UPDATED", "SCENARIO_STARTED", "SCENARIO_COMPLETED"]
+            "enum": [
+              "COMMAND_RECEIVED",
+              "COMMAND_ACCEPTED",
+              "COMMAND_REJECTED",
+              "COMMAND_STARTED",
+              "COMMAND_COMPLETED",
+              "COMMAND_FAILED",
+              "EQUIPMENT_STATE_CHANGED",
+              "ALARM_ACTIVATED",
+              "ALARM_ACKNOWLEDGED",
+              "ALARM_CLEARED",
+              "SYSTEM_STATUS_CHANGED",
+              "SIMULATION_STATE_UPDATED",
+              "SCENARIO_STARTED",
+              "SCENARIO_COMPLETED",
+              "CONTROL_MODE_CHANGED",
+              "CONTROL_AUTHORITY_CHANGED",
+              "COMMAND_REJECTED_BY_ARBITRATION"
+            ]
           },
-          "source": { "type": "string" },
-          "severity": { "type": "string", "enum": ["INFO", "WARNING", "ERROR", "CRITICAL"] },
-          "targetTag": { "type": "string" },
-          "commandId": { "type": "string" },
-          "alarmId": { "type": "string" },
-          "message": { "type": "string" },
+          "source": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "INFO",
+              "WARNING",
+              "ERROR",
+              "CRITICAL"
+            ]
+          },
+          "targetTag": {
+            "type": "string"
+          },
+          "commandId": {
+            "type": "string"
+          },
+          "alarmId": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
           "metadata": {
             "type": "object",
             "additionalProperties": true
           }
         },
-        "required": ["id", "timestamp", "type", "source", "severity", "message"],
+        "required": [
+          "id",
+          "timestamp",
+          "type",
+          "source",
+          "severity",
+          "message"
+        ],
         "additionalProperties": false
       },
       "Scenario": {
         "type": "object",
         "properties": {
-          "name": { "type": "string" },
-          "title": { "type": "string" },
-          "description": { "type": "string" },
-          "simulationOnly": { "type": "boolean" }
+          "name": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "simulationOnly": {
+            "type": "boolean"
+          }
         },
-        "required": ["name", "title", "description", "simulationOnly"],
+        "required": [
+          "name",
+          "title",
+          "description",
+          "simulationOnly"
+        ],
         "additionalProperties": false
       },
       "SimulationStatus": {
         "type": "object",
         "properties": {
-          "running": { "type": "boolean" },
-          "mode": { "type": "string" },
-          "health": { "type": "string" },
-          "activeScenario": { "type": "string" },
-          "tickMs": { "type": "integer" },
-          "historySize": { "type": "integer" },
-          "snapshotCount": { "type": "integer" },
-          "lastSimulationTimestamp": { "type": "string" },
-          "simulationOnly": { "type": "boolean" }
+          "running": {
+            "type": "boolean"
+          },
+          "mode": {
+            "type": "string"
+          },
+          "health": {
+            "type": "string"
+          },
+          "activeScenario": {
+            "type": "string"
+          },
+          "tickMs": {
+            "type": "integer"
+          },
+          "historySize": {
+            "type": "integer"
+          },
+          "snapshotCount": {
+            "type": "integer"
+          },
+          "lastSimulationTimestamp": {
+            "type": "string"
+          },
+          "simulationOnly": {
+            "type": "boolean"
+          }
         },
-        "required": ["running", "mode", "health", "activeScenario", "tickMs", "historySize", "snapshotCount", "lastSimulationTimestamp", "simulationOnly"],
+        "required": [
+          "running",
+          "mode",
+          "health",
+          "activeScenario",
+          "tickMs",
+          "historySize",
+          "snapshotCount",
+          "lastSimulationTimestamp",
+          "simulationOnly"
+        ],
         "additionalProperties": false
       },
       "SystemStatusResponse": {
         "type": "object",
         "properties": {
-          "data": { "$ref": "#/components/schemas/SystemStatus" },
-          "meta": { "$ref": "#/components/schemas/ApiMeta" }
+          "data": {
+            "$ref": "#/components/schemas/SystemStatus"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ApiMeta"
+          }
         },
-        "required": ["data", "meta"],
+        "required": [
+          "data",
+          "meta"
+        ],
         "additionalProperties": false
       },
       "AssetsResponse": {
         "type": "object",
         "properties": {
-          "data": { "type": "array", "items": { "$ref": "#/components/schemas/Asset" } },
-          "meta": { "$ref": "#/components/schemas/ApiMeta" }
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Asset"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ApiMeta"
+          }
         },
-        "required": ["data", "meta"],
+        "required": [
+          "data",
+          "meta"
+        ],
         "additionalProperties": false
       },
       "TelemetryLatestResponse": {
         "type": "object",
         "properties": {
-          "data": { "type": "array", "items": { "$ref": "#/components/schemas/TelemetryPoint" } },
-          "meta": { "$ref": "#/components/schemas/ApiMeta" }
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TelemetryPoint"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ApiMeta"
+          }
         },
-        "required": ["data", "meta"],
+        "required": [
+          "data",
+          "meta"
+        ],
         "additionalProperties": false
       },
       "TelemetryHistoryResponse": {
         "type": "object",
         "properties": {
-          "data": { "type": "array", "items": { "$ref": "#/components/schemas/TelemetrySnapshot" } },
-          "meta": { "$ref": "#/components/schemas/ApiMeta" }
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TelemetrySnapshot"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ApiMeta"
+          }
         },
-        "required": ["data", "meta"],
+        "required": [
+          "data",
+          "meta"
+        ],
         "additionalProperties": false
       },
       "CommandResponse": {
         "type": "object",
         "properties": {
-          "data": { "$ref": "#/components/schemas/Command" },
-          "meta": { "$ref": "#/components/schemas/ApiMeta" }
+          "data": {
+            "$ref": "#/components/schemas/Command"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ApiMeta"
+          }
         },
-        "required": ["data", "meta"],
+        "required": [
+          "data",
+          "meta"
+        ],
         "additionalProperties": false
       },
       "CommandsResponse": {
         "type": "object",
         "properties": {
-          "data": { "type": "array", "items": { "$ref": "#/components/schemas/Command" } },
-          "meta": { "$ref": "#/components/schemas/ApiMeta" }
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Command"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ApiMeta"
+          }
         },
-        "required": ["data", "meta"],
+        "required": [
+          "data",
+          "meta"
+        ],
         "additionalProperties": false
       },
       "EventsResponse": {
         "type": "object",
         "properties": {
-          "data": { "type": "array", "items": { "$ref": "#/components/schemas/Event" } },
-          "meta": { "$ref": "#/components/schemas/ApiMeta" }
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Event"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ApiMeta"
+          }
         },
-        "required": ["data", "meta"],
+        "required": [
+          "data",
+          "meta"
+        ],
         "additionalProperties": false
       },
       "AlarmResponse": {
         "type": "object",
         "properties": {
-          "data": { "$ref": "#/components/schemas/AlarmInstance" },
-          "meta": { "$ref": "#/components/schemas/ApiMeta" }
+          "data": {
+            "$ref": "#/components/schemas/AlarmInstance"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ApiMeta"
+          }
         },
-        "required": ["data", "meta"],
+        "required": [
+          "data",
+          "meta"
+        ],
         "additionalProperties": false
       },
       "AlarmsResponse": {
         "type": "object",
         "properties": {
-          "data": { "type": "array", "items": { "$ref": "#/components/schemas/AlarmInstance" } },
-          "meta": { "$ref": "#/components/schemas/ApiMeta" }
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AlarmInstance"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ApiMeta"
+          }
         },
-        "required": ["data", "meta"],
+        "required": [
+          "data",
+          "meta"
+        ],
         "additionalProperties": false
       },
       "ScenariosResponse": {
         "type": "object",
         "properties": {
-          "data": { "type": "array", "items": { "$ref": "#/components/schemas/Scenario" } },
-          "meta": { "$ref": "#/components/schemas/ApiMeta" }
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Scenario"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ApiMeta"
+          }
         },
-        "required": ["data", "meta"],
+        "required": [
+          "data",
+          "meta"
+        ],
         "additionalProperties": false
       },
       "SimulationStatusResponse": {
         "type": "object",
         "properties": {
-          "data": { "$ref": "#/components/schemas/SimulationStatus" },
-          "meta": { "$ref": "#/components/schemas/ApiMeta" }
+          "data": {
+            "$ref": "#/components/schemas/SimulationStatus"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ApiMeta"
+          }
         },
-        "required": ["data", "meta"],
+        "required": [
+          "data",
+          "meta"
+        ],
+        "additionalProperties": false
+      },
+      "ControlMode": {
+        "type": "string",
+        "enum": [
+          "MANUAL",
+          "AUTO",
+          "DISABLED"
+        ]
+      },
+      "ControlAuthority": {
+        "type": "string",
+        "enum": [
+          "USER",
+          "SCENARIO",
+          "PID",
+          "SYSTEM",
+          "NONE"
+        ]
+      },
+      "CommandRejectReason": {
+        "type": "string",
+        "enum": [
+          "CONTROL_MODE_AUTO",
+          "CONTROL_DISABLED",
+          "UNSUPPORTED_COMMAND_SOURCE",
+          "UNSUPPORTED_TARGET",
+          "INVALID_COMMAND",
+          "INVALID_PAYLOAD",
+          "TARGET_CONTROLLED_BY_PID",
+          "UNKNOWN"
+        ]
+      },
+      "ControlStatus": {
+        "type": "object",
+        "properties": {
+          "controllerTag": {
+            "type": "string",
+            "example": "TIC-101"
+          },
+          "controlledVariableTag": {
+            "type": "string",
+            "example": "TT-101"
+          },
+          "manipulatedVariableTag": {
+            "type": "string",
+            "example": "V-101.POS"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/ControlMode"
+          },
+          "authority": {
+            "$ref": "#/components/schemas/ControlAuthority"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "pidImplemented": {
+            "type": "boolean",
+            "const": false
+          },
+          "reason": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedBy": {
+            "type": "string"
+          },
+          "safetyDisclaimer": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "controllerTag",
+          "controlledVariableTag",
+          "manipulatedVariableTag",
+          "mode",
+          "authority",
+          "enabled",
+          "pidImplemented",
+          "reason",
+          "updatedAt",
+          "updatedBy",
+          "safetyDisclaimer"
+        ],
+        "additionalProperties": false
+      },
+      "ModeChangeRequest": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "$ref": "#/components/schemas/ControlMode"
+          },
+          "requestedBy": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 300
+          }
+        },
+        "required": [
+          "mode"
+        ],
+        "additionalProperties": false
+      },
+      "ArbitrationDecision": {
+        "type": "object",
+        "properties": {
+          "allowed": {
+            "type": "boolean"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/CommandRejectReason"
+          },
+          "message": {
+            "type": "string"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/ControlMode"
+          },
+          "authority": {
+            "$ref": "#/components/schemas/ControlAuthority"
+          },
+          "targetTag": {
+            "type": "string"
+          },
+          "commandType": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "allowed",
+          "mode",
+          "authority",
+          "targetTag",
+          "commandType",
+          "source"
+        ],
+        "additionalProperties": false
+      },
+      "ControlStatusResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ControlStatus"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ApiMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ],
         "additionalProperties": false
       }
     }

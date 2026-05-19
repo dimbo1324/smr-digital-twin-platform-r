@@ -15,6 +15,8 @@ type Handlers struct {
 	Assets           http.Handler
 	LatestTelemetry  http.Handler
 	TelemetryHistory http.Handler
+	ControlStatus    http.Handler
+	SetControlMode   http.Handler
 	ActiveAlarms     http.Handler
 	AlarmHistory     http.Handler
 	AcknowledgeAlarm http.Handler

@@ -78,6 +78,33 @@ func (h *Handler) History(w http.ResponseWriter, r *http.Request) {
 	writeData(w, values, len(values))
 }
 
+func (h *Handler) ControlStatus(w http.ResponseWriter, _ *http.Request) {
+	writeData(w, h.engine.ControlStatus(), 0)
+}
+
+func (h *Handler) SetControlMode(w http.ResponseWriter, r *http.Request) {
+	var request model.ModeChangeRequest
+	r.Body = http.MaxBytesReader(w, r.Body, maxJSONBodyBytes)
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&request); err != nil {
+		writeError(w, http.StatusBadRequest, "MALFORMED_JSON", "Control mode request body is invalid JSON")
+		return
+	}
+
+	status, err := h.engine.SetControlMode(request)
+	if err != nil {
+		var commandErr *engine.CommandError
+		if errors.As(err, &commandErr) {
+			writeError(w, commandErr.HTTPStatus, commandErr.Code, commandErr.Message)
+			return
+		}
+		writeError(w, http.StatusInternalServerError, "CONTROL_MODE_FAILED", "Failed to update control mode")
+		return
+	}
+	writeData(w, status, 0)
+}
+
 func (h *Handler) ActiveAlarms(w http.ResponseWriter, _ *http.Request) {
 	alarms := h.engine.ActiveAlarms()
 	writeData(w, alarms, len(alarms))

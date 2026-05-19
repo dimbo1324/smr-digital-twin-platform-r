@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://smr-twin.local/schemas/control-mode.schema.json",
+  "title": "ControlMode",
+  "type": "string",
+  "enum": ["MANUAL", "AUTO", "DISABLED"]
+}

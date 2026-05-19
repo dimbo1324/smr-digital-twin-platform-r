@@ -10,6 +10,9 @@ export const queryKeys = {
     history: (windowValue: string) => ["telemetry", "history", windowValue] as const,
     histories: ["telemetry", "history"] as const,
   },
+  control: {
+    status: ["control", "status"] as const,
+  },
   commands: {
     recent: ["commands", "recent"] as const,
   },

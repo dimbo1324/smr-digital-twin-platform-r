@@ -89,6 +89,35 @@ func (g *Gateway) TelemetryHistory(w http.ResponseWriter, r *http.Request) {
 	httpapi.WriteData(w, r, http.StatusOK, history, httpapi.MetaOptions{Count: len(history), Source: "simulation"})
 }
 
+func (g *Gateway) ControlStatus(w http.ResponseWriter, r *http.Request) {
+	status, err := g.client.ControlStatus(r.Context())
+	if err != nil {
+		httpapi.WriteError(w, r, http.StatusServiceUnavailable, "SIMULATION_UNAVAILABLE", "Simulation control status is unavailable")
+		return
+	}
+	httpapi.WriteData(w, r, http.StatusOK, status, httpapi.MetaOptions{Source: "simulation"})
+}
+
+func (g *Gateway) SetControlMode(w http.ResponseWriter, r *http.Request) {
+	var request ModeChangeRequest
+	r.Body = http.MaxBytesReader(w, r.Body, maxJSONBodyBytes)
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&request); err != nil {
+		httpapi.WriteError(w, r, http.StatusBadRequest, "MALFORMED_JSON", "Control mode request body is invalid JSON")
+		return
+	}
+	if request.RequestedBy == "" {
+		request.RequestedBy = "demo-operator"
+	}
+	status, err := g.client.SetControlMode(r.Context(), request)
+	if err != nil {
+		g.writeSimulationCommandError(w, r, err)
+		return
+	}
+	httpapi.WriteData(w, r, http.StatusOK, status, httpapi.MetaOptions{Source: "simulation"})
+}
+
 func (g *Gateway) ActiveAlarms(w http.ResponseWriter, r *http.Request) {
 	alarms, err := g.client.ActiveAlarms(r.Context())
 	if err != nil {

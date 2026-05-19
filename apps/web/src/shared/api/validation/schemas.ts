@@ -2,6 +2,7 @@ import alarmSchema from "../../../../../../packages/schemas/schemas/alarm.schema
 import assetSchema from "../../../../../../packages/schemas/schemas/asset.schema.json";
 import commandSchema from "../../../../../../packages/schemas/schemas/command.schema.json";
 import commandRequestSchema from "../../../../../../packages/schemas/schemas/command-request.schema.json";
+import controlStatusSchema from "../../../../../../packages/schemas/schemas/control-status.schema.json";
 import acknowledgeAlarmRequestSchema from "../../../../../../packages/schemas/schemas/acknowledge-alarm-request.schema.json";
 import eventSchema from "../../../../../../packages/schemas/schemas/event.schema.json";
 import scenarioSchema from "../../../../../../packages/schemas/schemas/scenario.schema.json";
@@ -9,6 +10,7 @@ import simulationStatusSchema from "../../../../../../packages/schemas/schemas/s
 import systemStatusSchema from "../../../../../../packages/schemas/schemas/system-status.schema.json";
 import telemetrySchema from "../../../../../../packages/schemas/schemas/telemetry.schema.json";
 import telemetrySnapshotSchema from "../../../../../../packages/schemas/schemas/telemetry-snapshot.schema.json";
+import modeChangeRequestSchema from "../../../../../../packages/schemas/schemas/mode-change-request.schema.json";
 
 export const apiSchemaNames = [
   "AcknowledgeAlarmRequest",
@@ -19,6 +21,7 @@ export const apiSchemaNames = [
   "Command",
   "CommandList",
   "CommandRequest",
+  "ControlStatus",
   "Event",
   "EventList",
   "Scenario",
@@ -28,6 +31,7 @@ export const apiSchemaNames = [
   "TelemetryPoint",
   "TelemetryPointList",
   "TelemetrySnapshotList",
+  "ModeChangeRequest",
 ] as const;
 
 export type ApiSchemaName = (typeof apiSchemaNames)[number];
@@ -49,6 +53,7 @@ export const apiSchemas: Record<ApiSchemaName, unknown> = {
   Command: commandSchema,
   CommandList: arrayOf("CommandList", commandSchema),
   CommandRequest: commandRequestSchema,
+  ControlStatus: controlStatusSchema,
   Event: eventSchema,
   EventList: arrayOf("EventList", eventSchema),
   Scenario: scenarioSchema,
@@ -58,4 +63,5 @@ export const apiSchemas: Record<ApiSchemaName, unknown> = {
   TelemetryPoint: telemetrySchema,
   TelemetryPointList: arrayOf("TelemetryPointList", telemetrySchema),
   TelemetrySnapshotList: arrayOf("TelemetrySnapshotList", telemetrySnapshotSchema),
+  ModeChangeRequest: modeChangeRequestSchema,
 };
