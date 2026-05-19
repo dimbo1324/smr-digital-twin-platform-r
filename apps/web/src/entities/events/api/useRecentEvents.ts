@@ -9,14 +9,15 @@ export function useRecentEvents(refreshMs = 2500) {
     refetchInterval: refreshMs,
   });
 
+  const events = query.data ?? [];
   const state: "loading" | "connected" | "degraded" = query.isLoading
     ? "loading"
-    : query.isError
+    : query.isError && events.length === 0
       ? "degraded"
       : "connected";
 
   return {
-    events: query.data ?? [],
+    events,
     state,
     refresh: () => void query.refetch(),
   };

@@ -65,7 +65,7 @@ Current process-loop assets:
 | `PT-101` | Loop Pressure Transmitter | sensor | Process loop pressure |
 | `FT-101` | Loop Flow Transmitter | sensor | Process loop flow |
 | `LT-101` | Tank Level Transmitter | sensor | Tank level |
-| `TIC-101` | Temperature Controller | controller | Manual/auto/disabled arbitration for future PID |
+| `TIC-101` | Temperature Controller | controller | Manual/auto/disabled arbitration and simulation-only PID |
 
 ## Asset Model
 
@@ -127,6 +127,14 @@ Current process-loop telemetry:
 | `P-101.RPM` | Pump Speed | numeric | `rpm` | simulation via API |
 | `HX-101.STATE` | Heat Exchanger State | text | empty | simulation via API |
 | `TIC-101.MODE` | Control Mode | text | empty | simulation via API |
+| `TIC-101.SETPOINT` | PID Setpoint | numeric | `C` | simulation via API |
+| `TIC-101.PV` | PID Process Value | numeric | `C` | simulation via API |
+| `TIC-101.ERROR` | PID Error | numeric | `C` | simulation via API |
+| `TIC-101.OUTPUT` | PID Output | numeric | `%` | simulation via API |
+| `TIC-101.P_TERM` | PID P Term | numeric | `%` | simulation via API |
+| `TIC-101.I_TERM` | PID I Term | numeric | `%` | simulation via API |
+| `TIC-101.D_TERM` | PID D Term | numeric | `%` | simulation via API |
+| `TIC-101.STATUS` | PID Status | text | empty | simulation via API |
 
 Telemetry quality values:
 
@@ -136,7 +144,7 @@ Telemetry quality values:
 
 ## Control Mode / Arbitration Model
 
-`TIC-101` is the simulation-only controller placeholder for the future `TT-101 -> V-101.POS` loop. PID calculations are not implemented yet, but the control mode and command arbitration layer now exist.
+`TIC-101` is the simulation-only controller for the synthetic `TT-101 -> V-101.POS` loop. PID calculations are implemented for training/demo use only and apply only to in-memory simulation state.
 
 ControlMode:
 
@@ -155,11 +163,38 @@ ControlAuthority:
 Current semantics:
 
 1. `MANUAL`: direct user/frontend `V-101` commands are allowed.
-2. `AUTO`: direct user/frontend `V-101` commands are rejected because `V-101` is reserved for future simulated PID authority. No PID output is generated yet.
+2. `AUTO`: direct user/frontend `V-101` commands are rejected because `V-101` is owned by simulation-only PID authority.
 3. `DISABLED`: direct user/frontend `V-101` commands are rejected because control output is disabled.
 4. `P-101` remains manually controllable in this milestone.
 
 Mode changes emit `CONTROL_MODE_CHANGED` and `CONTROL_AUTHORITY_CHANGED`. Arbitration rejections emit `COMMAND_REJECTED_BY_ARBITRATION` and leave a rejected command record with a structured reject reason.
+
+PIDConfig:
+
+- `setpoint`
+- `kp`
+- `ki`
+- `kd`
+- `outputMin`
+- `outputMax`
+- `integralMin`
+- `integralMax`
+- `sampleTimeMs`
+
+PIDStatus:
+
+- `processValue`
+- `error`
+- `pTerm`
+- `iTerm`
+- `dTerm`
+- `output`
+- `saturated`
+- `active`
+- `mode`
+- `authority`
+
+PID setpoint/tuning changes emit `PID_SETPOINT_CHANGED` and `PID_TUNING_CHANGED`. Output updates are rate-limited by threshold events and saturation events so the unified event stream is not spammed every tick.
 
 ## Alarm Model
 
@@ -407,6 +442,7 @@ Implemented now:
 - In-memory history for trends.
 - Scenario start/stop/reset endpoints.
 - Manual/auto/disabled `TIC-101` mode and `V-101` command arbitration.
+- Simulation-only `TIC-101` PID controller.
 
 Partial:
 
@@ -418,7 +454,6 @@ Partial:
 
 Not implemented:
 
-- PID control.
 - MQTT.
 - Persistent historian.
 - Persistent command/audit storage.
@@ -427,9 +462,7 @@ Not implemented:
 
 ## Planned Extensions
 
-- Expanded command arbitration for user, scenario, PID, and system command sources.
 - Persistent event/audit storage with pagination and retention policy.
 - Alarm shelving and richer operator workflow.
 - MQTT telemetry bridge.
-- PID controller and manual/auto command arbitration.
 - Persistent historian and report export.

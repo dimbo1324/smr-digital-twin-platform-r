@@ -13,7 +13,7 @@ Current milestone:
 - optional simulation service gateway integration
 - telemetry history, alarms, and scenario proxy endpoints
 - simulation-only command proxy endpoints for `V-101` and `P-101`
-- simulation-only control mode endpoints for `TIC-101` manual/auto/disabled arbitration
+- simulation-only control mode and PID endpoints for `TIC-101`
 - alarm lifecycle proxy endpoints for active, history, and acknowledge workflows
 - recent in-memory command/alarm/event proxy endpoints
 - SMR Unit Overview and Thermal Process Loop telemetry through `/api/v1/telemetry/latest`
@@ -92,7 +92,11 @@ curl "http://localhost:8080/api/v1/telemetry/history?window=15m"
 curl http://localhost:8080/api/v1/control/status
 curl -X POST http://localhost:8080/api/v1/control/mode \
   -H "Content-Type: application/json" \
-  -d '{"mode":"AUTO","requestedBy":"demo-operator","reason":"Prepare for future simulated PID demo"}'
+  -d '{"mode":"AUTO","requestedBy":"demo-operator","reason":"Enable simulation-only PID demo"}'
+curl http://localhost:8080/api/v1/pid/status
+curl -X PATCH http://localhost:8080/api/v1/pid/config \
+  -H "Content-Type: application/json" \
+  -d '{"setpoint":288,"kp":0.9,"ki":0.05,"kd":0.1,"requestedBy":"demo-operator"}'
 curl http://localhost:8080/api/v1/alarms/active
 curl http://localhost:8080/api/v1/alarms/history
 curl -X POST http://localhost:8080/api/v1/alarms/alarm-id/acknowledge \
@@ -164,7 +168,12 @@ The current telemetry contract includes both unit overview tags such as `SMR-POW
 - `GET /api/v1/control/status` returns current `TIC-101` mode, authority, controlled variable, manipulated variable, and simulation-only safety disclaimer.
 - `POST /api/v1/control/mode` switches `TIC-101` between `MANUAL`, `AUTO`, and `DISABLED`.
 
-`AUTO` mode reserves `V-101` for future simulated PID authority. PID output is not implemented yet. Direct frontend/user `V-101` commands are rejected in `AUTO` and `DISABLED`; `P-101` commands remain manually controllable.
+`AUTO` mode assigns `V-101` to the simulation-only `TIC-101` PID controller. Direct frontend/user `V-101` commands are rejected in `AUTO` and `DISABLED`; `P-101` commands remain manually controllable.
+
+PID endpoints:
+
+- `GET /api/v1/pid/status` returns current synthetic PID status, tuning, setpoint, output, terms, and saturation state.
+- `PATCH /api/v1/pid/config` updates setpoint and tuning values for the in-memory simulation PID.
 
 Example acknowledgement request:
 

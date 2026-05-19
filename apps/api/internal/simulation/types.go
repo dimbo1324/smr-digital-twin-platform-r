@@ -40,6 +40,15 @@ type TelemetrySnapshot struct {
 	PumpRPM                float64   `json:"pumpRpm"`
 	HeatExchangerState     string    `json:"heatExchangerState"`
 	PIDControllerMode      string    `json:"pidControllerMode"`
+	PIDSetpointC           float64   `json:"pidSetpointC"`
+	PIDProcessValueC       float64   `json:"pidProcessValueC"`
+	PIDErrorC              float64   `json:"pidErrorC"`
+	PIDOutputPct           float64   `json:"pidOutputPct"`
+	PIDPTermPct            float64   `json:"pidPTermPct"`
+	PIDITermPct            float64   `json:"pidITermPct"`
+	PIDDTermPct            float64   `json:"pidDTermPct"`
+	PIDStatus              string    `json:"pidStatus"`
+	PIDSaturated           bool      `json:"pidSaturated"`
 	Timestamp              time.Time `json:"timestamp"`
 	Mode                   string    `json:"mode"`
 	Health                 string    `json:"health"`
@@ -133,6 +142,45 @@ type ModeChangeRequest struct {
 	Mode        string `json:"mode"`
 	RequestedBy string `json:"requestedBy,omitempty"`
 	Reason      string `json:"reason,omitempty"`
+}
+
+type PIDStatus struct {
+	ControllerTag          string    `json:"controllerTag"`
+	Mode                   string    `json:"mode"`
+	Authority              string    `json:"authority"`
+	Active                 bool      `json:"active"`
+	PIDImplemented         bool      `json:"pidImplemented"`
+	ProcessVariableTag     string    `json:"processVariableTag"`
+	ProcessValue           float64   `json:"processValue"`
+	Setpoint               float64   `json:"setpoint"`
+	ManipulatedVariableTag string    `json:"manipulatedVariableTag"`
+	Output                 float64   `json:"output"`
+	OutputMin              float64   `json:"outputMin"`
+	OutputMax              float64   `json:"outputMax"`
+	Kp                     float64   `json:"kp"`
+	Ki                     float64   `json:"ki"`
+	Kd                     float64   `json:"kd"`
+	Error                  float64   `json:"error"`
+	PTerm                  float64   `json:"pTerm"`
+	ITerm                  float64   `json:"iTerm"`
+	DTerm                  float64   `json:"dTerm"`
+	Integral               float64   `json:"integral"`
+	Derivative             float64   `json:"derivative"`
+	Saturated              bool      `json:"saturated"`
+	Status                 string    `json:"status"`
+	UpdatedAt              time.Time `json:"updatedAt"`
+	SafetyDisclaimer       string    `json:"safetyDisclaimer"`
+}
+
+type PIDConfigUpdateRequest struct {
+	Setpoint    *float64 `json:"setpoint,omitempty"`
+	Kp          *float64 `json:"kp,omitempty"`
+	Ki          *float64 `json:"ki,omitempty"`
+	Kd          *float64 `json:"kd,omitempty"`
+	OutputMin   *float64 `json:"outputMin,omitempty"`
+	OutputMax   *float64 `json:"outputMax,omitempty"`
+	RequestedBy string   `json:"requestedBy,omitempty"`
+	Reason      string   `json:"reason,omitempty"`
 }
 
 type CommandPayload struct {

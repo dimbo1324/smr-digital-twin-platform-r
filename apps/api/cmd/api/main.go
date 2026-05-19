@@ -41,6 +41,8 @@ func main() {
 		TelemetryHistory: http.HandlerFunc(gateway.TelemetryHistory),
 		ControlStatus:    http.HandlerFunc(gateway.ControlStatus),
 		SetControlMode:   http.HandlerFunc(gateway.SetControlMode),
+		PIDStatus:        http.HandlerFunc(gateway.PIDStatus),
+		UpdatePIDConfig:  http.HandlerFunc(gateway.UpdatePIDConfig),
 		ActiveAlarms:     http.HandlerFunc(gateway.ActiveAlarms),
 		AlarmHistory:     http.HandlerFunc(gateway.AlarmHistory),
 		AcknowledgeAlarm: http.HandlerFunc(gateway.AcknowledgeAlarm),

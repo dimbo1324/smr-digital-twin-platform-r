@@ -17,6 +17,8 @@ type Handlers struct {
 	TelemetryHistory http.Handler
 	ControlStatus    http.Handler
 	SetControlMode   http.Handler
+	PIDStatus        http.Handler
+	UpdatePIDConfig  http.Handler
 	ActiveAlarms     http.Handler
 	AlarmHistory     http.Handler
 	AcknowledgeAlarm http.Handler

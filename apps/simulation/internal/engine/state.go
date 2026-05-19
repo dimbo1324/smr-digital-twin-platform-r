@@ -12,12 +12,20 @@ type state struct {
 	valve          valveRuntime
 	pump           pumpRuntime
 	control        controlRuntime
+	pid            pidRuntime
 	commands       []model.Command
 	events         []model.Event
 	running        bool
 	tickCount      int64
 	commandSeq     int64
 	eventSeq       int64
+}
+
+type pidRuntime struct {
+	config              model.PIDConfig
+	state               model.PIDState
+	lastOutputEventPct  float64
+	saturationEventOpen bool
 }
 
 type controlRuntime struct {
@@ -79,6 +87,11 @@ func initialState(now time.Time) state {
 			PumpRPM:                1800,
 			HeatExchangerState:     "Online",
 			PIDControllerMode:      string(model.ControlModeManual),
+			PIDSetpointC:           286,
+			PIDProcessValueC:       286.4,
+			PIDErrorC:              -0.4,
+			PIDOutputPct:           64,
+			PIDStatus:              "Manual",
 			Timestamp:              now,
 			Mode:                   model.ModeNormal,
 			Health:                 model.HealthOK,
@@ -106,6 +119,35 @@ func initialState(now time.Time) state {
 			reason:    "Operator manual control",
 			updatedAt: now,
 			updatedBy: "system",
+		},
+		pid: pidRuntime{
+			config: model.PIDConfig{
+				ControllerTag:          "TIC-101",
+				ProcessVariableTag:     "TT-101",
+				ManipulatedVariableTag: "V-101.POS",
+				Setpoint:               286,
+				Kp:                     0.8,
+				Ki:                     0.05,
+				Kd:                     0.1,
+				OutputMin:              0,
+				OutputMax:              100,
+				IntegralMin:            -100,
+				IntegralMax:            100,
+				SampleTimeMS:           1000,
+				Enabled:                true,
+			},
+			state: model.PIDState{
+				Setpoint:      286,
+				ProcessValue:  286.4,
+				Error:         -0.4,
+				PreviousError: -0.4,
+				Output:        64,
+				LastOutput:    64,
+				OutputBias:    64,
+				LastUpdateAt:  now,
+				Status:        "Manual",
+			},
+			lastOutputEventPct: 64,
 		},
 	}
 }

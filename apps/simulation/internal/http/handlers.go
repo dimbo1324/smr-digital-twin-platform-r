@@ -105,6 +105,33 @@ func (h *Handler) SetControlMode(w http.ResponseWriter, r *http.Request) {
 	writeData(w, status, 0)
 }
 
+func (h *Handler) PIDStatus(w http.ResponseWriter, _ *http.Request) {
+	writeData(w, h.engine.PIDStatus(), 0)
+}
+
+func (h *Handler) UpdatePIDConfig(w http.ResponseWriter, r *http.Request) {
+	var request model.PIDConfigUpdateRequest
+	r.Body = http.MaxBytesReader(w, r.Body, maxJSONBodyBytes)
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&request); err != nil {
+		writeError(w, http.StatusBadRequest, "MALFORMED_JSON", "PID config request body is invalid JSON")
+		return
+	}
+
+	status, err := h.engine.UpdatePIDConfig(request)
+	if err != nil {
+		var commandErr *engine.CommandError
+		if errors.As(err, &commandErr) {
+			writeError(w, commandErr.HTTPStatus, commandErr.Code, commandErr.Message)
+			return
+		}
+		writeError(w, http.StatusInternalServerError, "PID_CONFIG_FAILED", "Failed to update PID configuration")
+		return
+	}
+	writeData(w, status, 0)
+}
+
 func (h *Handler) ActiveAlarms(w http.ResponseWriter, _ *http.Request) {
 	alarms := h.engine.ActiveAlarms()
 	writeData(w, alarms, len(alarms))

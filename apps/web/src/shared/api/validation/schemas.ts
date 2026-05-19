@@ -11,6 +11,8 @@ import systemStatusSchema from "../../../../../../packages/schemas/schemas/syste
 import telemetrySchema from "../../../../../../packages/schemas/schemas/telemetry.schema.json";
 import telemetrySnapshotSchema from "../../../../../../packages/schemas/schemas/telemetry-snapshot.schema.json";
 import modeChangeRequestSchema from "../../../../../../packages/schemas/schemas/mode-change-request.schema.json";
+import pidConfigUpdateRequestSchema from "../../../../../../packages/schemas/schemas/pid-config-update-request.schema.json";
+import pidStatusSchema from "../../../../../../packages/schemas/schemas/pid-status.schema.json";
 
 export const apiSchemaNames = [
   "AcknowledgeAlarmRequest",
@@ -32,6 +34,8 @@ export const apiSchemaNames = [
   "TelemetryPointList",
   "TelemetrySnapshotList",
   "ModeChangeRequest",
+  "PIDConfigUpdateRequest",
+  "PIDStatus",
 ] as const;
 
 export type ApiSchemaName = (typeof apiSchemaNames)[number];
@@ -64,4 +68,6 @@ export const apiSchemas: Record<ApiSchemaName, unknown> = {
   TelemetryPointList: arrayOf("TelemetryPointList", telemetrySchema),
   TelemetrySnapshotList: arrayOf("TelemetrySnapshotList", telemetrySnapshotSchema),
   ModeChangeRequest: modeChangeRequestSchema,
+  PIDConfigUpdateRequest: pidConfigUpdateRequestSchema,
+  PIDStatus: pidStatusSchema,
 };

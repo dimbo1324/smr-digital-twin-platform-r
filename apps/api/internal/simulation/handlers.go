@@ -118,6 +118,35 @@ func (g *Gateway) SetControlMode(w http.ResponseWriter, r *http.Request) {
 	httpapi.WriteData(w, r, http.StatusOK, status, httpapi.MetaOptions{Source: "simulation"})
 }
 
+func (g *Gateway) PIDStatus(w http.ResponseWriter, r *http.Request) {
+	status, err := g.client.PIDStatus(r.Context())
+	if err != nil {
+		httpapi.WriteError(w, r, http.StatusServiceUnavailable, "SIMULATION_UNAVAILABLE", "Simulation PID status is unavailable")
+		return
+	}
+	httpapi.WriteData(w, r, http.StatusOK, status, httpapi.MetaOptions{Source: "simulation"})
+}
+
+func (g *Gateway) UpdatePIDConfig(w http.ResponseWriter, r *http.Request) {
+	var request PIDConfigUpdateRequest
+	r.Body = http.MaxBytesReader(w, r.Body, maxJSONBodyBytes)
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&request); err != nil {
+		httpapi.WriteError(w, r, http.StatusBadRequest, "MALFORMED_JSON", "PID config request body is invalid JSON")
+		return
+	}
+	if request.RequestedBy == "" {
+		request.RequestedBy = "demo-operator"
+	}
+	status, err := g.client.UpdatePIDConfig(r.Context(), request)
+	if err != nil {
+		g.writeSimulationCommandError(w, r, err)
+		return
+	}
+	httpapi.WriteData(w, r, http.StatusOK, status, httpapi.MetaOptions{Source: "simulation"})
+}
+
 func (g *Gateway) ActiveAlarms(w http.ResponseWriter, r *http.Request) {
 	alarms, err := g.client.ActiveAlarms(r.Context())
 	if err != nil {
@@ -309,6 +338,14 @@ func telemetryPointsFromSnapshot(s TelemetrySnapshot) []telemetry.TelemetryPoint
 		numberPoint("P-101.RPM", "Pump Speed", s.PumpRPM, "rpm", s.Timestamp),
 		textPointWithQuality("HX-101.STATE", "Heat Exchanger State", valueOrFallback(s.HeatExchangerState, "Mock Duty"), telemetry.QualityGood, s.Timestamp),
 		textPointWithQuality("TIC-101.MODE", "PID Controller Mode", valueOrFallback(s.PIDControllerMode, "Disabled"), telemetry.QualityUncertain, s.Timestamp),
+		numberPoint("TIC-101.SETPOINT", "PID Setpoint", s.PIDSetpointC, "C", s.Timestamp),
+		numberPoint("TIC-101.PV", "PID Process Value", s.PIDProcessValueC, "C", s.Timestamp),
+		numberPoint("TIC-101.ERROR", "PID Error", s.PIDErrorC, "C", s.Timestamp),
+		numberPoint("TIC-101.OUTPUT", "PID Output", s.PIDOutputPct, "%", s.Timestamp),
+		numberPoint("TIC-101.P_TERM", "PID P Term", s.PIDPTermPct, "%", s.Timestamp),
+		numberPoint("TIC-101.I_TERM", "PID I Term", s.PIDITermPct, "%", s.Timestamp),
+		numberPoint("TIC-101.D_TERM", "PID D Term", s.PIDDTermPct, "%", s.Timestamp),
+		textPointWithQuality("TIC-101.STATUS", "PID Status", valueOrFallback(s.PIDStatus, "Manual"), telemetry.QualityGood, s.Timestamp),
 	}
 }
 

@@ -14,7 +14,7 @@ interface ControlModePanelProps {
 
 const modeCopy: Record<ControlMode, string> = {
   MANUAL: "Direct simulation-only operator commands to V-101 are allowed.",
-  AUTO: "AUTO reserves V-101 for future simulated PID control. PID output is not implemented yet.",
+  AUTO: "AUTO reserves V-101 for simulation-only TIC-101 PID output.",
   DISABLED: "Control output is disabled in the simulation.",
 };
 
@@ -80,7 +80,7 @@ export function ControlModePanel({ controlStatus, state }: ControlModePanelProps
           </div>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">{modeCopy[mode]}</p>
           <p className="mt-2 text-xs text-muted-foreground" data-testid="control-mode-pid-placeholder">
-            PID implemented: {controlStatus?.pidImplemented ? "yes" : "no"}. AUTO mode is a simulation-only preparation state.
+            PID implemented: {controlStatus?.pidImplemented ? "yes" : "no"}. AUTO mode applies only to in-memory simulation state.
           </p>
         </div>
 

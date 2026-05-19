@@ -236,7 +236,7 @@ function valveDisabledReason(controlStatus?: ControlStatus) {
     return undefined;
   }
   if (controlStatus.mode === "AUTO") {
-    return "Switch TIC-101 to MANUAL to send direct valve commands. AUTO is reserved for future simulated PID control.";
+    return "Switch TIC-101 to MANUAL to send direct valve commands. AUTO lets the simulation-only PID own V-101 output.";
   }
   if (controlStatus.mode === "DISABLED") {
     return "Control output disabled in simulation.";

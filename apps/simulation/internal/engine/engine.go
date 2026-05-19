@@ -206,7 +206,7 @@ func (e *Engine) Assets() []model.Asset {
 		asset("pt-101", "PT-101", "Loop Pressure Transmitter", "sensor", "thermal-process-loop", model.AssetStatusOK, "Synthetic process-loop pressure point.", now, []model.AssetMetric{{Name: "Pressure", Value: s.LoopPressureMPa, Unit: "MPa"}}),
 		asset("ft-101", "FT-101", "Loop Flow Transmitter", "sensor", "thermal-process-loop", model.AssetStatusOK, "Synthetic process-loop flow point.", now, []model.AssetMetric{{Name: "Flow", Value: s.LoopFlowKGS, Unit: "kg/s"}}),
 		asset("lt-101", "LT-101", "Tank Level Transmitter", "sensor", "thermal-process-loop", model.AssetStatusOK, "Synthetic process-loop level point.", now, []model.AssetMetric{{Name: "Level", Value: s.TankLevelPct, Unit: "%"}}),
-		asset("tic-101", "TIC-101", "Temperature PID Controller", "controller", "thermal-process-loop", model.AssetStatusWarning, "PID placeholder. Automatic control is not implemented yet.", now, []model.AssetMetric{{Name: "Valve position", Value: s.ValvePositionPct, Unit: "%"}}),
+		asset("tic-101", "TIC-101", "Temperature PID Controller", "controller", "thermal-process-loop", model.AssetStatusOK, "Simulation-only PID controller for the synthetic TT-101 to V-101.POS loop.", now, []model.AssetMetric{{Name: "Setpoint", Value: s.PIDSetpointC, Unit: "C"}, {Name: "Output", Value: s.PIDOutputPct, Unit: "%"}}),
 	}
 }
 

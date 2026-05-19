@@ -85,6 +85,38 @@ export async function apiPost<TResponse, TBody = unknown>(
   return payload;
 }
 
+export async function apiPatch<TResponse, TBody = unknown>(
+  path: string,
+  body?: TBody,
+  options: { signal?: AbortSignal; requestSchema?: ApiSchemaName; responseSchema?: ApiSchemaName } = {},
+): Promise<ApiEnvelope<TResponse>> {
+  if (body !== undefined) {
+    await validateApiRequest(options.requestSchema, body, path);
+  }
+
+  const headers: HeadersInit = {
+    Accept: "application/json",
+  };
+  if (body !== undefined) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  const response = await fetch(`${getApiBaseUrl()}${path}`, {
+    method: "PATCH",
+    headers,
+    body: body === undefined ? undefined : JSON.stringify(body),
+    signal: options.signal,
+  });
+
+  if (!response.ok) {
+    throw await toApiError(response);
+  }
+
+  const payload = (await response.json()) as ApiEnvelope<TResponse>;
+  await validateApiResponse(options.responseSchema, payload.data, path);
+  return payload;
+}
+
 async function toApiError(response: Response): Promise<ApiClientError> {
   try {
     const payload = (await response.json()) as {

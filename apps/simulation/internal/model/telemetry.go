@@ -30,6 +30,15 @@ type TelemetrySnapshot struct {
 	PumpRPM                float64   `json:"pumpRpm"`
 	HeatExchangerState     string    `json:"heatExchangerState"`
 	PIDControllerMode      string    `json:"pidControllerMode"`
+	PIDSetpointC           float64   `json:"pidSetpointC"`
+	PIDProcessValueC       float64   `json:"pidProcessValueC"`
+	PIDErrorC              float64   `json:"pidErrorC"`
+	PIDOutputPct           float64   `json:"pidOutputPct"`
+	PIDPTermPct            float64   `json:"pidPTermPct"`
+	PIDITermPct            float64   `json:"pidITermPct"`
+	PIDDTermPct            float64   `json:"pidDTermPct"`
+	PIDStatus              string    `json:"pidStatus"`
+	PIDSaturated           bool      `json:"pidSaturated"`
 	Timestamp              time.Time `json:"timestamp"`
 	Mode                   Mode      `json:"mode"`
 	Health                 Health    `json:"health"`

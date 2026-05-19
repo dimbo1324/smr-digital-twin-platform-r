@@ -22,6 +22,14 @@ const (
 	EventTypeControlModeChanged           EventType = "CONTROL_MODE_CHANGED"
 	EventTypeControlAuthorityChanged      EventType = "CONTROL_AUTHORITY_CHANGED"
 	EventTypeCommandRejectedByArbitration EventType = "COMMAND_REJECTED_BY_ARBITRATION"
+	EventTypePIDEnabled                   EventType = "PID_ENABLED"
+	EventTypePIDDisabled                  EventType = "PID_DISABLED"
+	EventTypePIDSetpointChanged           EventType = "PID_SETPOINT_CHANGED"
+	EventTypePIDTuningChanged             EventType = "PID_TUNING_CHANGED"
+	EventTypePIDOutputUpdated             EventType = "PID_OUTPUT_UPDATED"
+	EventTypePIDOutputSaturated           EventType = "PID_OUTPUT_SATURATED"
+	EventTypePIDOutputReleased            EventType = "PID_OUTPUT_RELEASED"
+	EventTypePIDStatusChanged             EventType = "PID_STATUS_CHANGED"
 )
 
 type EventSeverity string

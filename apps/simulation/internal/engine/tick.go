@@ -23,6 +23,7 @@ func (e *Engine) tick(now time.Time) model.TelemetrySnapshot {
 	if deltaSeconds <= 0 {
 		deltaSeconds = 1
 	}
+	e.updatePIDLocked(now, deltaSeconds)
 	e.updateActuatorsLocked(now, deltaSeconds)
 	target := e.targetsForScenario(current)
 	phase := float64(e.state.tickCount) / 8
@@ -75,6 +76,15 @@ func (e *Engine) tick(now time.Time) model.TelemetrySnapshot {
 	current.PumpRPM = round(e.state.pump.rpm)
 	current.HeatExchangerState = heatExchangerStateForSnapshot(current)
 	current.PIDControllerMode = string(e.state.control.mode)
+	current.PIDSetpointC = round(e.state.pid.config.Setpoint)
+	current.PIDProcessValueC = round(e.state.pid.state.ProcessValue)
+	current.PIDErrorC = round(e.state.pid.state.Error)
+	current.PIDOutputPct = round(e.state.pid.state.Output)
+	current.PIDPTermPct = round(e.state.pid.state.PTerm)
+	current.PIDITermPct = round(e.state.pid.state.ITerm)
+	current.PIDDTermPct = round(e.state.pid.state.DTerm)
+	current.PIDStatus = e.state.pid.state.Status
+	current.PIDSaturated = e.state.pid.state.Saturated
 	current.Timestamp = now
 	current.SimulationOnly = true
 	current.Scenario = string(e.state.activeScenario)

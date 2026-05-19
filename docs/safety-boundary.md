@@ -25,4 +25,4 @@ The current command trail is not a persistent compliance audit store. Persistent
 
 Alarm and event operations are also simulation-only. Acknowledging an alarm only changes an in-memory synthetic alarm instance created by `apps/simulation`; it does not confirm, silence, or clear a real plant condition. Cleared alarm history and recent events are demo workflow records, not a regulated operational archive.
 
-Manual, auto, and disabled control modes are simulation-only state on `TIC-101`. Switching modes changes only in-memory command arbitration for the simulated `V-101` valve. `AUTO` mode reserves the valve for future simulated PID authority, but no PID output, safety automation, or real controller behavior is implemented in this milestone.
+Manual, auto, and disabled control modes are simulation-only state on `TIC-101`. Switching modes changes only in-memory command arbitration for the simulated `V-101` valve. `AUTO` mode lets the synthetic `TIC-101` PID controller apply an in-memory `V-101.POS` target. This PID is educational simulation logic only; it is not safety automation or real controller behavior.

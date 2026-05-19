@@ -578,6 +578,86 @@
           }
         }
       }
+    },
+    "/api/v1/pid/status": {
+      "get": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Get TIC-101 PID status",
+        "responses": {
+          "200": {
+            "description": "Current simulation PID status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PIDStatusResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Simulation unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pid/config": {
+      "patch": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Update TIC-101 PID configuration",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PIDConfigUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated simulation PID status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PIDStatusResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid PID configuration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Simulation unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1016,6 +1096,33 @@
           },
           "scenario": {
             "type": "string"
+          },
+          "pidSetpointC": {
+            "type": "number"
+          },
+          "pidProcessValueC": {
+            "type": "number"
+          },
+          "pidErrorC": {
+            "type": "number"
+          },
+          "pidOutputPct": {
+            "type": "number"
+          },
+          "pidPTermPct": {
+            "type": "number"
+          },
+          "pidITermPct": {
+            "type": "number"
+          },
+          "pidDTermPct": {
+            "type": "number"
+          },
+          "pidStatus": {
+            "type": "string"
+          },
+          "pidSaturated": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -1050,7 +1157,16 @@
           "mode",
           "health",
           "simulationOnly",
-          "scenario"
+          "scenario",
+          "pidSetpointC",
+          "pidProcessValueC",
+          "pidErrorC",
+          "pidOutputPct",
+          "pidPTermPct",
+          "pidITermPct",
+          "pidDTermPct",
+          "pidStatus",
+          "pidSaturated"
         ],
         "additionalProperties": false
       },
@@ -1362,7 +1478,15 @@
               "SCENARIO_COMPLETED",
               "CONTROL_MODE_CHANGED",
               "CONTROL_AUTHORITY_CHANGED",
-              "COMMAND_REJECTED_BY_ARBITRATION"
+              "COMMAND_REJECTED_BY_ARBITRATION",
+              "PID_ENABLED",
+              "PID_DISABLED",
+              "PID_SETPOINT_CHANGED",
+              "PID_TUNING_CHANGED",
+              "PID_OUTPUT_UPDATED",
+              "PID_OUTPUT_SATURATED",
+              "PID_OUTPUT_RELEASED",
+              "PID_STATUS_CHANGED"
             ]
           },
           "source": {
@@ -1726,7 +1850,7 @@
           },
           "pidImplemented": {
             "type": "boolean",
-            "const": false
+            "const": true
           },
           "reason": {
             "type": "string"
@@ -1830,6 +1954,182 @@
           "meta"
         ],
         "additionalProperties": false
+      },
+      "PIDStatus": {
+        "type": "object",
+        "properties": {
+          "controllerTag": {
+            "type": "string",
+            "example": "TIC-101"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/ControlMode"
+          },
+          "authority": {
+            "$ref": "#/components/schemas/ControlAuthority"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "pidImplemented": {
+            "type": "boolean",
+            "const": true
+          },
+          "processVariableTag": {
+            "type": "string",
+            "example": "TT-101"
+          },
+          "processValue": {
+            "type": "number"
+          },
+          "setpoint": {
+            "type": "number"
+          },
+          "manipulatedVariableTag": {
+            "type": "string",
+            "example": "V-101.POS"
+          },
+          "output": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "outputMin": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "outputMax": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "kp": {
+            "type": "number",
+            "minimum": 0
+          },
+          "ki": {
+            "type": "number",
+            "minimum": 0
+          },
+          "kd": {
+            "type": "number",
+            "minimum": 0
+          },
+          "error": {
+            "type": "number"
+          },
+          "pTerm": {
+            "type": "number"
+          },
+          "iTerm": {
+            "type": "number"
+          },
+          "dTerm": {
+            "type": "number"
+          },
+          "integral": {
+            "type": "number"
+          },
+          "derivative": {
+            "type": "number"
+          },
+          "saturated": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "safetyDisclaimer": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "controllerTag",
+          "mode",
+          "authority",
+          "active",
+          "pidImplemented",
+          "processVariableTag",
+          "processValue",
+          "setpoint",
+          "manipulatedVariableTag",
+          "output",
+          "outputMin",
+          "outputMax",
+          "kp",
+          "ki",
+          "kd",
+          "error",
+          "pTerm",
+          "iTerm",
+          "dTerm",
+          "integral",
+          "derivative",
+          "saturated",
+          "status",
+          "updatedAt",
+          "safetyDisclaimer"
+        ],
+        "additionalProperties": false
+      },
+      "PIDConfigUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "setpoint": {
+            "type": "number",
+            "minimum": 270,
+            "maximum": 310
+          },
+          "kp": {
+            "type": "number",
+            "minimum": 0
+          },
+          "ki": {
+            "type": "number",
+            "minimum": 0
+          },
+          "kd": {
+            "type": "number",
+            "minimum": 0
+          },
+          "outputMin": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "outputMax": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "requestedBy": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PIDStatusResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/PIDStatus"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ApiMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
       }
     }
   }

@@ -17,8 +17,11 @@ test("core simulator smoke flow", async ({ page }) => {
   await expect(page.getByTestId("flow-value")).toBeVisible();
   await expect(page.getByTestId("control-mode-panel")).toBeVisible();
   await expect(page.getByTestId("control-mode-current")).toContainText(/MANUAL/i);
+  await expect(page.getByTestId("pid-controller-panel")).toBeVisible();
+  await expect(page.getByTestId("pid-status")).toBeVisible();
 
   await sendValveSetPosition(page, 75);
+  await updatePidSettings(page);
   await verifyControlModeArbitration(page);
   await ensurePumpStartAccepted(page);
 
@@ -27,6 +30,9 @@ test("core simulator smoke flow", async ({ page }) => {
   await expect(page.getByTestId("event-row").first()).toBeVisible({ timeout: 15_000 });
   await expect(
     page.getByTestId("event-row").filter({ hasText: /COMMAND_|CONTROL_MODE_CHANGED|P-101|V-101/i }).first(),
+  ).toBeVisible();
+  await expect(
+    page.getByTestId("event-row").filter({ hasText: /PID_SETPOINT_CHANGED|PID_TUNING_CHANGED|PID_ENABLED/i }).first(),
   ).toBeVisible();
 
   await page.getByTestId("events-filter-severity").selectOption("all");
@@ -76,13 +82,27 @@ async function verifyControlModeArbitration(page: Page) {
   await page.getByTestId("control-mode-auto-button").click();
   await expect(page.getByTestId("control-mode-current")).toContainText(/AUTO/i, { timeout: 15_000 });
   await expect(page.getByTestId("control-authority-current")).toContainText(/PID/i);
-  await expect(page.getByTestId("control-mode-pid-placeholder")).toContainText(/not implemented|no/i);
+  await expect(page.getByTestId("control-mode-pid-placeholder")).toContainText(/yes|in-memory simulation/i);
+  await expect(page.getByTestId("pid-active-badge")).toContainText(/Active/i, { timeout: 15_000 });
+  await expect(page.getByTestId("pid-status")).toContainText(/Active|Saturated/i, { timeout: 15_000 });
+  await expect(page.getByTestId("pid-output")).toContainText(/[0-9]/);
   await expect(page.getByTestId("valve-command-disabled-reason")).toBeVisible();
   await expect(page.getByTestId("valve-apply-position-button")).toBeDisabled();
 
   await page.getByTestId("control-mode-manual-button").click();
   await expect(page.getByTestId("control-mode-current")).toContainText(/MANUAL/i, { timeout: 15_000 });
   await expect(page.getByTestId("valve-apply-position-button")).toBeEnabled({ timeout: 15_000 });
+}
+
+async function updatePidSettings(page: Page) {
+  await page.getByTestId("pid-setpoint-input").fill("288");
+  await page.getByTestId("pid-kp-input").fill("0.9");
+  await page.getByTestId("pid-ki-input").fill("0.05");
+  await page.getByTestId("pid-kd-input").fill("0.1");
+  await page.getByTestId("pid-apply-settings-button").click();
+  await expect(page.getByTestId("pid-controller-panel")).toContainText(/settings applied|288/i, {
+    timeout: 15_000,
+  });
 }
 
 async function ensurePumpStartAccepted(page: Page) {
