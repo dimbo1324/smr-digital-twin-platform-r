@@ -235,15 +235,31 @@ func TestRecentCommandsAndEventsProxy(t *testing.T) {
 	gateway := newTestGateway(server.URL, true)
 
 	commandRecorder := httptest.NewRecorder()
-	gateway.RecentCommands(commandRecorder, httptest.NewRequest(http.MethodGet, "/api/v1/commands/recent", nil))
+	gateway.RecentCommands(commandRecorder, httptest.NewRequest(http.MethodGet, "/api/v1/commands/recent?limit=1", nil))
 	if commandRecorder.Code != http.StatusOK {
 		t.Fatalf("expected commands status 200, got %d", commandRecorder.Code)
 	}
 
 	eventRecorder := httptest.NewRecorder()
-	gateway.RecentEvents(eventRecorder, httptest.NewRequest(http.MethodGet, "/api/v1/events/recent", nil))
+	gateway.RecentEvents(eventRecorder, httptest.NewRequest(http.MethodGet, "/api/v1/events/recent?limit=1", nil))
 	if eventRecorder.Code != http.StatusOK {
 		t.Fatalf("expected events status 200, got %d", eventRecorder.Code)
+	}
+}
+
+func TestRecentEndpointsRejectInvalidLimit(t *testing.T) {
+	gateway := newTestGateway("http://127.0.0.1:1", true)
+
+	commandRecorder := httptest.NewRecorder()
+	gateway.RecentCommands(commandRecorder, httptest.NewRequest(http.MethodGet, "/api/v1/commands/recent?limit=bad", nil))
+	if commandRecorder.Code != http.StatusBadRequest {
+		t.Fatalf("expected commands status 400, got %d", commandRecorder.Code)
+	}
+
+	eventRecorder := httptest.NewRecorder()
+	gateway.RecentEvents(eventRecorder, httptest.NewRequest(http.MethodGet, "/api/v1/events/recent?limit=500", nil))
+	if eventRecorder.Code != http.StatusBadRequest {
+		t.Fatalf("expected events status 400, got %d", eventRecorder.Code)
 	}
 }
 

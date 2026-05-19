@@ -143,11 +143,56 @@ func TestTripScenarioSetsModeAndHealth(t *testing.T) {
 	}
 }
 
+func TestScenarioLifecycleCreatesEvents(t *testing.T) {
+	engine := newTestEngine()
+	if err := engine.SetScenario(model.ScenarioTrip); err != nil {
+		t.Fatalf("set scenario: %v", err)
+	}
+	if err := engine.ClearScenario(); err != nil {
+		t.Fatalf("clear scenario: %v", err)
+	}
+
+	events := engine.RecentEvents()
+	if !eventTypeExists(events, model.EventTypeScenarioStarted) {
+		t.Fatal("expected scenario started event")
+	}
+	if !eventTypeExists(events, model.EventTypeScenarioCompleted) {
+		t.Fatal("expected scenario completed event")
+	}
+}
+
+func TestRecentEventsLimitNewestFirst(t *testing.T) {
+	engine := newTestEngine()
+	if err := engine.SetScenario(model.ScenarioHighTemperature); err != nil {
+		t.Fatalf("set scenario: %v", err)
+	}
+	if err := engine.ClearScenario(); err != nil {
+		t.Fatalf("clear scenario: %v", err)
+	}
+
+	events := engine.RecentEventsLimited(1)
+	if len(events) != 1 {
+		t.Fatalf("expected 1 event, got %d", len(events))
+	}
+	if events[0].Type != model.EventTypeScenarioCompleted {
+		t.Fatalf("expected newest scenario completed event, got %s", events[0].Type)
+	}
+}
+
 func TestUnknownScenarioReturnsError(t *testing.T) {
 	engine := newTestEngine()
 	if err := engine.SetScenario("unknown"); err == nil {
 		t.Fatal("expected unknown scenario error")
 	}
+}
+
+func eventTypeExists(events []model.Event, eventType model.EventType) bool {
+	for _, event := range events {
+		if event.Type == eventType {
+			return true
+		}
+	}
+	return false
 }
 
 func newTestEngine() *Engine {

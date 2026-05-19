@@ -16,6 +16,7 @@ const (
 	pumpTransitionDelay  = 2 * time.Second
 	commandAcceptedText  = "Command accepted by simulation engine"
 	commandCompletedText = "Command completed in simulation state"
+	maxCommandReasonLen  = 240
 )
 
 type CommandError struct {
@@ -71,21 +72,38 @@ func (e *Engine) SubmitCommand(request model.CommandRequest) (model.Command, err
 }
 
 func (e *Engine) RecentCommands() []model.Command {
+	return e.RecentCommandsLimited(0)
+}
+
+func (e *Engine) RecentCommandsLimited(limit int) []model.Command {
 	e.mu.RLock()
 	defer e.mu.RUnlock()
 
-	commands := make([]model.Command, len(e.state.commands))
-	copy(commands, e.state.commands)
+	commands := newestFirst(e.state.commands, limit)
 	return commands
 }
 
 func (e *Engine) RecentEvents() []model.Event {
+	return e.RecentEventsLimited(0)
+}
+
+func (e *Engine) RecentEventsLimited(limit int) []model.Event {
 	e.mu.RLock()
 	defer e.mu.RUnlock()
 
-	events := make([]model.Event, len(e.state.events))
-	copy(events, e.state.events)
+	events := newestFirst(e.state.events, limit)
 	return events
+}
+
+func newestFirst[T any](items []T, limit int) []T {
+	if limit <= 0 || limit > len(items) {
+		limit = len(items)
+	}
+	result := make([]T, 0, limit)
+	for index := len(items) - 1; index >= 0 && len(result) < limit; index-- {
+		result = append(result, items[index])
+	}
+	return result
 }
 
 func normalizeCommandRequest(request model.CommandRequest) model.CommandRequest {
@@ -114,6 +132,10 @@ func (e *Engine) newCommandLocked(request model.CommandRequest, now time.Time) m
 }
 
 func (e *Engine) validateCommandLocked(command model.Command) *CommandError {
+	if len(command.Payload.Reason) > maxCommandReasonLen {
+		return commandError("INVALID_PAYLOAD", "reason must be 240 characters or fewer", http.StatusBadRequest)
+	}
+
 	switch command.TargetTag {
 	case "V-101":
 		return validateValveCommand(command)

@@ -102,8 +102,19 @@ func (e *Engine) SetScenario(scenario model.ScenarioName) error {
 
 	e.mu.Lock()
 	defer e.mu.Unlock()
+	now := time.Now().UTC()
 	e.state.activeScenario = scenario
 	e.state.snapshot.Scenario = string(scenario)
+	e.appendEventLocked(
+		model.EventTypeScenarioStarted,
+		model.EventSeverityInfo,
+		"scenario-engine",
+		"Predefined simulation scenario started.",
+		"simulation",
+		"",
+		now,
+		map[string]string{"scenario": string(scenario)},
+	)
 	e.logger.Info("simulation_scenario_started", slog.String("scenario", string(scenario)))
 	return nil
 }
@@ -111,8 +122,22 @@ func (e *Engine) SetScenario(scenario model.ScenarioName) error {
 func (e *Engine) ClearScenario() error {
 	e.mu.Lock()
 	defer e.mu.Unlock()
+	now := time.Now().UTC()
+	previous := e.state.activeScenario
 	e.state.activeScenario = model.ScenarioNormal
 	e.state.snapshot.Scenario = string(model.ScenarioNormal)
+	if previous != model.ScenarioNormal {
+		e.appendEventLocked(
+			model.EventTypeScenarioCompleted,
+			model.EventSeverityInfo,
+			"scenario-engine",
+			"Predefined simulation scenario stopped.",
+			"simulation",
+			"",
+			now,
+			map[string]string{"scenario": string(previous)},
+		)
+	}
 	e.logger.Info("simulation_scenario_stopped")
 	return nil
 }
@@ -126,6 +151,16 @@ func (e *Engine) Reset() {
 	e.history = history.NewRingBuffer(e.cfg.HistorySize)
 	e.evaluator.Reset()
 	e.tickLocked(now)
+	e.appendEventLocked(
+		model.EventTypeSimulationStateUpdated,
+		model.EventSeverityInfo,
+		"system",
+		"In-memory simulation state reset.",
+		"simulation",
+		"",
+		now,
+		map[string]string{"action": "reset"},
+	)
 	e.logger.Info("simulation_reset_executed")
 }
 

@@ -1,6 +1,7 @@
-.PHONY: help dev dev-up dev-down down status test lint api-dev api-run api-build api-test api-vet simulation-run simulation-build simulation-test simulation-vet web-api-types web-build web-lint web-typecheck
+.PHONY: help dev dev-up dev-down down status compose-config test lint api-dev api-run api-build api-test api-vet simulation-run simulation-build simulation-test simulation-vet web-api-types web-api-types-check web-api-validate-schemas web-build web-lint web-typecheck
 
 WEB_RUN = docker compose run --rm --no-deps web sh -c
+WEB_INSTALL = npm ci
 
 help:
 	@echo "Available targets:"
@@ -9,6 +10,7 @@ help:
 	@echo "  make dev-down         - stop the Docker Compose stack"
 	@echo "  make down             - alias for make dev-down"
 	@echo "  make status           - show Docker Compose service status"
+	@echo "  make compose-config   - validate Docker Compose configuration"
 	@echo "  make test             - run API, simulation, and frontend checks"
 	@echo "  make lint             - run go vet and frontend lint"
 	@echo "  make api-run          - run the Go API locally"
@@ -18,6 +20,8 @@ help:
 	@echo "  make simulation-build - build the Go simulation service"
 	@echo "  make simulation-test  - run simulation tests"
 	@echo "  make web-api-types    - regenerate frontend API contract types"
+	@echo "  make web-api-types-check - verify generated frontend API types are current"
+	@echo "  make web-api-validate-schemas - compile API JSON schemas"
 	@echo "  make web-build        - build the frontend in the web container"
 	@echo "  make web-lint         - lint the frontend in the web container"
 	@echo "  make web-typecheck    - typecheck the frontend in the web container"
@@ -35,7 +39,10 @@ down: dev-down
 status:
 	docker compose ps
 
-test: api-test simulation-test web-api-types web-typecheck web-lint web-build
+compose-config:
+	docker compose config --quiet
+
+test: api-test simulation-test web-api-types-check web-api-validate-schemas web-typecheck web-lint web-build compose-config
 
 lint: api-vet simulation-vet web-lint
 
@@ -66,13 +73,19 @@ simulation-vet:
 	cd apps/simulation && go vet ./...
 
 web-api-types:
-	$(WEB_RUN) "npm install && npm run api:types"
+	$(WEB_RUN) "$(WEB_INSTALL) && npm run api:types"
+
+web-api-types-check:
+	$(WEB_RUN) "$(WEB_INSTALL) && npm run api:types:check"
+
+web-api-validate-schemas:
+	$(WEB_RUN) "$(WEB_INSTALL) && npm run api:validate-schemas"
 
 web-build:
-	$(WEB_RUN) "npm install && npm run build"
+	$(WEB_RUN) "$(WEB_INSTALL) && npm run build"
 
 web-lint:
-	$(WEB_RUN) "npm install && npm run lint"
+	$(WEB_RUN) "$(WEB_INSTALL) && npm run lint"
 
 web-typecheck:
-	$(WEB_RUN) "npm install && npm run typecheck"
+	$(WEB_RUN) "$(WEB_INSTALL) && npm run typecheck"

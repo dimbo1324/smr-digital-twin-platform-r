@@ -8,4 +8,10 @@ Do not edit `schema.ts` manually. Regenerate it from `apps/web`:
 npm run api:types
 ```
 
-The generated types describe the API gateway contract only. Runtime validation and Go server code generation are not implemented in the current milestone.
+To verify that the committed generated file still matches the OpenAPI contract:
+
+```bash
+npm run api:types:check
+```
+
+The generated types describe the API gateway contract only. Frontend dev/test runtime validation is implemented separately in the shared HTTP client. Go server code generation and Go runtime validation from JSON Schema are not implemented.

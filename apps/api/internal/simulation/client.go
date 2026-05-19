@@ -47,7 +47,9 @@ func (c *Client) TelemetryHistory(ctx context.Context, window string) ([]Telemet
 	if window == "" {
 		window = "15m"
 	}
-	return get[[]TelemetrySnapshot](ctx, c, "/api/v1/simulation/telemetry/history?window="+window)
+	query := url.Values{}
+	query.Set("window", window)
+	return get[[]TelemetrySnapshot](ctx, c, "/api/v1/simulation/telemetry/history?"+query.Encode())
 }
 
 func (c *Client) ActiveAlarms(ctx context.Context) ([]Alarm, error) {
@@ -67,7 +69,7 @@ func (c *Client) Scenarios(ctx context.Context) ([]ScenarioInfo, error) {
 }
 
 func (c *Client) StartScenario(ctx context.Context, scenarioName string) (Status, error) {
-	return post[Status](ctx, c, "/api/v1/simulation/scenarios/"+scenarioName+"/start")
+	return post[Status](ctx, c, "/api/v1/simulation/scenarios/"+url.PathEscape(scenarioName)+"/start")
 }
 
 func (c *Client) StopScenario(ctx context.Context) (Status, error) {
@@ -82,12 +84,21 @@ func (c *Client) SubmitCommand(ctx context.Context, request CommandRequest) (Com
 	return postJSON[Command](ctx, c, "/api/v1/simulation/commands", request)
 }
 
-func (c *Client) RecentCommands(ctx context.Context) ([]Command, error) {
-	return get[[]Command](ctx, c, "/api/v1/simulation/commands/recent")
+func (c *Client) RecentCommands(ctx context.Context, limit int) ([]Command, error) {
+	return get[[]Command](ctx, c, recentPath("/api/v1/simulation/commands/recent", limit))
 }
 
-func (c *Client) RecentEvents(ctx context.Context) ([]Event, error) {
-	return get[[]Event](ctx, c, "/api/v1/simulation/events/recent")
+func (c *Client) RecentEvents(ctx context.Context, limit int) ([]Event, error) {
+	return get[[]Event](ctx, c, recentPath("/api/v1/simulation/events/recent", limit))
+}
+
+func recentPath(path string, limit int) string {
+	if limit <= 0 {
+		return path
+	}
+	query := url.Values{}
+	query.Set("limit", fmt.Sprintf("%d", limit))
+	return path + "?" + query.Encode()
 }
 
 func get[T any](ctx context.Context, c *Client, path string) (T, error) {

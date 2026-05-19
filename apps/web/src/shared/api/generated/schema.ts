@@ -56,7 +56,7 @@ export interface components {
     "AssetMetadata": {
       "site"?: string;
       "unit"?: string;
-      [key: string]: unknown;
+      [key: string]: string | undefined;
     };
     "Asset": {
       "id": string;

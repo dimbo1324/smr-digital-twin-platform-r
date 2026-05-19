@@ -7,6 +7,7 @@ const webRoot = resolve(scriptDir, "..");
 const repoRoot = resolve(webRoot, "..", "..");
 const openApiPath = resolve(repoRoot, "packages", "schemas", "openapi.yaml");
 const outputPath = resolve(webRoot, "src", "shared", "api", "generated", "schema.ts");
+const checkOnly = process.argv.includes("--check");
 
 const openApi = JSON.parse(await readFile(openApiPath, "utf8"));
 const schemas = openApi.components?.schemas;
@@ -29,8 +30,19 @@ for (const [name, schema] of Object.entries(schemas)) {
 
 lines.push("  };", "}", "");
 
-await mkdir(dirname(outputPath), { recursive: true });
-await writeFile(outputPath, `${lines.join("\n")}\n`);
+const output = `${lines.join("\n")}\n`;
+
+if (checkOnly) {
+  const current = await readFile(outputPath, "utf8");
+  if (current !== output) {
+    console.error("Generated API types are out of date. Run `npm run api:types` from apps/web.");
+    process.exit(1);
+  }
+  console.log("Generated API types are up to date.");
+} else {
+  await mkdir(dirname(outputPath), { recursive: true });
+  await writeFile(outputPath, output);
+}
 
 function toType(schema, indentLevel = 0) {
   if (!schema || typeof schema !== "object") {
@@ -89,8 +101,10 @@ function objectType(schema, indentLevel) {
     return `${childIndent}${quoteKey(key)}${optional}: ${toType(value, indentLevel + 2)};`;
   });
 
-  if (schema.additionalProperties === true || typeof schema.additionalProperties === "object") {
+  if (schema.additionalProperties === true) {
     body.push(`${childIndent}[key: string]: unknown;`);
+  } else if (schema.additionalProperties && typeof schema.additionalProperties === "object") {
+    body.push(`${childIndent}[key: string]: ${toType(schema.additionalProperties, indentLevel + 2)} | undefined;`);
   }
 
   return `{\n${body.join("\n")}\n${indent}}`;

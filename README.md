@@ -298,7 +298,13 @@ Regenerate frontend API types from `apps/web`:
 npm run api:types
 ```
 
-This contract layer is documentation and frontend type source for the current API gateway. Runtime schema validation and generated Go server stubs are not implemented yet.
+Verify that committed frontend API types are still current:
+
+```bash
+npm run api:types:check
+```
+
+This contract layer is documentation and frontend type source for the current API gateway. Frontend dev/test runtime validation is implemented for selected request and response payloads. Generated Go server stubs and Go runtime validation from JSON Schema are not implemented yet.
 
 ## Runtime API Validation
 
@@ -352,8 +358,8 @@ curl -X POST http://localhost:8080/api/v1/alarms/alarm-id/acknowledge \
 curl -X POST http://localhost:8080/api/v1/commands \
   -H "Content-Type: application/json" \
   -d '{"targetTag":"V-101","commandType":"SET_POSITION","payload":{"positionPercent":75}}'
-curl http://localhost:8080/api/v1/commands/recent
-curl http://localhost:8080/api/v1/events/recent
+curl "http://localhost:8080/api/v1/commands/recent?limit=50"
+curl "http://localhost:8080/api/v1/events/recent?limit=50"
 curl http://localhost:8080/api/v1/simulation/scenarios
 curl -X POST http://localhost:8080/api/v1/simulation/scenarios/high_temperature/start
 curl -X POST http://localhost:8080/api/v1/simulation/scenarios/stop
@@ -374,8 +380,8 @@ curl -X POST http://localhost:8081/api/v1/simulation/alarms/alarm-id/acknowledge
 curl -X POST http://localhost:8081/api/v1/simulation/commands \
   -H "Content-Type: application/json" \
   -d '{"targetTag":"P-101","commandType":"START","source":"frontend","requestedBy":"demo-engineer"}'
-curl http://localhost:8081/api/v1/simulation/commands/recent
-curl http://localhost:8081/api/v1/simulation/events/recent
+curl "http://localhost:8081/api/v1/simulation/commands/recent?limit=50"
+curl "http://localhost:8081/api/v1/simulation/events/recent?limit=50"
 ```
 
 ## Known Limitations
@@ -387,7 +393,7 @@ curl http://localhost:8081/api/v1/simulation/events/recent
 - Command support is limited to simulated `V-101` valve and `P-101` pump assets.
 - Events are recent in-memory command/alarm/simulation records, not a persistent event log service.
 - Data source switching in UI is not a real runtime integration switch yet.
-- Frontend bundle currently builds as a single large SPA chunk.
+- Frontend uses route-level code splitting; deeper vendor/chart chunk tuning can be added later if needed.
 - Dashboard data is live for the local simulator, but it still uses REST polling and in-memory simulation sources.
 - Runtime validation is dev/test focused and currently lives in the frontend HTTP client; Go runtime validation from JSON Schema is not implemented yet.
 - Go server/client code generation is not implemented yet.
@@ -397,12 +403,13 @@ curl http://localhost:8081/api/v1/simulation/events/recent
 
 1. Stabilize architecture truth, domain levels, live process UI, and dev commands.
 2. Add simulation-only command layer for valve and pump with event/audit trail.
-3. Add React Query API layer and Playwright smoke coverage.
-4. Add MQTT bridge for simulated telemetry.
-5. Add PID/manual-auto control in simulation-only mode.
-6. Add persistent historian and trend APIs.
-7. Add report export.
-8. Add auth/RBAC, observability, deployment hardening, and extended CI checks.
+3. Add OpenAPI schemas, generated frontend types, React Query API layer, runtime validation, and Playwright smoke coverage.
+4. Harden API contract tooling, simulation domain boundaries, and quality gates.
+5. Add manual/auto mode and PID control in simulation-only mode.
+6. Add MQTT bridge for simulated telemetry.
+7. Add persistent historian and trend APIs.
+8. Add report export.
+9. Add auth/RBAC, observability, deployment hardening, and extended CI checks.
 
 ## Documentation
 

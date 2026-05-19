@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/model"
@@ -155,6 +156,23 @@ func TestUnsupportedCommandRejectedAndCreatesEvent(t *testing.T) {
 	}
 	if len(engine.RecentEvents()) == 0 {
 		t.Fatal("expected command event")
+	}
+}
+
+func TestCommandReasonLengthRejected(t *testing.T) {
+	engine := newTestEngine()
+	request := commandRequest("V-101", model.CommandTypeOpen)
+	request.Payload.Reason = strings.Repeat("x", maxCommandReasonLen+1)
+
+	command, err := engine.SubmitCommand(request)
+	if err == nil {
+		t.Fatal("expected long reason validation error")
+	}
+	if command.Status != model.CommandStatusRejected {
+		t.Fatalf("expected rejected command, got %s", command.Status)
+	}
+	if command.ErrorCode != "INVALID_PAYLOAD" {
+		t.Fatalf("expected INVALID_PAYLOAD, got %s", command.ErrorCode)
 	}
 }
 

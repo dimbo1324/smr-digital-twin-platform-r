@@ -14,9 +14,10 @@ From `apps/web`:
 
 ```bash
 npm run api:types
+npm run api:types:check
 ```
 
-The generator is intentionally lightweight and dependency-free for this milestone. It reads `packages/schemas/openapi.yaml`, which is valid YAML and JSON, and emits TypeScript schema aliases used by the frontend API layer.
+The generator is intentionally lightweight and dependency-free for this milestone. It reads `packages/schemas/openapi.yaml`, which is maintained as JSON-compatible YAML, and emits TypeScript schema aliases used by the frontend API layer. `npm run api:types:check` verifies that the committed generated file is current.
 
 ## Rules
 
@@ -42,7 +43,8 @@ When changing API payloads:
 1. Update `openapi.yaml`.
 2. Update the matching `schemas/*.schema.json` file.
 3. Run `npm run api:types`.
-4. Run `npm run api:validate-schemas`.
-5. Keep runtime validation mappings in `apps/web/src/shared/api/validation/schemas.ts` aligned.
+4. Run `npm run api:types:check`.
+5. Run `npm run api:validate-schemas`.
+6. Keep runtime validation mappings in `apps/web/src/shared/api/validation/schemas.ts` aligned.
 
 Go server code generation and Go runtime validation from JSON Schema are not implemented yet.
