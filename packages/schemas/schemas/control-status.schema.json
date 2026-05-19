@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://smr-twin.local/schemas/control-status.schema.json",
+  "title": "ControlStatus",
+  "type": "object",
+  "properties": {
+    "controllerTag": { "type": "string" },
+    "controlledVariableTag": { "type": "string" },
+    "manipulatedVariableTag": { "type": "string" },
+    "mode": { "type": "string", "enum": ["MANUAL", "AUTO", "DISABLED"] },
+    "authority": { "type": "string", "enum": ["USER", "SCENARIO", "PID", "SYSTEM", "NONE"] },
+    "enabled": { "type": "boolean" },
+    "pidImplemented": { "type": "boolean" },
+    "reason": { "type": "string" },
+    "updatedAt": { "type": "string", "format": "date-time" },
+    "updatedBy": { "type": "string" },
+    "safetyDisclaimer": { "type": "string" }
+  },
+  "required": [
+    "controllerTag",
+    "controlledVariableTag",
+    "manipulatedVariableTag",
+    "mode",
+    "authority",
+    "enabled",
+    "pidImplemented",
+    "reason",
+    "updatedAt",
+    "updatedBy",
+    "safetyDisclaimer"
+  ],
+  "additionalProperties": false
+}

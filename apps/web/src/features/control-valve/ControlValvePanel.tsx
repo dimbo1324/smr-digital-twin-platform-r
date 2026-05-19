@@ -2,6 +2,7 @@ import { useState } from "react";
 import { CheckCircle2, Clock3, Power, Send, SlidersHorizontal, XCircle } from "lucide-react";
 import type { CommandRecord, CommandType } from "@/entities/commands/model/types";
 import { useSendCommand } from "@/entities/commands/api/useSendCommand";
+import type { ControlStatus } from "@/entities/control/model/types";
 import type { TelemetryDisplayPoint } from "@/entities/telemetry/model/types";
 import {
   findTelemetryByTag,
@@ -22,6 +23,7 @@ type DataState = "loading" | "connected" | "degraded";
 export interface ControlValvePanelProps {
   telemetryPoints: TelemetryDisplayPoint[];
   dataState: DataState;
+  controlStatus?: ControlStatus;
   onCommandComplete?: () => void;
 }
 
@@ -38,6 +40,7 @@ function clampValvePosition(value: number) {
 export function ControlValvePanel({
   telemetryPoints,
   dataState,
+  controlStatus,
   onCommandComplete,
 }: ControlValvePanelProps) {
   const valvePoint = findTelemetryByTag(telemetryPoints, "V-101.POS");
@@ -51,7 +54,8 @@ export function ControlValvePanel({
   const ageLabel = formatTelemetryAge(getTelemetryAge(telemetryPoints, "V-101.POS"));
   const sourceVariant = valvePoint?.source === "simulation" ? "success" : dataState === "degraded" ? "warning" : "mock";
   const isPending = feedback.state === "pending" || commandMutation.isPending;
-  const canSend = dataState === "connected" && !isPending;
+  const disabledReason = valveDisabledReason(controlStatus);
+  const canSend = dataState === "connected" && !isPending && !disabledReason;
   const positionInvalid = requestedPosition < 0 || requestedPosition > 100;
 
   const submitValveCommand = (commandType: CommandType, positionPercent?: number) => {
@@ -143,6 +147,14 @@ export function ControlValvePanel({
           <div className="mt-4 rounded-2xl border border-border/70 bg-background/50 p-3 text-xs leading-5 text-muted-foreground">
             Commands affect only the in-memory simulation. No real equipment, plant network, or safety-critical automation is connected.
           </div>
+          {disabledReason ? (
+            <div
+              className="mt-3 rounded-2xl border border-warning/30 bg-warning/10 p-3 text-xs leading-5 text-warning"
+              data-testid="valve-command-disabled-reason"
+            >
+              {disabledReason}
+            </div>
+          ) : null}
         </div>
 
         <div className="mt-4 grid gap-2 sm:grid-cols-3">
@@ -184,7 +196,7 @@ export function ControlValvePanel({
                 value={requestedPosition}
                 onChange={(event) => setRequestedPosition(Number(event.target.value))}
                 className="mt-3 w-full accent-primary"
-                disabled={isPending}
+                disabled={isPending || Boolean(disabledReason)}
               />
             </label>
             <div className="flex items-center gap-2">
@@ -195,7 +207,7 @@ export function ControlValvePanel({
                 value={requestedPosition}
                 onChange={(event) => setRequestedPosition(Number(event.target.value))}
                 className="h-10 w-24 rounded-full border border-border/80 bg-card/70 px-3 text-sm text-foreground"
-                disabled={isPending}
+                disabled={isPending || Boolean(disabledReason)}
                 data-testid="valve-set-position-input"
               />
               <Button
@@ -217,6 +229,19 @@ export function ControlValvePanel({
       </CardContent>
     </Card>
   );
+}
+
+function valveDisabledReason(controlStatus?: ControlStatus) {
+  if (!controlStatus) {
+    return undefined;
+  }
+  if (controlStatus.mode === "AUTO") {
+    return "Switch TIC-101 to MANUAL to send direct valve commands. AUTO is reserved for future simulated PID control.";
+  }
+  if (controlStatus.mode === "DISABLED") {
+    return "Control output disabled in simulation.";
+  }
+  return undefined;
 }
 
 function CommandFeedbackView({ feedback }: { feedback: CommandFeedback }) {

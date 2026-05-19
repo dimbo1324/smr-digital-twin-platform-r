@@ -50,6 +50,37 @@ func (e *Engine) SubmitCommand(request model.CommandRequest) (model.Command, err
 		return command, commandErr
 	}
 
+	decision := e.arbitrateCommandLocked(command)
+	if !decision.Allowed {
+		command.Status = model.CommandStatusRejected
+		command.RejectedAt = &now
+		command.ErrorCode = string(decision.Reason)
+		command.ErrorMessage = decision.Message
+		command.ResultMessage = "Command rejected by simulation command arbitration"
+		command.RejectReason = string(decision.Reason)
+		command.ArbitrationMode = string(decision.Mode)
+		command.Authority = string(decision.Authority)
+		command.RejectedBy = "command-arbitrator"
+		e.replaceCommandLocked(command)
+		e.appendEventLocked(
+			model.EventTypeCommandRejectedByArbitration,
+			model.EventSeverityWarning,
+			"command-arbitrator",
+			decision.Message,
+			command.TargetTag,
+			command.ID,
+			now,
+			map[string]string{
+				"mode":        string(decision.Mode),
+				"authority":   string(decision.Authority),
+				"reason":      string(decision.Reason),
+				"commandType": string(command.CommandType),
+				"source":      string(command.Source),
+			},
+		)
+		return command, commandError(string(decision.Reason), decision.Message, http.StatusConflict)
+	}
+
 	acceptedAt := now
 	command.AcceptedAt = &acceptedAt
 	command.Status = model.CommandStatusAccepted

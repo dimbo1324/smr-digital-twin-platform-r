@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://smr-twin.local/schemas/mode-change-request.schema.json",
+  "title": "ModeChangeRequest",
+  "type": "object",
+  "properties": {
+    "mode": { "type": "string", "enum": ["MANUAL", "AUTO", "DISABLED"] },
+    "requestedBy": { "type": "string", "maxLength": 120 },
+    "reason": { "type": "string", "maxLength": 300 }
+  },
+  "required": ["mode"],
+  "additionalProperties": false
+}

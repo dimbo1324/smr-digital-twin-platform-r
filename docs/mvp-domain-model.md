@@ -65,7 +65,7 @@ Current process-loop assets:
 | `PT-101` | Loop Pressure Transmitter | sensor | Process loop pressure |
 | `FT-101` | Loop Flow Transmitter | sensor | Process loop flow |
 | `LT-101` | Tank Level Transmitter | sensor | Tank level |
-| `TIC-101` | Temperature PID Controller | controller | PID placeholder, disabled now |
+| `TIC-101` | Temperature Controller | controller | Manual/auto/disabled arbitration for future PID |
 
 ## Asset Model
 
@@ -126,13 +126,40 @@ Current process-loop telemetry:
 | `P-101.STATE` | Pump State | text | empty | simulation via API |
 | `P-101.RPM` | Pump Speed | numeric | `rpm` | simulation via API |
 | `HX-101.STATE` | Heat Exchanger State | text | empty | simulation via API |
-| `TIC-101.MODE` | PID Controller Mode | text | empty | simulation via API |
+| `TIC-101.MODE` | Control Mode | text | empty | simulation via API |
 
 Telemetry quality values:
 
 - `GOOD`
 - `BAD`
 - `UNCERTAIN`
+
+## Control Mode / Arbitration Model
+
+`TIC-101` is the simulation-only controller placeholder for the future `TT-101 -> V-101.POS` loop. PID calculations are not implemented yet, but the control mode and command arbitration layer now exist.
+
+ControlMode:
+
+- `MANUAL`
+- `AUTO`
+- `DISABLED`
+
+ControlAuthority:
+
+- `USER`
+- `SCENARIO`
+- `PID`
+- `SYSTEM`
+- `NONE`
+
+Current semantics:
+
+1. `MANUAL`: direct user/frontend `V-101` commands are allowed.
+2. `AUTO`: direct user/frontend `V-101` commands are rejected because `V-101` is reserved for future simulated PID authority. No PID output is generated yet.
+3. `DISABLED`: direct user/frontend `V-101` commands are rejected because control output is disabled.
+4. `P-101` remains manually controllable in this milestone.
+
+Mode changes emit `CONTROL_MODE_CHANGED` and `CONTROL_AUTHORITY_CHANGED`. Arbitration rejections emit `COMMAND_REJECTED_BY_ARBITRATION` and leave a rejected command record with a structured reject reason.
 
 ## Alarm Model
 
@@ -214,6 +241,9 @@ Current event types:
 - `SIMULATION_STATE_UPDATED`
 - `SCENARIO_STARTED`
 - `SCENARIO_COMPLETED`
+- `CONTROL_MODE_CHANGED`
+- `CONTROL_AUTHORITY_CHANGED`
+- `COMMAND_REJECTED_BY_ARBITRATION`
 
 Current severities:
 
@@ -376,6 +406,7 @@ Implemented now:
 - Active alarm generation and display.
 - In-memory history for trends.
 - Scenario start/stop/reset endpoints.
+- Manual/auto/disabled `TIC-101` mode and `V-101` command arbitration.
 
 Partial:
 

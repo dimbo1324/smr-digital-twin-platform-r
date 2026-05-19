@@ -74,7 +74,7 @@ func (e *Engine) tick(now time.Time) model.TelemetrySnapshot {
 	current.PumpState = string(e.state.pump.state)
 	current.PumpRPM = round(e.state.pump.rpm)
 	current.HeatExchangerState = heatExchangerStateForSnapshot(current)
-	current.PIDControllerMode = "Disabled"
+	current.PIDControllerMode = string(e.state.control.mode)
 	current.Timestamp = now
 	current.SimulationOnly = true
 	current.Scenario = string(e.state.activeScenario)

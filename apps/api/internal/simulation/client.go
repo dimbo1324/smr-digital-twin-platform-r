@@ -52,6 +52,14 @@ func (c *Client) TelemetryHistory(ctx context.Context, window string) ([]Telemet
 	return get[[]TelemetrySnapshot](ctx, c, "/api/v1/simulation/telemetry/history?"+query.Encode())
 }
 
+func (c *Client) ControlStatus(ctx context.Context) (ControlStatus, error) {
+	return get[ControlStatus](ctx, c, "/api/v1/simulation/control/status")
+}
+
+func (c *Client) SetControlMode(ctx context.Context, request ModeChangeRequest) (ControlStatus, error) {
+	return postJSON[ControlStatus](ctx, c, "/api/v1/simulation/control/mode", request)
+}
+
 func (c *Client) ActiveAlarms(ctx context.Context) ([]Alarm, error) {
 	return get[[]Alarm](ctx, c, "/api/v1/simulation/alarms/active")
 }

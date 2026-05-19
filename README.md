@@ -33,6 +33,8 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 - Process asset cards backed by the API assets endpoint, with labelled fallback states.
 - Trends summary cards backed by latest API telemetry and chart history backed by in-memory simulation history.
 - Simulation-only command layer for `V-101` and `P-101` through the API gateway.
+- Simulation-only `TIC-101` control modes for command arbitration: `MANUAL`, `AUTO`, and `DISABLED`.
+- Command arbitration for direct `V-101` commands, with `AUTO` reserved for future simulated PID authority.
 - Valve `V-101` and pump `P-101` state machines that update synthetic telemetry.
 - In-memory command history and event/audit trail for simulation command attempts.
 - Frontend valve and pump control panels with pending, success, and error states.
@@ -41,7 +43,7 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 - OpenAPI 3.1 contract and JSON Schema reference files under `packages/schemas`.
 - Generated frontend API schema types committed under `apps/web/src/shared/api/generated`.
 - TanStack Query frontend data layer with typed REST hooks, query keys, polling intervals, and mutation invalidation.
-- Runtime API validation in the frontend HTTP client for dev/test contract drift detection.
+- Runtime API validation in the frontend HTTP client for dev/test contract drift detection, including control mode payloads.
 - Explicit safety boundary in docs and UI copy.
 
 ## Partially Implemented
@@ -49,7 +51,7 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 - **Alarms**: active, acknowledged, and cleared alarm workflow exists in memory. Shelving, persistent audit, and production operator workflow are planned.
 - **Trends**: in-memory simulation history exists. External TSDB persistence, downsampling APIs, and long-range queries are not implemented yet.
 - **Events**: command, alarm, and simulation events are captured in an in-memory recent-event trail and shown on the Events page. Persistent audit storage is planned.
-- **Process UI**: process-loop values are bound to live API telemetry when available. Valve and pump controls call simulation-only command endpoints; other process controls remain planned.
+- **Process UI**: process-loop values are bound to live API telemetry when available. Valve and pump controls call simulation-only command endpoints; `TIC-101` mode controls whether direct valve commands are allowed.
 - **Scenario controls**: predefined synthetic scenarios can be started/stopped through the API. Declarative YAML/JSON scenario definitions are planned.
 - **Assets**: API exposes current simulation assets and fallback process-loop assets. Persistent asset registry is planned.
 - **API contract layer**: OpenAPI and generated TypeScript types exist for core DTOs. Frontend runtime validation exists for selected dev/test request and response payloads; Go server code generation is not implemented yet.
@@ -123,7 +125,7 @@ Lower-level process-loop tags used by the HMI mnemonic and future command layer:
 - `PT-101` loop pressure
 - `FT-101` loop flow
 - `LT-101` tank level
-- `TIC-101` PID controller placeholder
+- `TIC-101` manual/auto/disabled arbitration status, with PID output still not implemented
 
 See [MVP Domain Model](docs/mvp-domain-model.md) for the current contract and planned extensions.
 
@@ -135,6 +137,8 @@ See [MVP Domain Model](docs/mvp-domain-model.md) for the current contract and pl
 - No real reactor operating procedures.
 - No connection to real plant networks or physical actuators.
 - Simulation commands apply only to in-memory simulated assets.
+- Manual/auto/disabled mode changes apply only to in-memory `TIC-101` simulation state.
+- `AUTO` mode reserves `V-101` for future simulated PID authority but does not generate PID output yet.
 - Command history and event/audit records are in-memory only at this stage.
 - Alarm acknowledge/clear actions apply only to synthetic in-memory alarm instances.
 - UI and API copy must preserve the distinction between monitoring, simulation, advisory concepts, and real control.
@@ -350,6 +354,10 @@ curl http://localhost:8080/api/v1/system/status
 curl http://localhost:8080/api/v1/assets
 curl http://localhost:8080/api/v1/telemetry/latest
 curl "http://localhost:8080/api/v1/telemetry/history?window=15m"
+curl http://localhost:8080/api/v1/control/status
+curl -X POST http://localhost:8080/api/v1/control/mode \
+  -H "Content-Type: application/json" \
+  -d '{"mode":"AUTO","requestedBy":"demo-operator","reason":"Prepare for future simulated PID demo"}'
 curl http://localhost:8080/api/v1/alarms/active
 curl http://localhost:8080/api/v1/alarms/history
 curl -X POST http://localhost:8080/api/v1/alarms/alarm-id/acknowledge \
@@ -372,6 +380,10 @@ Simulation service, usually called through the API:
 curl http://localhost:8081/health
 curl http://localhost:8081/api/v1/simulation/status
 curl http://localhost:8081/api/v1/simulation/telemetry/latest
+curl http://localhost:8081/api/v1/simulation/control/status
+curl -X POST http://localhost:8081/api/v1/simulation/control/mode \
+  -H "Content-Type: application/json" \
+  -d '{"mode":"MANUAL","requestedBy":"demo-operator"}'
 curl http://localhost:8081/api/v1/simulation/alarms/active
 curl http://localhost:8081/api/v1/simulation/alarms/history
 curl -X POST http://localhost:8081/api/v1/simulation/alarms/alarm-id/acknowledge \
@@ -391,6 +403,8 @@ curl "http://localhost:8081/api/v1/simulation/events/recent?limit=50"
 - Command history and event/audit records are in-memory and reset with the simulation service.
 - Alarm lifecycle and history are in-memory and reset with the simulation service.
 - Command support is limited to simulated `V-101` valve and `P-101` pump assets.
+- Command arbitration currently applies primarily to the `TIC-101` / `V-101` control loop; `P-101` remains manually controllable.
+- `AUTO` mode is a preparation state for future simulated PID and does not calculate PID output yet.
 - Events are recent in-memory command/alarm/simulation records, not a persistent event log service.
 - Data source switching in UI is not a real runtime integration switch yet.
 - Frontend uses route-level code splitting; deeper vendor/chart chunk tuning can be added later if needed.
@@ -405,7 +419,7 @@ curl "http://localhost:8081/api/v1/simulation/events/recent?limit=50"
 2. Add simulation-only command layer for valve and pump with event/audit trail.
 3. Add OpenAPI schemas, generated frontend types, React Query API layer, runtime validation, and Playwright smoke coverage.
 4. Harden API contract tooling, simulation domain boundaries, and quality gates.
-5. Add manual/auto mode and PID control in simulation-only mode.
+5. Add PID control in simulation-only mode on top of manual/auto arbitration.
 6. Add MQTT bridge for simulated telemetry.
 7. Add persistent historian and trend APIs.
 8. Add report export.

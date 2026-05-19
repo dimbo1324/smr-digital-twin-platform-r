@@ -39,6 +39,8 @@ func main() {
 		Assets:           http.HandlerFunc(gateway.Assets),
 		LatestTelemetry:  http.HandlerFunc(gateway.LatestTelemetry),
 		TelemetryHistory: http.HandlerFunc(gateway.TelemetryHistory),
+		ControlStatus:    http.HandlerFunc(gateway.ControlStatus),
+		SetControlMode:   http.HandlerFunc(gateway.SetControlMode),
 		ActiveAlarms:     http.HandlerFunc(gateway.ActiveAlarms),
 		AlarmHistory:     http.HandlerFunc(gateway.AlarmHistory),
 		AcknowledgeAlarm: http.HandlerFunc(gateway.AcknowledgeAlarm),

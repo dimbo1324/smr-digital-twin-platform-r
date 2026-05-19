@@ -115,6 +115,26 @@ type Status struct {
 	SimulationOnly          bool   `json:"simulationOnly"`
 }
 
+type ControlStatus struct {
+	ControllerTag          string    `json:"controllerTag"`
+	ControlledVariableTag  string    `json:"controlledVariableTag"`
+	ManipulatedVariableTag string    `json:"manipulatedVariableTag"`
+	Mode                   string    `json:"mode"`
+	Authority              string    `json:"authority"`
+	Enabled                bool      `json:"enabled"`
+	PIDImplemented         bool      `json:"pidImplemented"`
+	Reason                 string    `json:"reason"`
+	UpdatedAt              time.Time `json:"updatedAt"`
+	UpdatedBy              string    `json:"updatedBy"`
+	SafetyDisclaimer       string    `json:"safetyDisclaimer"`
+}
+
+type ModeChangeRequest struct {
+	Mode        string `json:"mode"`
+	RequestedBy string `json:"requestedBy,omitempty"`
+	Reason      string `json:"reason,omitempty"`
+}
+
 type CommandPayload struct {
 	PositionPercent *float64 `json:"positionPercent,omitempty"`
 	Reason          string   `json:"reason,omitempty"`
@@ -130,21 +150,25 @@ type CommandRequest struct {
 }
 
 type Command struct {
-	ID            string         `json:"id"`
-	TargetTag     string         `json:"targetTag"`
-	CommandType   string         `json:"commandType"`
-	Source        string         `json:"source"`
-	RequestedBy   string         `json:"requestedBy"`
-	Payload       CommandPayload `json:"payload"`
-	Status        string         `json:"status"`
-	RequestedAt   time.Time      `json:"requestedAt"`
-	AcceptedAt    *time.Time     `json:"acceptedAt,omitempty"`
-	CompletedAt   *time.Time     `json:"completedAt,omitempty"`
-	RejectedAt    *time.Time     `json:"rejectedAt,omitempty"`
-	ResultMessage string         `json:"resultMessage,omitempty"`
-	ErrorCode     string         `json:"errorCode,omitempty"`
-	ErrorMessage  string         `json:"errorMessage,omitempty"`
-	CorrelationID string         `json:"correlationId,omitempty"`
+	ID              string         `json:"id"`
+	TargetTag       string         `json:"targetTag"`
+	CommandType     string         `json:"commandType"`
+	Source          string         `json:"source"`
+	RequestedBy     string         `json:"requestedBy"`
+	Payload         CommandPayload `json:"payload"`
+	Status          string         `json:"status"`
+	RequestedAt     time.Time      `json:"requestedAt"`
+	AcceptedAt      *time.Time     `json:"acceptedAt,omitempty"`
+	CompletedAt     *time.Time     `json:"completedAt,omitempty"`
+	RejectedAt      *time.Time     `json:"rejectedAt,omitempty"`
+	ResultMessage   string         `json:"resultMessage,omitempty"`
+	ErrorCode       string         `json:"errorCode,omitempty"`
+	ErrorMessage    string         `json:"errorMessage,omitempty"`
+	CorrelationID   string         `json:"correlationId,omitempty"`
+	RejectReason    string         `json:"rejectReason,omitempty"`
+	ArbitrationMode string         `json:"arbitrationMode,omitempty"`
+	Authority       string         `json:"authority,omitempty"`
+	RejectedBy      string         `json:"rejectedBy,omitempty"`
 }
 
 type Event struct {

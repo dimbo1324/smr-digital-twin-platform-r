@@ -7,7 +7,7 @@
     "id": { "type": "string" },
     "targetTag": { "type": "string", "enum": ["V-101", "P-101"] },
     "commandType": { "type": "string", "enum": ["OPEN", "CLOSE", "STOP", "SET_POSITION", "START"] },
-    "source": { "type": "string", "enum": ["frontend", "api", "scenario", "system"] },
+    "source": { "type": "string", "enum": ["frontend", "api", "user", "scenario", "pid", "system"] },
     "requestedBy": { "type": "string" },
     "payload": {
       "type": "object",
@@ -25,7 +25,23 @@
     "resultMessage": { "type": "string" },
     "errorCode": { "type": "string" },
     "errorMessage": { "type": "string" },
-    "correlationId": { "type": "string" }
+    "correlationId": { "type": "string" },
+    "rejectReason": {
+      "type": "string",
+      "enum": [
+        "CONTROL_MODE_AUTO",
+        "CONTROL_DISABLED",
+        "UNSUPPORTED_COMMAND_SOURCE",
+        "UNSUPPORTED_TARGET",
+        "INVALID_COMMAND",
+        "INVALID_PAYLOAD",
+        "TARGET_CONTROLLED_BY_PID",
+        "UNKNOWN"
+      ]
+    },
+    "arbitrationMode": { "type": "string", "enum": ["MANUAL", "AUTO", "DISABLED"] },
+    "authority": { "type": "string", "enum": ["USER", "SCENARIO", "PID", "SYSTEM", "NONE"] },
+    "rejectedBy": { "type": "string" }
   },
   "required": ["id", "targetTag", "commandType", "source", "requestedBy", "payload", "status", "requestedAt"],
   "additionalProperties": false
