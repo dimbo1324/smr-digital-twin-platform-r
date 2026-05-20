@@ -337,6 +337,24 @@ export interface components {
       "data": components["schemas"]["PIDStatus"];
       "meta": components["schemas"]["ApiMeta"];
     };
+    "HistorianStatus": {
+      "enabled": boolean;
+      "mode": "in_memory" | "persistent";
+      "status": "disabled" | "connected" | "degraded" | "unavailable_fallback";
+      "database": string;
+      "writeIntervalMs": number;
+      "telemetrySampleMs": number;
+      "lastSuccessfulWriteAt"?: string;
+      "lastErrorAt"?: string;
+      "lastErrorMessage"?: string;
+      "fallbackActive": boolean;
+      "simulationOnly": boolean;
+      "safetyDisclaimer": string;
+    };
+    "HistorianStatusResponse": {
+      "data": components["schemas"]["HistorianStatus"];
+      "meta": components["schemas"]["ApiMeta"];
+    };
   };
 }
 

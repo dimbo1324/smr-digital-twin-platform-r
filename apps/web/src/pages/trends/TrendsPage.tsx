@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { getMockTelemetryPoint } from "@/entities/telemetry/model/mockTelemetry";
+import { useHistorianStatus } from "@/entities/historian/api/useHistorianStatus";
 import { findTelemetryByTag } from "@/entities/telemetry/lib/selectors";
 import { TREND_TELEMETRY_TAGS } from "@/entities/telemetry/model/processTags";
 import { TelemetryValue } from "@/entities/telemetry/ui/TelemetryValue";
@@ -14,6 +15,7 @@ export function TrendsPage() {
   const [windowValue, setWindowValue] = useState("15m");
   const { history, state } = useTelemetryHistory(windowValue);
   const latestTelemetry = useLatestTelemetry(2000);
+  const historian = useHistorianStatus();
   const trendPoints = TREND_TELEMETRY_TAGS
     .map(({ tag }) => findTelemetryByTag(latestTelemetry.points, tag) ?? getMockTelemetryPoint(tag))
     .filter((point) => point !== undefined);
@@ -49,7 +51,11 @@ export function TrendsPage() {
             </CardDescription>
           </div>
           <Badge variant={state === "connected" ? "success" : "warning"}>
-            {state === "connected" ? "simulation history" : "fallback"}
+            {historian.status?.status === "connected"
+              ? "persistent historian"
+              : state === "connected"
+                ? "in-memory simulation history"
+                : "fallback"}
           </Badge>
         </CardHeader>
         <CardContent>

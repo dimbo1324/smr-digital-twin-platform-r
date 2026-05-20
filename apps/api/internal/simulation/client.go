@@ -64,6 +64,10 @@ func (c *Client) PIDStatus(ctx context.Context) (PIDStatus, error) {
 	return get[PIDStatus](ctx, c, "/api/v1/simulation/pid/status")
 }
 
+func (c *Client) HistorianStatus(ctx context.Context) (HistorianStatus, error) {
+	return get[HistorianStatus](ctx, c, "/api/v1/simulation/historian/status")
+}
+
 func (c *Client) UpdatePIDConfig(ctx context.Context, request PIDConfigUpdateRequest) (PIDStatus, error) {
 	return patchJSON[PIDStatus](ctx, c, "/api/v1/simulation/pid/config", request)
 }

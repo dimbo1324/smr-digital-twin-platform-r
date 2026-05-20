@@ -19,10 +19,10 @@ Process controls for assets such as `V-101` and `P-101` use a simulation-only co
 - do not leave the local software stack;
 - do not connect to physical actuators, PLCs, DCS systems, or plant networks;
 - include explicit command source and requester metadata;
-- are recorded in an in-memory command/event audit trail for demo purposes.
+- are recorded in a demo command/event trail that can be persisted by the optional historian.
 
-The current command trail is not a persistent compliance audit store. Persistent audit, auth/RBAC, and external integrations are planned separately and must preserve the simulation-only boundary.
+The current command trail is not a compliance audit store. The optional PostgreSQL/TimescaleDB historian stores only synthetic demo data and does not provide immutability, regulatory retention, or production audit guarantees. Auth/RBAC and external integrations are planned separately and must preserve the simulation-only boundary.
 
-Alarm and event operations are also simulation-only. Acknowledging an alarm only changes an in-memory synthetic alarm instance created by `apps/simulation`; it does not confirm, silence, or clear a real plant condition. Cleared alarm history and recent events are demo workflow records, not a regulated operational archive.
+Alarm and event operations are also simulation-only. Acknowledging an alarm only changes a synthetic alarm instance created by `apps/simulation`; it does not confirm, silence, or clear a real plant condition. Cleared alarm history and recent events are demo workflow records, not a regulated operational archive, even when persisted by the historian.
 
 Manual, auto, and disabled control modes are simulation-only state on `TIC-101`. Switching modes changes only in-memory command arbitration for the simulated `V-101` valve. `AUTO` mode lets the synthetic `TIC-101` PID controller apply an in-memory `V-101.POS` target. This PID is educational simulation logic only; it is not safety automation or real controller behavior.

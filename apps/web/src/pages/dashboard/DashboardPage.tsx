@@ -3,6 +3,7 @@ import { ArrowRight, ShieldCheck } from "lucide-react";
 import { useAlarms } from "@/entities/alarms/api/useAlarms";
 import { useCommandHistory } from "@/entities/commands/api/useCommandHistory";
 import { useRecentEvents } from "@/entities/events/api/useRecentEvents";
+import { useHistorianStatus } from "@/entities/historian/api/useHistorianStatus";
 import { DashboardLiveOverview } from "@/widgets/dashboard-live-overview/DashboardLiveOverview";
 import { useSystemStatus } from "@/shared/api/useSystemStatus";
 import { useLatestTelemetry } from "@/shared/api/useSimulationTelemetry";
@@ -16,6 +17,7 @@ export function DashboardPage() {
   const alarms = useAlarms();
   const commandHistory = useCommandHistory();
   const recentEvents = useRecentEvents();
+  const historian = useHistorianStatus();
 
   const mode =
     systemStatus.state === "connected" && systemStatus.status.mode
@@ -32,6 +34,12 @@ export function DashboardPage() {
         ? "Checking"
         : "Offline";
   const telemetrySource = liveTelemetry.state === "connected" ? "Simulation API" : "Waiting/offline";
+  const historianLabel =
+    historian.status?.status === "connected"
+      ? "Persistent historian"
+      : historian.status?.fallbackActive
+        ? "In-memory fallback"
+        : historian.status?.status ?? "Checking";
 
   return (
     <PageShell data-testid="dashboard-page">
@@ -80,6 +88,7 @@ export function DashboardPage() {
               <Metric label="Environment" value={environment} />
               <Metric label="Mode" value={mode} />
               <Metric label="Telemetry" value={telemetrySource} />
+              <Metric label="Historian" value={historianLabel} />
               <Metric label="Active alarms" value={String(alarms.activeAlarms.filter((alarm) => alarm.status === "ACTIVE").length)} />
               <Metric label="Recent events" value={String(recentEvents.events.length)} />
             </div>

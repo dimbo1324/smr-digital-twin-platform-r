@@ -9,26 +9,36 @@ import (
 	"time"
 
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/alarms"
+	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/historian"
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/history"
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/model"
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/scenarios"
 )
 
 type Config struct {
-	TickInterval time.Duration
-	HistorySize  int
-	Seed         int64
+	TickInterval              time.Duration
+	HistorySize               int
+	Seed                      int64
+	Historian                 historian.Repository
+	HistorianStatus           model.HistorianStatus
+	HistorianOperationTimeout time.Duration
+	HistorianTelemetrySample  time.Duration
 }
 
 type Engine struct {
-	mu        sync.RWMutex
-	cfg       Config
-	logger    *slog.Logger
-	state     state
-	history   *history.RingBuffer
-	evaluator *alarms.Evaluator
-	random    *rand.Rand
-	cancel    context.CancelFunc
+	mu                        sync.RWMutex
+	cfg                       Config
+	logger                    *slog.Logger
+	state                     state
+	history                   *history.RingBuffer
+	historian                 historian.Repository
+	historianStatus           model.HistorianStatus
+	historianOperationTimeout time.Duration
+	historianTelemetrySample  time.Duration
+	lastHistorianSample       time.Time
+	evaluator                 *alarms.Evaluator
+	random                    *rand.Rand
+	cancel                    context.CancelFunc
 }
 
 func New(cfg Config, logger *slog.Logger) *Engine {
@@ -38,6 +48,12 @@ func New(cfg Config, logger *slog.Logger) *Engine {
 	if cfg.HistorySize <= 0 {
 		cfg.HistorySize = 3600
 	}
+	if cfg.HistorianOperationTimeout <= 0 {
+		cfg.HistorianOperationTimeout = 500 * time.Millisecond
+	}
+	if cfg.HistorianTelemetrySample <= 0 {
+		cfg.HistorianTelemetrySample = time.Second
+	}
 
 	now := time.Now().UTC()
 	ring := history.NewRingBuffer(cfg.HistorySize)
@@ -45,12 +61,16 @@ func New(cfg Config, logger *slog.Logger) *Engine {
 	ring.Add(initial.snapshot)
 
 	return &Engine{
-		cfg:       cfg,
-		logger:    logger,
-		state:     initial,
-		history:   ring,
-		evaluator: alarms.NewEvaluator(),
-		random:    rand.New(rand.NewSource(cfg.Seed)),
+		cfg:                       cfg,
+		logger:                    logger,
+		state:                     initial,
+		history:                   ring,
+		historian:                 cfg.Historian,
+		historianStatus:           cfg.HistorianStatus,
+		historianOperationTimeout: cfg.HistorianOperationTimeout,
+		historianTelemetrySample:  cfg.HistorianTelemetrySample,
+		evaluator:                 alarms.NewEvaluator(),
+		random:                    rand.New(rand.NewSource(cfg.Seed)),
 	}
 }
 
@@ -79,6 +99,9 @@ func (e *Engine) Stop(_ context.Context) error {
 		e.cancel()
 	}
 	e.state.running = false
+	if e.historian != nil {
+		e.historian.Close()
+	}
 	e.logger.Info("simulation_engine_stopped")
 	return nil
 }
@@ -90,9 +113,23 @@ func (e *Engine) Snapshot() model.TelemetrySnapshot {
 }
 
 func (e *Engine) History(window time.Duration) []model.TelemetrySnapshot {
+	if e.historian != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), e.historianOperationTimeout)
+		defer cancel()
+		if values, err := e.historian.QueryTelemetryHistory(ctx, window, time.Now().UTC()); err == nil && len(values) > 0 {
+			return values
+		}
+	}
 	e.mu.RLock()
 	defer e.mu.RUnlock()
 	return e.history.Window(window, e.state.snapshot.Timestamp)
+}
+
+func (e *Engine) HistorianStatus() model.HistorianStatus {
+	if e.historian != nil {
+		return e.historian.Status()
+	}
+	return e.historianStatus
 }
 
 func (e *Engine) SetScenario(scenario model.ScenarioName) error {
@@ -231,6 +268,10 @@ func (e *Engine) tickLocked(now time.Time) {
 	e.state.snapshot = snapshot
 	e.applyAlarmChangesLocked(e.evaluator.Evaluate(snapshot))
 	e.history.Add(snapshot)
+	if e.historian != nil && (e.lastHistorianSample.IsZero() || now.Sub(e.lastHistorianSample) >= e.historianTelemetrySample) {
+		e.lastHistorianSample = now
+		e.persistTelemetryAsync(snapshot)
+	}
 }
 
 func (e *Engine) noise(amplitude float64) float64 {

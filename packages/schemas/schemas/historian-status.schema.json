@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://smr-twin.local/schemas/historian-status.schema.json",
+  "title": "HistorianStatus",
+  "type": "object",
+  "properties": {
+    "enabled": { "type": "boolean" },
+    "mode": { "type": "string", "enum": ["in_memory", "persistent"] },
+    "status": { "type": "string", "enum": ["disabled", "connected", "degraded", "unavailable_fallback"] },
+    "database": { "type": "string" },
+    "writeIntervalMs": { "type": "integer", "minimum": 0 },
+    "telemetrySampleMs": { "type": "integer", "minimum": 0 },
+    "lastSuccessfulWriteAt": { "type": "string", "format": "date-time" },
+    "lastErrorAt": { "type": "string", "format": "date-time" },
+    "lastErrorMessage": { "type": "string" },
+    "fallbackActive": { "type": "boolean" },
+    "simulationOnly": { "type": "boolean" },
+    "safetyDisclaimer": { "type": "string" }
+  },
+  "required": ["enabled", "mode", "status", "database", "writeIntervalMs", "telemetrySampleMs", "fallbackActive", "simulationOnly", "safetyDisclaimer"],
+  "additionalProperties": false
+}

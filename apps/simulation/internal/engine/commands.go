@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"time"
@@ -107,6 +108,13 @@ func (e *Engine) RecentCommands() []model.Command {
 }
 
 func (e *Engine) RecentCommandsLimited(limit int) []model.Command {
+	if e.historian != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), e.historianOperationTimeout)
+		defer cancel()
+		if commands, err := e.historian.ListRecentCommands(ctx, limit); err == nil && len(commands) > 0 {
+			return commands
+		}
+	}
 	e.mu.RLock()
 	defer e.mu.RUnlock()
 
@@ -119,6 +127,13 @@ func (e *Engine) RecentEvents() []model.Event {
 }
 
 func (e *Engine) RecentEventsLimited(limit int) []model.Event {
+	if e.historian != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), e.historianOperationTimeout)
+		defer cancel()
+		if events, err := e.historian.ListRecentEvents(ctx, limit); err == nil && len(events) > 0 {
+			return events
+		}
+	}
 	e.mu.RLock()
 	defer e.mu.RUnlock()
 
@@ -325,12 +340,14 @@ func (e *Engine) appendCommandLocked(command model.Command) {
 	if len(e.state.commands) > maxCommandHistory {
 		e.state.commands = e.state.commands[len(e.state.commands)-maxCommandHistory:]
 	}
+	e.persistCommandAsync(command)
 }
 
 func (e *Engine) replaceCommandLocked(command model.Command) {
 	for index := len(e.state.commands) - 1; index >= 0; index-- {
 		if e.state.commands[index].ID == command.ID {
 			e.state.commands[index] = command
+			e.persistCommandAsync(command)
 			return
 		}
 	}
@@ -379,6 +396,7 @@ func (e *Engine) appendEventRecordLocked(event model.Event) {
 	if len(e.state.events) > maxEventHistory {
 		e.state.events = e.state.events[len(e.state.events)-maxEventHistory:]
 	}
+	e.persistEventAsync(event)
 }
 
 func (e *Engine) appendEquipmentEventLocked(message, targetTag, commandID string, timestamp time.Time) {
@@ -409,6 +427,7 @@ func (e *Engine) failCommandLocked(commandID string, now time.Time, code, messag
 		command.ErrorCode = code
 		command.ErrorMessage = message
 		command.ResultMessage = message
+		e.persistCommandAsync(command)
 		return command
 	})
 	e.appendEventLocked(model.EventTypeCommandFailed, model.EventSeverityWarning, "simulation", message, targetTag, commandID, now, nil)

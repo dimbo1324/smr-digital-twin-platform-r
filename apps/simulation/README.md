@@ -1,6 +1,6 @@
 # SMR Twin Simulation Service
 
-Go simulation-only telemetry engine for the SMR Twin Platform MVP. It generates deterministic synthetic telemetry, in-memory history, alarm lifecycle state, recent events, control mode arbitration, a synthetic TIC-101 PID loop, and scenario states for the backend API.
+Go simulation-only telemetry engine for the SMR Twin Platform MVP. It generates deterministic synthetic telemetry, in-memory fallback history, optional PostgreSQL/TimescaleDB historian records, alarm lifecycle state, recent events, control mode arbitration, a synthetic TIC-101 PID loop, and scenario states for the backend API.
 
 The service exposes two synthetic telemetry layers:
 
@@ -9,7 +9,7 @@ The service exposes two synthetic telemetry layers:
 
 This service is not connected to real equipment. It does not implement real nuclear operating procedures, safety automation, or plant control.
 
-The current command layer is simulation-only. Commands mutate only in-memory `V-101` and `P-101` state and are recorded in an in-memory command/event trail.
+The current command layer is simulation-only. Commands mutate only in-memory `V-101` and `P-101` state and are recorded in the recent command/event trail. Those records are persisted when the optional historian is enabled and connected.
 
 `TIC-101` owns a simulation-only PID loop for the synthetic `TT-101 -> V-101.POS` process. `MANUAL` allows direct `V-101` commands, `AUTO` lets PID apply an in-memory valve target, and `DISABLED` blocks direct valve commands. This is not real plant control.
 
@@ -34,6 +34,14 @@ Default port: `8081`.
 | `SIM_HISTORY_SIZE` | `3600` |
 | `SIM_SEED` | `42` |
 | `SIM_VERSION` | `0.1.0` |
+| `HISTORIAN_ENABLED` | `false` when `DATABASE_URL` is absent |
+| `DATABASE_URL` | unset |
+| `HISTORIAN_REQUIRED` | `false` |
+| `HISTORIAN_MIGRATIONS_PATH` | `../../infra/db/migrations` |
+| `HISTORIAN_WRITE_INTERVAL_MS` | `1000` |
+| `HISTORIAN_TELEMETRY_SAMPLE_MS` | `1000` |
+| `HISTORIAN_MAX_BATCH_SIZE` | `500` |
+| `HISTORIAN_OPERATION_TIMEOUT_MS` | `500` |
 
 ## Endpoints
 
@@ -51,6 +59,7 @@ curl http://localhost:8081/api/v1/simulation/pid/status
 curl -X PATCH http://localhost:8081/api/v1/simulation/pid/config \
   -H "Content-Type: application/json" \
   -d '{"setpoint":288,"kp":0.9,"ki":0.05,"kd":0.1,"requestedBy":"demo-operator"}'
+curl http://localhost:8081/api/v1/simulation/historian/status
 curl http://localhost:8081/api/v1/simulation/alarms/active
 curl http://localhost:8081/api/v1/simulation/alarms/history
 curl -X POST http://localhost:8081/api/v1/simulation/alarms/alarm-id/acknowledge \
@@ -79,11 +88,11 @@ curl -X POST http://localhost:8081/api/v1/simulation/reset
 - `trip`
 
 All scenarios are synthetic demonstrations for portfolio and UI validation.
-Starting and stopping a predefined scenario writes `SCENARIO_STARTED` and `SCENARIO_COMPLETED` records to the same in-memory event stream used by commands and alarms.
+Starting and stopping a predefined scenario writes `SCENARIO_STARTED` and `SCENARIO_COMPLETED` records to the same event stream used by commands and alarms.
 
 ## Alarm Lifecycle
 
-The simulation service keeps alarm instances in memory:
+The simulation service keeps active alarm state in memory and persists alarm lifecycle records when the optional historian is connected:
 
 - `ACTIVE`: a synthetic rule condition is currently true.
 - `ACKNOWLEDGED`: a demo operator acknowledged an active alarm.
@@ -102,6 +111,18 @@ Alarm actions create events in the same recent event stream as command events:
 - `ALARM_CLEARED`
 
 This is an operator workflow simulator only. It is not a real plant alarm system.
+
+## Persistent Historian
+
+When `HISTORIAN_ENABLED=true` and `DATABASE_URL` is reachable, the simulation service runs SQL migrations from `HISTORIAN_MIGRATIONS_PATH` and writes synthetic telemetry, command, event, and alarm history records to PostgreSQL/TimescaleDB. Docker Compose uses local demo credentials and mounts the migrations into the container at `/migrations`.
+
+If the database is disabled or unavailable, the service continues with in-memory fallback state unless `HISTORIAN_REQUIRED=true`.
+
+Historian status is exposed through:
+
+- `GET /api/v1/simulation/historian/status`
+
+The historian stores synthetic simulation data only. It is not a production audit store and has no compliance retention guarantees.
 
 ## Simulation Commands
 
@@ -179,7 +200,7 @@ Recent commands and events are exposed through:
 - `GET /api/v1/simulation/commands/recent`
 - `GET /api/v1/simulation/events/recent`
 
-Both endpoints accept an optional `limit` query parameter from `1` to `200` and return newest records first. This trail is in-memory only and resets when the simulation service restarts. It is not a persistent compliance audit store.
+Both endpoints accept an optional `limit` query parameter from `1` to `200` and return newest records first. Records are read from the persistent historian when it is connected and fall back to in-memory history otherwise. They are not a persistent compliance audit store.
 
 ## Test
 

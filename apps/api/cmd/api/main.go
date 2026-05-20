@@ -43,6 +43,7 @@ func main() {
 		SetControlMode:   http.HandlerFunc(gateway.SetControlMode),
 		PIDStatus:        http.HandlerFunc(gateway.PIDStatus),
 		UpdatePIDConfig:  http.HandlerFunc(gateway.UpdatePIDConfig),
+		HistorianStatus:  http.HandlerFunc(gateway.HistorianStatus),
 		ActiveAlarms:     http.HandlerFunc(gateway.ActiveAlarms),
 		AlarmHistory:     http.HandlerFunc(gateway.AlarmHistory),
 		AcknowledgeAlarm: http.HandlerFunc(gateway.AcknowledgeAlarm),

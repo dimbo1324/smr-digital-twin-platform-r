@@ -1,4 +1,5 @@
 import { useTheme } from "@/app/providers/theme/themeContext";
+import { useHistorianStatus } from "@/entities/historian/api/useHistorianStatus";
 import { useSimulationScenarios } from "@/shared/api/useSimulationTelemetry";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
@@ -9,6 +10,7 @@ import { ThemeToggle } from "@/shared/ui/theme-toggle";
 export function SettingsPage() {
   const { theme } = useTheme();
   const simulation = useSimulationScenarios();
+  const historian = useHistorianStatus();
 
   return (
     <PageShell data-testid="settings-page">
@@ -32,6 +34,17 @@ export function SettingsPage() {
             ["Connection", simulation.state === "connected" ? "Connected" : "In-memory fallback / unavailable"],
             ["Active scenario", simulation.status?.activeScenario ?? "normal"],
             ["Boundary", "Simulation-only, no live control"],
+          ]}
+        />
+
+        <SettingsPanel
+          title="Historian Settings"
+          description="Persistence status for synthetic simulation telemetry, commands, events, and alarms."
+          rows={[
+            ["Status", historian.status?.status ?? "checking"],
+            ["Mode", historian.status?.mode ?? "in_memory"],
+            ["Storage", historian.status?.database ?? "in-memory"],
+            ["Fallback", historian.status?.fallbackActive ? "Active" : "Not active"],
           ]}
         />
 
@@ -90,7 +103,9 @@ export function SettingsPage() {
                 />
               </label>
             ))}
-            <Badge variant="warning">MQTT and runtime source switching are not implemented yet</Badge>
+            <Badge variant={historian.status?.status === "connected" ? "success" : "warning"}>
+              Historian: {historian.status?.status ?? "checking"} / MQTT not implemented yet
+            </Badge>
           </CardContent>
         </Card>
       </section>

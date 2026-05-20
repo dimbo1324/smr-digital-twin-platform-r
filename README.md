@@ -2,7 +2,7 @@
 
 Simulation-only digital twin platform for SMR energy systems. No real plant control.
 
-SMR Twin Platform is a modular digital twin simulator for portfolio and educational industrial software work. The project demonstrates HMI-style frontend engineering, Go backend architecture, synthetic simulation, telemetry contracts, alarms, scenarios, in-memory history, Docker-based local development, and safety-conscious system boundaries.
+SMR Twin Platform is a modular digital twin simulator for portfolio and educational industrial software work. The project demonstrates HMI-style frontend engineering, Go backend architecture, synthetic simulation, telemetry contracts, alarms, scenarios, optional PostgreSQL/TimescaleDB historian persistence, Docker-based local development, and safety-conscious system boundaries.
 
 The current MVP has two explicit domain levels:
 
@@ -20,24 +20,25 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 - Monorepo structure for `apps`, `services`, `packages`, `infra`, `docs`, and `scripts`.
 - React + TypeScript frontend shell with Dashboard, Process, Alarms, Events, Trends, and Settings pages.
 - Go API service with health, system status, assets, latest telemetry, history, alarm lifecycle, event, command, and scenario proxy endpoints.
-- Go simulation service with deterministic synthetic telemetry, scenarios, active alarm generation, and in-memory history.
-- Docker Compose stack for `web`, `api`, and `simulation`.
+- Go simulation service with deterministic synthetic telemetry, scenarios, active alarm generation, in-memory fallback history, and optional PostgreSQL/TimescaleDB historian writes.
+- Docker Compose stack for `web`, `api`, `simulation`, and local TimescaleDB/PostgreSQL.
 - Polling-based live telemetry from frontend to API.
 - Dashboard overview backed by live API status, synthetic telemetry, active alarms, alarm history, command history, and recent events.
 - API proxy from backend to simulation service, with clearly labelled in-memory fallback data for selected endpoints.
 - Basic synthetic scenarios such as normal, startup, load ramp, high temperature, pressure deviation, pump degradation, sensor drift, and trip.
 - Alarm lifecycle for synthetic alarm instances: `ACTIVE`, `ACKNOWLEDGED`, and `CLEARED`.
-- Alarm history for cleared in-memory alarm instances.
+- Alarm history for synthetic alarm instances, persisted when the historian is enabled.
 - Unified recent event stream for command, alarm, equipment, and simulation events.
 - In-memory telemetry history for trend charts.
 - Process asset cards backed by the API assets endpoint, with labelled fallback states.
-- Trends summary cards backed by latest API telemetry and chart history backed by in-memory simulation history.
+- Trends summary cards backed by latest API telemetry and chart history backed by persistent historian data when available, with in-memory fallback.
 - Simulation-only command layer for `V-101` and `P-101` through the API gateway.
 - Simulation-only `TIC-101` control modes for command arbitration: `MANUAL`, `AUTO`, and `DISABLED`.
 - Command arbitration for direct `V-101` commands, with `AUTO` assigning authority to the simulation-only `TIC-101` PID controller.
 - Simulation-only `TIC-101` PID controller for the synthetic `TT-101 -> V-101.POS` thermal loop.
 - Valve `V-101` and pump `P-101` state machines that update synthetic telemetry.
-- In-memory command history and event/audit trail for simulation command attempts.
+- Command history and event/audit trail for simulation command attempts, persisted when the historian is connected and kept in memory as fallback.
+- Persistent historian status endpoint and minimal Dashboard/Trends/Settings historian source labels.
 - Frontend valve and pump control panels with pending, success, and error states.
 - GitHub Actions CI quality gates for Go API, Go simulation, frontend, and Docker Compose config validation.
 - Playwright Chromium smoke test for the core browser flow across Dashboard, Process commands, Alarms, and Events.
@@ -50,8 +51,8 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 ## Partially Implemented
 
 - **Alarms**: active, acknowledged, and cleared alarm workflow exists in memory. Shelving, persistent audit, and production operator workflow are planned.
-- **Trends**: in-memory simulation history exists. External TSDB persistence, downsampling APIs, and long-range queries are not implemented yet.
-- **Events**: command, alarm, and simulation events are captured in an in-memory recent-event trail and shown on the Events page. Persistent audit storage is planned.
+- **Trends**: PostgreSQL/TimescaleDB-backed telemetry history exists when the historian is enabled. In-memory history remains the fallback. Downsampling APIs and long-range query controls are planned.
+- **Events**: command, alarm, control, PID, scenario, and simulation events are captured in memory and persisted when the historian is connected. This is still not a production audit archive.
 - **Process UI**: process-loop values are bound to live API telemetry when available. Valve and pump controls call simulation-only command endpoints; `TIC-101` mode controls whether direct valve commands are allowed.
 - **Scenario controls**: predefined synthetic scenarios can be started/stopped through the API. Declarative YAML/JSON scenario definitions are planned.
 - **Assets**: API exposes current simulation assets and fallback process-loop assets. Persistent asset registry is planned.
@@ -59,11 +60,8 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 
 ## Planned Next
 
-- Persistent command history and audit storage.
 - Alarm shelving and richer operator workflow.
-- Persistent event/audit storage.
 - MQTT bridge for simulated telemetry.
-- Persistent historian with PostgreSQL/TimescaleDB or another time-series store.
 - WebSocket or SSE real-time transport.
 - Report export.
 - Auth/RBAC.
@@ -73,7 +71,7 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 
 - MQTT broker or MQTT ingestion.
 - Kafka, Redpanda, or NATS.
-- PostgreSQL, TimescaleDB, InfluxDB, Redis, or MinIO persistence.
+- InfluxDB, Redis, or MinIO persistence.
 - Production auth/RBAC.
 - PDF/Excel report export.
 - Kubernetes or Helm deployment.
@@ -137,7 +135,7 @@ See [MVP Domain Model](docs/mvp-domain-model.md) for the current contract and pl
 - Simulation commands apply only to in-memory simulated assets.
 - Manual/auto/disabled mode changes apply only to in-memory `TIC-101` simulation state.
 - `AUTO` mode lets the simulation-only `TIC-101` PID controller apply an in-memory `V-101.POS` target.
-- Command history and event/audit records are in-memory only at this stage.
+- Command history, event records, alarm lifecycle, and telemetry history store only synthetic simulation data. When PostgreSQL/TimescaleDB is enabled, the persistent historian is for demo, learning, and portfolio use only.
 - Alarm acknowledge/clear actions apply only to synthetic in-memory alarm instances.
 - UI and API copy must preserve the distinction between monitoring, simulation, advisory concepts, and real control.
 
@@ -149,7 +147,7 @@ See [MVP Domain Model](docs/mvp-domain-model.md) for the current contract and pl
 | Backend | Go, REST, structured logging, simulation gateway |
 | Simulation | Go synthetic telemetry engine |
 | Messaging | MQTT planned, not implemented |
-| Data | In-memory now; PostgreSQL/TimescaleDB planned |
+| Data | In-memory fallback plus optional PostgreSQL/TimescaleDB historian for synthetic telemetry/events/commands/alarms |
 | DevOps | Docker, Docker Compose, Makefile |
 | Security | Safety boundary and in-memory command audit now; auth/RBAC and persistent audit planned |
 
@@ -162,7 +160,7 @@ apps/
   simulation/   Go simulation-only telemetry engine
 services/
   telemetry/    future telemetry ingestion service
-  historian/    future time-series query service
+  historian/    optional PostgreSQL/TimescaleDB write/read layer inside simulation service
   alarm/        future alarm engine service
 packages/
   proto/        shared protocol definitions
@@ -405,16 +403,16 @@ curl "http://localhost:8081/api/v1/simulation/events/recent?limit=50"
 ## Known Limitations
 
 - Live UI transport is polling, not WebSocket/SSE.
-- Telemetry history is in-memory and resets with the simulation service.
-- Command history and event/audit records are in-memory and reset with the simulation service.
-- Alarm lifecycle and history are in-memory and reset with the simulation service.
+- Telemetry history can persist to PostgreSQL/TimescaleDB when the historian is enabled; otherwise the simulation service uses in-memory fallback history.
+- Command history, event records, and alarm history can persist to the local demo historian when connected, but this is not a production compliance archive.
+- Alarm active state remains simulation-owned and synthetic; persisted alarm history stores demo lifecycle records only.
 - Command support is limited to simulated `V-101` valve and `P-101` pump assets.
 - Command arbitration currently applies primarily to the `TIC-101` / `V-101` control loop; `P-101` remains manually controllable.
 - `AUTO` mode lets the simulation-only `TIC-101` PID calculate an in-memory `V-101.POS` target.
-- Events are recent in-memory command/alarm/simulation records, not a persistent event log service.
+- Events are simulation records backed by the historian when available, with in-memory fallback if the DB is disabled or unavailable.
 - Data source switching in UI is not a real runtime integration switch yet.
 - Frontend uses route-level code splitting; deeper vendor/chart chunk tuning can be added later if needed.
-- Dashboard data is live for the local simulator, but it still uses REST polling and in-memory simulation sources.
+- Dashboard data is live for the local simulator, but it still uses REST polling and synthetic simulation sources.
 - Runtime validation is dev/test focused and currently lives in the frontend HTTP client; Go runtime validation from JSON Schema is not implemented yet.
 - Go server/client code generation is not implemented yet.
 - The simulation is synthetic and intentionally not a real reactor physics model.
@@ -425,9 +423,9 @@ curl "http://localhost:8081/api/v1/simulation/events/recent?limit=50"
 2. Add simulation-only command layer for valve and pump with event/audit trail.
 3. Add OpenAPI schemas, generated frontend types, React Query API layer, runtime validation, and Playwright smoke coverage.
 4. Harden API contract tooling, simulation domain boundaries, and quality gates.
-5. Add persistent historian storage for telemetry, events, and command audit.
+5. Add persistent historian storage for telemetry, events, commands, and alarm history.
 6. Add MQTT bridge for simulated telemetry.
-7. Add persistent historian and trend APIs.
+7. Add retention/downsampling and richer trend query controls.
 8. Add report export.
 9. Add auth/RBAC, observability, deployment hardening, and extended CI checks.
 

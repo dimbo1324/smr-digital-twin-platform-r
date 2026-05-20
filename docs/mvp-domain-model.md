@@ -243,7 +243,7 @@ Current lifecycle:
 5. Cleared alarms leave the active endpoint and appear in alarm history.
 6. A later recurrence creates a new alarm instance.
 
-Current implementation is in-memory and simulation-only. Shelving, persistent audit storage, and production-grade operator workflow are planned for later milestones.
+Current implementation is simulation-only. Active alarm state is in-memory, while alarm history can be persisted by the optional historian when connected. Shelving and production-grade operator workflow are planned for later milestones.
 
 ## Event / Audit Model
 
@@ -287,9 +287,21 @@ Current severities:
 - `ERROR`
 - `CRITICAL`
 
-The current implementation stores recent command, alarm, and simulation events in memory and exposes them through the Events page. A persistent event/audit store is planned.
+The current implementation stores recent command, alarm, PID, control, scenario, and simulation events in memory and exposes them through the Events page. The optional historian persists event records when connected, but this is not an immutable or compliance-grade audit store.
 
 The event schema describes the unified event stream only. It does not imply persistent audit storage or compliance-grade retention.
+
+## Persistent Historian Records
+
+The optional historian stores synthetic simulation records when PostgreSQL/TimescaleDB is enabled:
+
+- `TelemetryHistoryRecord`: timestamped tag values, quality, source, area, asset tag, and metadata.
+- `CommandHistoryRecord`: command identity, target, type, source, requester, status, timestamps, payload, result, and error details.
+- `EventLogRecord`: unified event stream records for commands, alarms, scenarios, control mode, PID, and simulation activity.
+- `AlarmHistoryRecord`: synthetic alarm lifecycle state, severity, timestamps, acknowledgement metadata, last value, threshold, and metadata.
+- `HistorianStatus`: enabled mode, connected/degraded/unavailable state, fallback flag, timing settings, and last write/error metadata.
+
+When the historian is disabled or unavailable, the simulation service keeps the existing in-memory fallback behavior. The historian is for demo and portfolio data only, not regulated plant audit storage.
 
 ## Command Model
 
@@ -430,8 +442,8 @@ Implemented now:
 - Thermal Process Loop synthetic telemetry exposed through API latest telemetry.
 - Simulation-only command layer for `V-101` and `P-101`.
 - Valve and pump state machines.
-- In-memory command history and event/audit trail.
-- Alarm lifecycle with active, acknowledged, and cleared in-memory instances.
+- In-memory fallback command history and event/audit trail, with optional historian persistence.
+- Alarm lifecycle with active, acknowledged, and cleared synthetic instances.
 - Events page backed by the unified recent event stream.
 - Dashboard overview backed by live API status, synthetic telemetry, active alarms, command history, and recent events.
 - Process asset cards backed by `/api/v1/assets`.
@@ -439,30 +451,29 @@ Implemented now:
 - Frontend HMI shell.
 - API gateway to simulation service.
 - Active alarm generation and display.
-- In-memory history for trends.
+- Persistent historian-backed history for trends when enabled, with in-memory fallback.
 - Scenario start/stop/reset endpoints.
 - Manual/auto/disabled `TIC-101` mode and `V-101` command arbitration.
 - Simulation-only `TIC-101` PID controller.
 
 Partial:
 
-- Alarm lifecycle persistence and shelving.
-- Events, because the stream is in-memory only.
+- Alarm shelving.
+- Events, because persistence exists but compliance-grade audit retention, pagination, and policy are not implemented.
 - Assets.
-- Trends.
+- Trends, because long-range query controls and downsampling are still limited.
 - Process UI controls, because only `V-101` and `P-101` simulation commands are implemented.
 
 Not implemented:
 
 - MQTT.
-- Persistent historian.
-- Persistent command/audit storage.
+- Production-grade command/audit storage.
 - Report export.
 - Auth/RBAC.
 
 ## Planned Extensions
 
-- Persistent event/audit storage with pagination and retention policy.
+- Event/audit pagination and retention policy.
 - Alarm shelving and richer operator workflow.
 - MQTT telemetry bridge.
-- Persistent historian and report export.
+- Report export.

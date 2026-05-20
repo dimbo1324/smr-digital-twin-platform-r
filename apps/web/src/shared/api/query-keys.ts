@@ -16,6 +16,9 @@ export const queryKeys = {
   pid: {
     status: ["pid", "status"] as const,
   },
+  historian: {
+    status: ["historian", "status"] as const,
+  },
   commands: {
     recent: ["commands", "recent"] as const,
   },

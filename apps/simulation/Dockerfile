@@ -10,5 +10,6 @@ FROM alpine:3.22
 RUN adduser -D -H appuser
 USER appuser
 COPY --from=build /out/simulation /usr/local/bin/simulation
+COPY infra/db/migrations /migrations
 EXPOSE 8081
 ENTRYPOINT ["simulation"]

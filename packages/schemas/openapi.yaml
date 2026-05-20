@@ -658,6 +658,27 @@
           }
         }
       }
+    },
+    "/api/v1/historian/status": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Get simulation historian status",
+        "description": "Returns PostgreSQL/TimescaleDB historian status for synthetic simulation data, or in-memory fallback status.",
+        "responses": {
+          "200": {
+            "description": "Historian status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistorianStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2121,6 +2142,85 @@
         "properties": {
           "data": {
             "$ref": "#/components/schemas/PIDStatus"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ApiMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "HistorianStatus": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "in_memory",
+              "persistent"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "disabled",
+              "connected",
+              "degraded",
+              "unavailable_fallback"
+            ]
+          },
+          "database": {
+            "type": "string"
+          },
+          "writeIntervalMs": {
+            "type": "integer"
+          },
+          "telemetrySampleMs": {
+            "type": "integer"
+          },
+          "lastSuccessfulWriteAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastErrorAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastErrorMessage": {
+            "type": "string"
+          },
+          "fallbackActive": {
+            "type": "boolean"
+          },
+          "simulationOnly": {
+            "type": "boolean"
+          },
+          "safetyDisclaimer": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "enabled",
+          "mode",
+          "status",
+          "database",
+          "writeIntervalMs",
+          "telemetrySampleMs",
+          "fallbackActive",
+          "simulationOnly",
+          "safetyDisclaimer"
+        ]
+      },
+      "HistorianStatusResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/HistorianStatus"
           },
           "meta": {
             "$ref": "#/components/schemas/ApiMeta"
