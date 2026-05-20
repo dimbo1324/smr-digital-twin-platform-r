@@ -183,6 +183,21 @@ type PIDConfigUpdateRequest struct {
 	Reason      string   `json:"reason,omitempty"`
 }
 
+type HistorianStatus struct {
+	Enabled               bool       `json:"enabled"`
+	Mode                  string     `json:"mode"`
+	Status                string     `json:"status"`
+	Database              string     `json:"database"`
+	WriteIntervalMS       int        `json:"writeIntervalMs"`
+	TelemetrySampleMS     int        `json:"telemetrySampleMs"`
+	LastSuccessfulWriteAt *time.Time `json:"lastSuccessfulWriteAt,omitempty"`
+	LastErrorAt           *time.Time `json:"lastErrorAt,omitempty"`
+	LastErrorMessage      string     `json:"lastErrorMessage,omitempty"`
+	FallbackActive        bool       `json:"fallbackActive"`
+	SimulationOnly        bool       `json:"simulationOnly"`
+	SafetyDisclaimer      string     `json:"safetyDisclaimer"`
+}
+
 type CommandPayload struct {
 	PositionPercent *float64 `json:"positionPercent,omitempty"`
 	Reason          string   `json:"reason,omitempty"`

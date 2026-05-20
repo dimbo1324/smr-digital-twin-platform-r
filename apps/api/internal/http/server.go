@@ -19,6 +19,7 @@ type Handlers struct {
 	SetControlMode   http.Handler
 	PIDStatus        http.Handler
 	UpdatePIDConfig  http.Handler
+	HistorianStatus  http.Handler
 	ActiveAlarms     http.Handler
 	AlarmHistory     http.Handler
 	AcknowledgeAlarm http.Handler

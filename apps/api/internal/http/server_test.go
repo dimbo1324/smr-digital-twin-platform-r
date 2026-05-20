@@ -156,6 +156,7 @@ func newTestRouter() http.Handler {
 		SetControlMode:   emptyOKHandler(),
 		PIDStatus:        emptyOKHandler(),
 		UpdatePIDConfig:  emptyOKHandler(),
+		HistorianStatus:  emptyOKHandler(),
 		ActiveAlarms:     emptyOKHandler(),
 		AlarmHistory:     emptyOKHandler(),
 		AcknowledgeAlarm: emptyOKHandler(),

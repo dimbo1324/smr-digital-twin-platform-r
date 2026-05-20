@@ -38,7 +38,11 @@ func (g *Gateway) SystemStatus(w http.ResponseWriter, r *http.Request) {
 			status.LastSimulationTimestamp = simStatus.LastSimulationTimestamp
 			status.DataSource = "synthetic_simulation"
 			status.SimulationService.Status = "connected"
-			status.Historian.Status = "in_memory"
+			if historianStatus, historianErr := g.client.HistorianStatus(r.Context()); historianErr == nil {
+				status.Historian.Status = historianStatus.Status
+			} else {
+				status.Historian.Status = "in_memory"
+			}
 		} else {
 			status.SimulationConnected = false
 			status.DataSource = "in_memory_fallback"
@@ -122,6 +126,23 @@ func (g *Gateway) PIDStatus(w http.ResponseWriter, r *http.Request) {
 	status, err := g.client.PIDStatus(r.Context())
 	if err != nil {
 		httpapi.WriteError(w, r, http.StatusServiceUnavailable, "SIMULATION_UNAVAILABLE", "Simulation PID status is unavailable")
+		return
+	}
+	httpapi.WriteData(w, r, http.StatusOK, status, httpapi.MetaOptions{Source: "simulation"})
+}
+
+func (g *Gateway) HistorianStatus(w http.ResponseWriter, r *http.Request) {
+	status, err := g.client.HistorianStatus(r.Context())
+	if err != nil {
+		httpapi.WriteData(w, r, http.StatusOK, HistorianStatus{
+			Enabled:          false,
+			Mode:             "in_memory",
+			Status:           "unavailable_fallback",
+			Database:         "in_memory",
+			FallbackActive:   true,
+			SimulationOnly:   true,
+			SafetyDisclaimer: "The historian stores synthetic simulation data for demo, learning and portfolio purposes only.",
+		}, httpapi.MetaOptions{Source: "memory", Degraded: true})
 		return
 	}
 	httpapi.WriteData(w, r, http.StatusOK, status, httpapi.MetaOptions{Source: "simulation"})

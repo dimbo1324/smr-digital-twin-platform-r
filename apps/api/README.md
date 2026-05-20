@@ -1,6 +1,6 @@
 # SMR Twin API
 
-Backend API gateway for **SMR Twin Platform**, a simulation-only digital twin platform for a small modular reactor energy loop. This service exposes REST endpoints for the frontend HMI, proxies the Go simulation service, and provides labelled in-memory fallback data when the simulation service is unavailable. It does not connect to real equipment and does not implement real plant control.
+Backend API gateway for **SMR Twin Platform**, a simulation-only digital twin platform for a small modular reactor energy loop. This service exposes REST endpoints for the frontend HMI, proxies the Go simulation service, and provides labelled in-memory fallback data when the simulation service is unavailable. It also exposes the simulation historian status. It does not connect to real equipment and does not implement real plant control.
 
 ## Scope
 
@@ -15,7 +15,8 @@ Current milestone:
 - simulation-only command proxy endpoints for `V-101` and `P-101`
 - simulation-only control mode and PID endpoints for `TIC-101`
 - alarm lifecycle proxy endpoints for active, history, and acknowledge workflows
-- recent in-memory command/alarm/event proxy endpoints
+- recent command/alarm/event proxy endpoints, DB-backed when the simulation historian is connected and in-memory otherwise
+- historian status proxy endpoint
 - SMR Unit Overview and Thermal Process Loop telemetry through `/api/v1/telemetry/latest`
 - OpenAPI/JSON Schema contract documentation under `packages/schemas`
 - structured request logging
@@ -24,11 +25,10 @@ Current milestone:
 
 Out of scope for this step:
 
-- real PostgreSQL connections
 - MQTT ingestion
 - WebSocket/SSE streaming
 - auth/RBAC
-- persistent command/audit storage
+- production audit/compliance storage
 - real plant integration
 
 ## Run Locally
@@ -97,6 +97,7 @@ curl http://localhost:8080/api/v1/pid/status
 curl -X PATCH http://localhost:8080/api/v1/pid/config \
   -H "Content-Type: application/json" \
   -d '{"setpoint":288,"kp":0.9,"ki":0.05,"kd":0.1,"requestedBy":"demo-operator"}'
+curl http://localhost:8080/api/v1/historian/status
 curl http://localhost:8080/api/v1/alarms/active
 curl http://localhost:8080/api/v1/alarms/history
 curl -X POST http://localhost:8080/api/v1/alarms/alarm-id/acknowledge \
@@ -160,7 +161,7 @@ The current telemetry contract includes both unit overview tags such as `SMR-POW
 ### Alarm Lifecycle Endpoints
 
 - `GET /api/v1/alarms/active` returns active and acknowledged synthetic alarm instances that are not cleared.
-- `GET /api/v1/alarms/history` returns cleared in-memory alarm instances.
+- `GET /api/v1/alarms/history` returns cleared synthetic alarm instances from the historian when available, with in-memory fallback.
 - `POST /api/v1/alarms/{id}/acknowledge` acknowledges an active synthetic alarm instance.
 
 ### Control Mode Endpoints
@@ -185,6 +186,19 @@ Example acknowledgement request:
 ```
 
 Acknowledgement affects only in-memory simulation state. Unknown alarms return `ALARM_NOT_FOUND`; already cleared alarms return `ALARM_ALREADY_CLEARED`.
+
+### `GET /api/v1/historian/status`
+
+Returns the current simulation historian status. The historian stores synthetic telemetry, command, event, and alarm history records for demo and portfolio workflows only.
+
+Possible statuses include:
+
+- `disabled`
+- `connected`
+- `degraded`
+- `unavailable_fallback`
+
+If the simulation service is unavailable, the API returns a degraded in-memory fallback status instead of implying that persistent storage is connected.
 
 ### `POST /api/v1/commands`
 
@@ -225,11 +239,11 @@ The command affects only in-memory simulation state. It does not control real eq
 
 ### `GET /api/v1/commands/recent`
 
-Returns recent in-memory command records from the simulation service. Optional `limit` query parameter: `1..200`; records are newest-first.
+Returns recent command records from the simulation service. Records are DB-backed when the historian is connected and use in-memory fallback otherwise. Optional `limit` query parameter: `1..200`; records are newest-first.
 
 ### `GET /api/v1/events/recent`
 
-Returns recent in-memory command, alarm, equipment, scenario, and simulation events from the simulation service. Optional `limit` query parameter: `1..200`; records are newest-first.
+Returns recent command, alarm, equipment, scenario, PID, control, and simulation events from the simulation service. Records are DB-backed when the historian is connected and use in-memory fallback otherwise. Optional `limit` query parameter: `1..200`; records are newest-first.
 
 ### Simulation Proxy Endpoints
 

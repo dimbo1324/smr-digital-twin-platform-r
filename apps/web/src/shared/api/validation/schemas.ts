@@ -5,6 +5,7 @@ import commandRequestSchema from "../../../../../../packages/schemas/schemas/com
 import controlStatusSchema from "../../../../../../packages/schemas/schemas/control-status.schema.json";
 import acknowledgeAlarmRequestSchema from "../../../../../../packages/schemas/schemas/acknowledge-alarm-request.schema.json";
 import eventSchema from "../../../../../../packages/schemas/schemas/event.schema.json";
+import historianStatusSchema from "../../../../../../packages/schemas/schemas/historian-status.schema.json";
 import scenarioSchema from "../../../../../../packages/schemas/schemas/scenario.schema.json";
 import simulationStatusSchema from "../../../../../../packages/schemas/schemas/simulation-status.schema.json";
 import systemStatusSchema from "../../../../../../packages/schemas/schemas/system-status.schema.json";
@@ -26,6 +27,7 @@ export const apiSchemaNames = [
   "ControlStatus",
   "Event",
   "EventList",
+  "HistorianStatus",
   "Scenario",
   "ScenarioList",
   "SimulationStatus",
@@ -60,6 +62,7 @@ export const apiSchemas: Record<ApiSchemaName, unknown> = {
   ControlStatus: controlStatusSchema,
   Event: eventSchema,
   EventList: arrayOf("EventList", eventSchema),
+  HistorianStatus: historianStatusSchema,
   Scenario: scenarioSchema,
   ScenarioList: arrayOf("ScenarioList", scenarioSchema),
   SimulationStatus: simulationStatusSchema,

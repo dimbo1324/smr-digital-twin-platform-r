@@ -96,7 +96,7 @@ sequenceDiagram
     API-->>UI: "Latest telemetry"
 ```
 
-Command history and events are stored in an in-memory ring buffer inside `apps/simulation`. The API proxies recent command/event reads through:
+Command history and events are stored first in the simulation service and can also be written to the optional PostgreSQL/TimescaleDB historian. The API proxies recent command/event reads through:
 
 - `GET /api/v1/commands/recent`
 - `GET /api/v1/events/recent`
@@ -111,7 +111,7 @@ This is intentionally not a real control path. Commands mutate only in-memory si
 - `AUTO`: `V-101` is owned by the simulation-only `TIC-101` PID controller. Direct user/frontend valve commands are rejected by arbitration.
 - `DISABLED`: direct user/frontend valve commands are rejected because control output is disabled.
 
-`P-101` remains manually controllable in this milestone. Scenario and system operations are preserved as simulation overrides. Mode changes and arbitration rejections are recorded in the unified in-memory event stream using `CONTROL_MODE_CHANGED`, `CONTROL_AUTHORITY_CHANGED`, and `COMMAND_REJECTED_BY_ARBITRATION`.
+`P-101` remains manually controllable in this milestone. Scenario and system operations are preserved as simulation overrides. Mode changes and arbitration rejections are recorded in the unified event stream using `CONTROL_MODE_CHANGED`, `CONTROL_AUTHORITY_CHANGED`, and `COMMAND_REJECTED_BY_ARBITRATION`; these records are persisted when the historian is connected.
 
 ## TIC-101 PID Loop
 
@@ -138,9 +138,29 @@ It reads independent live API sources through REST polling:
 - `GET /api/v1/commands/recent` for the latest simulation-only command result.
 - `GET /api/v1/events/recent` for command, alarm, and simulation activity.
 
-Each dashboard section handles loading, empty, and unavailable states independently. Remaining non-production boundaries are labelled explicitly as synthetic telemetry, in-memory storage, REST polling, and no real plant control.
+Each dashboard section handles loading, empty, and unavailable states independently. Remaining non-production boundaries are labelled explicitly as synthetic telemetry, optional historian/in-memory fallback storage, REST polling, and no real plant control.
 
 The Process page reads process-loop assets through `GET /api/v1/assets` and process telemetry through `GET /api/v1/telemetry/latest`. The Trends page uses latest telemetry for summary cards and `GET /api/v1/telemetry/history` for chart data. If history is unavailable, the chart explicitly labels its static fallback curve as demo data.
+
+## Persistent Historian Layer
+
+The optional historian stores synthetic simulation records only. It is owned by `apps/simulation`, because the simulation engine is the source of telemetry, commands, events, alarms, control mode changes, and PID events:
+
+```mermaid
+flowchart LR
+    ENG["Simulation Engine"] --> Repo["Historian repository"]
+    Repo --> PG["PostgreSQL / TimescaleDB"]
+    Repo --> Mem["In-memory fallback"]
+    API["API Gateway"] --> SIM["Simulation read APIs"]
+    SIM --> Repo
+```
+
+When `HISTORIAN_ENABLED=true` and `DATABASE_URL` is reachable, migrations run on simulation startup and the repository writes telemetry, command, event, and alarm history records. If the database is disabled or unavailable, simulation continues with the existing in-memory history and exposes degraded historian status through:
+
+- `GET /api/v1/historian/status`
+- `GET /api/v1/simulation/historian/status`
+
+The historian is not a compliance audit system. It has no immutability, retention policy, auth/RBAC, or regulatory guarantees.
 
 ## Alarm And Event Operations Flow
 
@@ -166,13 +186,12 @@ sequenceDiagram
     UI->>API: "GET /api/v1/events/recent"
 ```
 
-Alarm and event storage is in-memory inside `apps/simulation`. The API is a proxy boundary for the frontend and is the intended place for future auth, RBAC, rate limiting, persistent audit writes, and contract versioning.
+Alarm and event state is owned by `apps/simulation`. Recent records remain available from in-memory fallback and can be persisted by the optional historian. The API is a proxy boundary for the frontend and is the intended place for future auth, RBAC, rate limiting, audit policy, and contract versioning.
 
 ## Current Limitations
 
 - Live UI updates use polling, not WebSocket or SSE.
-- Telemetry history is in-memory.
-- Alarm lifecycle and event history are in-memory.
+- Telemetry, command, event, and alarm history are persistent only when the optional PostgreSQL/TimescaleDB historian is enabled and connected; otherwise they fall back to in-memory storage.
 - Process commands are implemented only for simulated `V-101` and `P-101` assets.
-- Command/event history is in-memory and not an immutable audit store.
-- MQTT, TSDB persistence, report export, auth/RBAC, and Kubernetes are not part of the current milestone.
+- Command/event history is not an immutable audit store.
+- MQTT, report export, auth/RBAC, and Kubernetes are not part of the current milestone.

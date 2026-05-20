@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -32,6 +33,13 @@ func (e *Engine) ActiveAlarms() []model.Alarm {
 }
 
 func (e *Engine) AlarmHistory() []model.Alarm {
+	if e.historian != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), e.historianOperationTimeout)
+		defer cancel()
+		if alarms, err := e.historian.ListAlarmHistory(ctx, 200); err == nil && len(alarms) > 0 {
+			return alarms
+		}
+	}
 	e.mu.RLock()
 	defer e.mu.RUnlock()
 	return e.evaluator.History()
@@ -61,6 +69,7 @@ func (e *Engine) AcknowledgeAlarm(id string, request model.AlarmAcknowledgeReque
 	}
 
 	if changed {
+		e.persistAlarmAsync(alarm)
 		e.appendAlarmEventLocked(
 			model.EventTypeAlarmAcknowledged,
 			model.EventSeverityInfo,
@@ -76,6 +85,7 @@ func (e *Engine) AcknowledgeAlarm(id string, request model.AlarmAcknowledgeReque
 
 func (e *Engine) applyAlarmChangesLocked(changes []alarms.Change) {
 	for _, change := range changes {
+		e.persistAlarmAsync(change.Alarm)
 		switch change.Type {
 		case alarms.ChangeActivated:
 			e.appendAlarmEventLocked(

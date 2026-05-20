@@ -15,6 +15,7 @@ func (s *Server) routes() http.Handler {
 	mux.HandleFunc("POST /api/v1/simulation/control/mode", h.SetControlMode)
 	mux.HandleFunc("GET /api/v1/simulation/pid/status", h.PIDStatus)
 	mux.HandleFunc("PATCH /api/v1/simulation/pid/config", h.UpdatePIDConfig)
+	mux.HandleFunc("GET /api/v1/simulation/historian/status", h.HistorianStatus)
 	mux.HandleFunc("GET /api/v1/simulation/alarms/active", h.ActiveAlarms)
 	mux.HandleFunc("GET /api/v1/simulation/alarms/history", h.AlarmHistory)
 	mux.HandleFunc("POST /api/v1/simulation/alarms/{alarmID}/acknowledge", h.AcknowledgeAlarm)
