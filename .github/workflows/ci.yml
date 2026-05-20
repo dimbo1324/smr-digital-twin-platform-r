@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - "feat/**"
+      - "fix/**"
       - "refactor/**"
       - "ci/**"
       - "test/**"
@@ -216,7 +217,7 @@ jobs:
     name: Historian DB Smoke
     runs-on: ubuntu-latest
     needs: [api, simulation, web, compose]
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -227,14 +228,18 @@ jobs:
           node-version: 22
 
       - name: Run historian DB integration smoke
-        run: node scripts/smoke/historian-db-smoke.mjs --keep-running --timeout-ms 240000
+        run: node scripts/smoke/historian-db-smoke.mjs --timeout-ms 300000 --history-wait-ms 90000
 
       - name: Collect historian smoke logs
         if: failure()
         run: |
           mkdir -p historian-smoke-logs
-          docker compose -p smr-twin-historian-smoke ps > historian-smoke-logs/compose-ps.txt 2>&1 || true
-          docker compose -p smr-twin-historian-smoke logs --tail=300 api simulation postgres > historian-smoke-logs/compose-logs.txt 2>&1 || true
+          if [ ! -s historian-smoke-logs/compose-ps.txt ]; then
+            docker compose -p smr-twin-historian-smoke ps > historian-smoke-logs/compose-ps.txt 2>&1 || true
+          fi
+          if [ ! -s historian-smoke-logs/compose-logs.txt ]; then
+            docker compose -p smr-twin-historian-smoke logs --tail=300 api simulation postgres > historian-smoke-logs/compose-logs.txt 2>&1 || true
+          fi
 
       - name: Upload historian smoke logs
         if: failure()

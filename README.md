@@ -302,13 +302,13 @@ The smoke test:
 
 - starts the isolated Docker Compose project `smr-twin-historian-smoke`;
 - waits for API health and connected persistent historian status;
-- waits for telemetry history records;
+- waits for direct `telemetry_history` rows in PostgreSQL/TimescaleDB and API telemetry history records;
 - sends a simulation-only `V-101` `SET_POSITION` command;
 - verifies command and event records;
 - restarts the `simulation` service;
 - verifies telemetry, command, and event records still exist after restart.
 
-It requires a running Docker daemon. By default it removes the isolated Compose project and volumes after completion. Use `--keep-running` for debugging.
+It requires a running Docker daemon. By default it removes the isolated Compose project and volumes after completion. Use `--keep-running` for debugging. On failure, the script writes diagnostics under `historian-smoke-logs/`, including Compose logs, DB counts, the last telemetry history response shape, historian status, and latest telemetry.
 
 ## API Contract / Schemas
 
