@@ -51,7 +51,7 @@ Runtime API validation is available in the frontend HTTP client for selected req
 
 ## Browser Smoke Quality Gate
 
-The CI pipeline includes a Playwright Chromium smoke job for the main simulator workflow:
+The CI pipeline includes a Playwright Chromium smoke job for the main simulator workflow and a separate historian DB smoke job for the full Docker Compose persistence path:
 
 ```mermaid
 flowchart LR
@@ -62,6 +62,8 @@ flowchart LR
 ```
 
 The smoke test is intentionally narrow. It checks that the browser can load the main pages, submit simulation-only `V-101` and `P-101` commands through the UI, observe command-related events, and keep alarm/event views usable. It does not replace deeper component tests, visual regression, multi-browser certification, or production SCADA validation.
+
+The historian DB smoke runs `docker compose up --build -d` in an isolated Compose project, waits for the PostgreSQL/TimescaleDB historian to report `connected`, writes telemetry plus a simulation-only `V-101` command, restarts the simulation service, and verifies history/command/event records survive the restart. It verifies demo persistence of synthetic data only, not production audit compliance.
 
 ## Domain Layers
 

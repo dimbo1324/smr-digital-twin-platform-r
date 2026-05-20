@@ -124,6 +124,14 @@ Historian status is exposed through:
 
 The historian stores synthetic simulation data only. It is not a production audit store and has no compliance retention guarantees.
 
+The full Docker Compose persistence path can be verified from the repository root:
+
+```bash
+node scripts/smoke/historian-db-smoke.mjs
+```
+
+The smoke uses an isolated Compose project, checks connected historian status, writes synthetic telemetry plus a `V-101` command, restarts the simulation service, and confirms records remain available through the API.
+
 ## Simulation Commands
 
 Supported targets:

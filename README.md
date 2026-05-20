@@ -281,6 +281,35 @@ npm run test:e2e:ui
 
 For local runs, API and simulation should be reachable at `http://127.0.0.1:8080` and `http://127.0.0.1:8081`; the Playwright config starts only the Vite frontend dev server. CI starts the Go backend services before running the smoke.
 
+## Historian DB Smoke Test
+
+The historian DB smoke verifies persistence of synthetic simulation data in the demo TimescaleDB historian through the full Docker Compose stack.
+
+Run from the repository root:
+
+```bash
+node scripts/smoke/historian-db-smoke.mjs
+```
+
+Or through Make:
+
+```bash
+make historian-smoke
+make historian-smoke-keep
+```
+
+The smoke test:
+
+- starts the isolated Docker Compose project `smr-twin-historian-smoke`;
+- waits for API health and connected persistent historian status;
+- waits for telemetry history records;
+- sends a simulation-only `V-101` `SET_POSITION` command;
+- verifies command and event records;
+- restarts the `simulation` service;
+- verifies telemetry, command, and event records still exist after restart.
+
+It requires a running Docker daemon. By default it removes the isolated Compose project and volumes after completion. Use `--keep-running` for debugging.
+
 ## API Contract / Schemas
 
 The current REST API contract is documented in:
@@ -337,8 +366,9 @@ Current Docker Compose services:
 - `web`
 - `api`
 - `simulation`
+- `postgres`
 
-No database, MQTT broker, Redis, Grafana, or object storage service is included in this milestone.
+No MQTT broker, Redis, Grafana, or object storage service is included in this milestone.
 
 ## Available API Endpoints
 
@@ -358,6 +388,7 @@ curl http://localhost:8080/api/v1/pid/status
 curl -X PATCH http://localhost:8080/api/v1/pid/config \
   -H "Content-Type: application/json" \
   -d '{"setpoint":288,"kp":0.9,"ki":0.05,"kd":0.1,"requestedBy":"demo-operator"}'
+curl http://localhost:8080/api/v1/historian/status
 curl http://localhost:8080/api/v1/alarms/active
 curl http://localhost:8080/api/v1/alarms/history
 curl -X POST http://localhost:8080/api/v1/alarms/alarm-id/acknowledge \
