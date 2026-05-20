@@ -1,15 +1,24 @@
 #!/usr/bin/env node
 
 import { execFile } from "node:child_process";
-import { mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
+import {
+  createArtifactRunDir,
+  sanitizeSecretText,
+  writeJsonArtifact,
+  writeMarkdownSummary,
+  writeTextArtifact,
+} from "../logs/log-artifacts.mjs";
 
-const DEBUG_DIR = "historian-smoke-logs";
+const COMPAT_DEBUG_DIR = "historian-smoke-logs";
 
 const DEFAULTS = {
   apiUrl: "http://127.0.0.1:8080",
   historyWaitMs: 60_000,
   keepRunning: false,
+  localArtifacts: true,
+  logDir: "logs",
   noBuild: false,
   projectName: "smr-twin-historian-smoke",
   restartService: "simulation",
@@ -24,6 +33,8 @@ const options = parseArgs(process.argv.slice(2));
 const startedAt = Date.now();
 const deadline = startedAt + options.timeoutMs;
 let failure = null;
+let artifactRun = null;
+let successArtifacts = null;
 
 const diagnostics = {
   dbTelemetryCount: null,
@@ -55,6 +66,15 @@ main()
   });
 
 async function main() {
+  if (options.localArtifacts) {
+    artifactRun = await createArtifactRunDir({
+      type: "smoke",
+      name: "historian-db-smoke",
+      rootDir: options.logDir,
+    });
+    log(`Artifact directory: ${artifactRun.relativePath}`);
+  }
+
   log("Preflight: checking Docker and Docker Compose.");
   await run("docker", ["--version"]);
   await dockerCompose(["version"]);
@@ -67,7 +87,7 @@ async function main() {
   await dockerCompose(["up", ...(options.noBuild ? [] : ["--build"]), "-d"]);
 
   await waitForOk(`${options.apiUrl}/health`, "API health");
-  await waitForHistorianConnected();
+  const historianStatusBefore = await waitForHistorianConnected();
 
   const dbRowsBefore = await waitForDatabaseTelemetryRows();
   log(`Database telemetry_history ready with ${dbRowsBefore} row(s).`);
@@ -87,14 +107,14 @@ async function main() {
   const commandId = command.id ?? "";
   log(`Submitted V-101 command ${commandId || "(no id)"} with correlationId ${correlationId}.`);
 
-  await waitForCommand(correlationId, commandId);
-  await waitForEvent(correlationId, commandId);
+  const commandBeforeRestart = await waitForCommand(correlationId, commandId);
+  const eventBeforeRestart = await waitForEvent(correlationId, commandId);
 
   log(`Restarting Docker Compose service "${options.restartService}".`);
   await dockerCompose(["restart", options.restartService]);
 
   await waitForOk(`${options.apiUrl}/health`, "API health after simulation restart");
-  await waitForHistorianConnected("after simulation restart");
+  const historianStatusAfter = await waitForHistorianConnected("after simulation restart");
   await waitForDatabaseTelemetryRows("after simulation restart");
 
   const historyAfterRestart = await waitForTelemetryHistory("after simulation restart", {
@@ -105,8 +125,25 @@ async function main() {
     throw new Error("Telemetry history was empty after simulation restart.");
   }
 
-  await waitForCommand(correlationId, commandId, "after simulation restart");
-  await waitForEvent(correlationId, commandId, "after simulation restart");
+  const commandAfterRestart = await waitForCommand(correlationId, commandId, "after simulation restart");
+  const eventAfterRestart = await waitForEvent(correlationId, commandId, "after simulation restart");
+  const psAfterSuccess = await dockerComposeCapture(["ps"], { allowFailure: true });
+
+  successArtifacts = {
+    command,
+    commandAfterRestart,
+    commandBeforeRestart,
+    commandId,
+    correlationId,
+    eventAfterRestart,
+    eventBeforeRestart,
+    historianStatusAfter,
+    historianStatusBefore,
+    historyAfterRestart,
+    initialHistory,
+    psAfterSuccess,
+    telemetryMarker,
+  };
 
   log("Summary:");
   log("- Historian status: connected/persistent");
@@ -117,6 +154,8 @@ async function main() {
   if (commandId) {
     log(`- Command id persisted: ${commandId}`);
   }
+
+  await writeSuccessArtifacts(successArtifacts);
 }
 
 function parseArgs(args) {
@@ -126,6 +165,12 @@ function parseArgs(args) {
     switch (arg) {
       case "--keep-running":
         parsed.keepRunning = true;
+        break;
+      case "--log-dir":
+        parsed.logDir = requireValue(args, ++index, arg);
+        break;
+      case "--no-local-artifacts":
+        parsed.localArtifacts = false;
         break;
       case "--no-build":
         parsed.noBuild = true;
@@ -188,7 +233,9 @@ Usage:
 
 Options:
   --keep-running                  Leave the compose stack running for debugging.
+  --log-dir <path>                Local artifact root. Default: ${DEFAULTS.logDir}
   --no-build                      Run docker compose up -d without --build.
+  --no-local-artifacts            Disable writing logs/smoke report artifacts.
   --project-name <name>           Compose project name. Default: ${DEFAULTS.projectName}
   --timeout-ms <ms>               Overall timeout. Default: ${DEFAULTS.timeoutMs}
   --api-url <url>                 API base URL. Default: ${DEFAULTS.apiUrl}
@@ -256,7 +303,7 @@ async function waitForOk(url, label) {
 
 async function waitForHistorianConnected(labelSuffix = "") {
   const label = `historian connected${labelSuffix ? ` ${labelSuffix}` : ""}`;
-  await waitUntil(label, 120_000, async () => {
+  return waitUntil(label, 120_000, async () => {
     const response = await getJson(`${options.apiUrl}/api/v1/historian/status`, { allowFailure: true });
     diagnostics.historianStatus = response;
     const data = unwrapData(response);
@@ -269,7 +316,7 @@ async function waitForHistorianConnected(labelSuffix = "") {
     if (!connected && data) {
       log(`Historian not connected yet: ${JSON.stringify(data)}`);
     }
-    return connected;
+    return connected ? response : false;
   });
 }
 
@@ -387,18 +434,20 @@ async function sendValveCommand(correlationId) {
 }
 
 async function waitForCommand(correlationId, commandId, labelSuffix = "") {
-  await waitUntil(`persisted command${labelSuffix ? ` ${labelSuffix}` : ""}`, 60_000, async () => {
+  return waitUntil(`persisted command${labelSuffix ? ` ${labelSuffix}` : ""}`, 60_000, async () => {
     const response = await getJson(`${options.apiUrl}/api/v1/commands/recent?limit=200`, { allowFailure: true });
     const commands = extractListItems(response);
-    return commands.some((command) => matchesCommand(command, correlationId, commandId));
+    const match = commands.find((command) => matchesCommand(command, correlationId, commandId));
+    return match ? { commands, match, response } : false;
   });
 }
 
 async function waitForEvent(correlationId, commandId, labelSuffix = "") {
-  await waitUntil(`persisted command event${labelSuffix ? ` ${labelSuffix}` : ""}`, 60_000, async () => {
+  return waitUntil(`persisted command event${labelSuffix ? ` ${labelSuffix}` : ""}`, 60_000, async () => {
     const response = await getJson(`${options.apiUrl}/api/v1/events/recent?limit=200`, { allowFailure: true });
     const events = extractListItems(response);
-    return events.some((event) => matchesEvent(event, correlationId, commandId));
+    const match = events.find((event) => matchesEvent(event, correlationId, commandId));
+    return match ? { events, match, response } : false;
   });
 }
 
@@ -637,9 +686,10 @@ async function waitUntil(label, timeoutMs, predicate) {
   log(`Waiting for ${label}...`);
   const waitDeadline = Date.now() + Math.min(timeoutMs, timeLeft());
   while (Date.now() < waitDeadline && Date.now() < deadline) {
-    if (await predicate()) {
+    const result = await predicate();
+    if (result) {
       log(`${label} ready.`);
-      return;
+      return result;
     }
     await sleep(2_000);
   }
@@ -654,18 +704,18 @@ async function printDiagnostics() {
   console.error(JSON.stringify(telemetryDebugPayload(), null, 2));
 
   console.error("\n--- database diagnostics ---");
-  process.stderr.write(dbDiagnostics || "(no db diagnostics output)\n");
+  process.stderr.write(sanitizeSecretText(dbDiagnostics || "(no db diagnostics output)\n"));
 
   console.error("\n--- docker compose ps ---");
   const ps = await dockerComposeCapture(["ps"], { allowFailure: true });
-  process.stderr.write(ps.stdout || ps.stderr || "(no ps output)\n");
+  process.stderr.write(sanitizeSecretText(ps.stdout || ps.stderr || "(no ps output)\n"));
 
   console.error("\n--- docker compose logs api/simulation/postgres ---");
   const logs = await dockerComposeCapture(["logs", "--tail=300", "api", "simulation", "postgres"], {
     allowFailure: true,
     timeoutMs: 120_000,
   });
-  process.stderr.write(logs.stdout || logs.stderr || "(no logs output)\n");
+  process.stderr.write(sanitizeSecretText(logs.stdout || logs.stderr || "(no logs output)\n"));
 
   await writeDiagnosticsArtifacts({ dbDiagnostics, logs, ps });
 }
@@ -737,11 +787,101 @@ function summarizeEnvelope(response) {
 }
 
 async function writeDiagnosticsArtifacts({ dbDiagnostics, logs, ps }) {
-  await mkdir(DEBUG_DIR, { recursive: true });
-  await writeFile(`${DEBUG_DIR}/historian-smoke-debug.json`, JSON.stringify(telemetryDebugPayload(), null, 2));
-  await writeFile(`${DEBUG_DIR}/db-counts.txt`, dbDiagnostics || "(no db diagnostics output)\n");
-  await writeFile(`${DEBUG_DIR}/compose-ps.txt`, ps.stdout || ps.stderr || "(no ps output)\n");
-  await writeFile(`${DEBUG_DIR}/compose-logs.txt`, logs.stdout || logs.stderr || "(no logs output)\n");
+  const payload = telemetryDebugPayload();
+  const targets = [];
+  if (artifactRun) {
+    targets.push(artifactRun.absolutePath);
+  }
+  targets.push(COMPAT_DEBUG_DIR);
+
+  for (const target of targets) {
+    await writeJsonArtifact(path.join(target, "historian-smoke-debug.json"), payload);
+    await writeTextArtifact(path.join(target, "db-counts.txt"), dbDiagnostics || "(no db diagnostics output)\n");
+    await writeTextArtifact(path.join(target, "compose-ps.txt"), ps.stdout || ps.stderr || "(no ps output)\n");
+    await writeTextArtifact(path.join(target, "compose-logs.txt"), logs.stdout || logs.stderr || "(no logs output)\n");
+    await writeJsonArtifact(path.join(target, "summary.json"), buildSummaryJson("failed", { dbDiagnostics, logs, ps }));
+    await writeMarkdownSummary(path.join(target, "summary.md"), buildSummaryMarkdown("failed"));
+  }
+
+  if (artifactRun) {
+    console.error(`Failure diagnostics written to: ${artifactRun.relativePath}`);
+  }
+}
+
+async function writeSuccessArtifacts(artifacts) {
+  if (!artifactRun) {
+    return;
+  }
+
+  await writeJsonArtifact(path.join(artifactRun.absolutePath, "historian-status.json"), {
+    beforeRestart: artifacts.historianStatusBefore,
+    afterRestart: artifacts.historianStatusAfter,
+  });
+  await writeJsonArtifact(
+    path.join(artifactRun.absolutePath, "telemetry-history-before-restart.json"),
+    artifacts.initialHistory.response,
+  );
+  await writeJsonArtifact(
+    path.join(artifactRun.absolutePath, "telemetry-history-after-restart.json"),
+    artifacts.historyAfterRestart.response,
+  );
+  await writeJsonArtifact(
+    path.join(artifactRun.absolutePath, "commands-recent-before-restart.json"),
+    artifacts.commandBeforeRestart.response,
+  );
+  await writeJsonArtifact(
+    path.join(artifactRun.absolutePath, "commands-recent-after-restart.json"),
+    artifacts.commandAfterRestart.response,
+  );
+  await writeJsonArtifact(
+    path.join(artifactRun.absolutePath, "events-recent-before-restart.json"),
+    artifacts.eventBeforeRestart.response,
+  );
+  await writeJsonArtifact(
+    path.join(artifactRun.absolutePath, "events-recent-after-restart.json"),
+    artifacts.eventAfterRestart.response,
+  );
+  await writeTextArtifact(
+    path.join(artifactRun.absolutePath, "compose-ps.txt"),
+    artifacts.psAfterSuccess.stdout || artifacts.psAfterSuccess.stderr || "(no ps output)\n",
+  );
+  await writeJsonArtifact(path.join(artifactRun.absolutePath, "summary.json"), buildSummaryJson("passed", artifacts));
+  await writeMarkdownSummary(path.join(artifactRun.absolutePath, "summary.md"), buildSummaryMarkdown("passed"));
+
+  log(`Smoke report written to: ${artifactRun.relativePath}`);
+}
+
+function buildSummaryJson(status, artifacts = {}) {
+  return {
+    artifactDir: artifactRun?.relativePath ?? null,
+    completedAt: new Date().toISOString(),
+    commandId: artifacts.commandId ?? successArtifacts?.commandId ?? null,
+    correlationId: artifacts.correlationId ?? successArtifacts?.correlationId ?? null,
+    historianStatus: unwrapData(diagnostics.historianStatus),
+    safety: "Synthetic simulation diagnostics only. No real plant data.",
+    status,
+    telemetryHistoryShape: sanitizeShapeForLog(diagnostics.lastTelemetryHistoryShape),
+  };
+}
+
+function buildSummaryMarkdown(status) {
+  const passed = status === "passed";
+  const items = [
+    `Status: ${status}`,
+    `Generated at: ${new Date().toISOString()}`,
+    "Scope: Docker Compose historian smoke for synthetic simulation data.",
+    "Safety: simulation-only diagnostics; no real plant data; not a production audit trail.",
+  ];
+  if (successArtifacts?.correlationId) {
+    items.push(`Command correlationId: ${successArtifacts.correlationId}`);
+  }
+  if (successArtifacts?.telemetryMarker) {
+    items.push(`Pre-restart telemetry marker: ${successArtifacts.telemetryMarker}`);
+  }
+  if (!passed && failure) {
+    items.push(`Failure: ${failure.message}`);
+  }
+  return [{ title: "Historian DB Smoke", items }];
 }
 
 async function cleanup() {

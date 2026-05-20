@@ -6,6 +6,7 @@ on:
       - main
       - "feat/**"
       - "fix/**"
+      - "chore/**"
       - "refactor/**"
       - "ci/**"
       - "test/**"
@@ -246,7 +247,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: historian-smoke-logs
-          path: historian-smoke-logs/
+          path: |
+            logs/smoke/
+            historian-smoke-logs/
           retention-days: 7
 
       - name: Cleanup historian smoke stack

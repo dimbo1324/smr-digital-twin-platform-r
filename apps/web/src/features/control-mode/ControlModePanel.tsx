@@ -52,7 +52,7 @@ export function ControlModePanel({ controlStatus, state }: ControlModePanelProps
           <div>
             <CardTitle>TIC-101 Control Mode</CardTitle>
             <CardDescription>
-              Simulation-only arbitration for direct V-101 commands and future PID authority.
+              Simulation-only arbitration for direct V-101 commands and TIC-101 PID authority.
             </CardDescription>
           </div>
           <Badge variant={mode === "MANUAL" ? "success" : mode === "AUTO" ? "warning" : "offline"}>
