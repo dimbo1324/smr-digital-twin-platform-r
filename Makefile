@@ -1,4 +1,4 @@
-.PHONY: help dev dev-up dev-down down status compose-config test lint api-dev api-run api-build api-test api-vet simulation-run simulation-build simulation-test simulation-vet web-api-types web-api-types-check web-api-validate-schemas web-build web-lint web-typecheck
+.PHONY: help dev dev-up dev-down down status compose-config historian-smoke historian-smoke-keep test lint api-dev api-run api-build api-test api-vet simulation-run simulation-build simulation-test simulation-vet web-api-types web-api-types-check web-api-validate-schemas web-build web-lint web-typecheck
 
 WEB_RUN = docker compose run --rm --no-deps web sh -c
 WEB_INSTALL = npm ci
@@ -11,6 +11,8 @@ help:
 	@echo "  make down             - alias for make dev-down"
 	@echo "  make status           - show Docker Compose service status"
 	@echo "  make compose-config   - validate Docker Compose configuration"
+	@echo "  make historian-smoke  - run full Docker Compose historian DB integration smoke"
+	@echo "  make historian-smoke-keep - run historian smoke and keep stack running"
 	@echo "  make test             - run API, simulation, and frontend checks"
 	@echo "  make lint             - run go vet and frontend lint"
 	@echo "  make api-run          - run the Go API locally"
@@ -41,6 +43,12 @@ status:
 
 compose-config:
 	docker compose config --quiet
+
+historian-smoke:
+	node scripts/smoke/historian-db-smoke.mjs
+
+historian-smoke-keep:
+	node scripts/smoke/historian-db-smoke.mjs --keep-running
 
 test: api-test simulation-test web-api-types-check web-api-validate-schemas web-typecheck web-lint web-build compose-config
 
