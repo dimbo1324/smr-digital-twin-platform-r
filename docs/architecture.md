@@ -65,6 +65,8 @@ The smoke test is intentionally narrow. It checks that the browser can load the 
 
 The historian DB smoke runs `docker compose up --build -d` in an isolated Compose project, waits for the PostgreSQL/TimescaleDB historian to report `connected`, writes telemetry plus a simulation-only `V-101` command, restarts the simulation service, and verifies history/command/event records survive the restart. It verifies demo persistence of synthetic data only, not production audit compliance.
 
+Smoke and integration scripts write sanitized local diagnostic artifacts under `logs/`, including success summaries and failure details. These artifacts are local/CI troubleshooting output for synthetic simulation data only; they are not an observability stack or production audit archive.
+
 ## Domain Layers
 
 The current MVP separates domain concerns into two layers:

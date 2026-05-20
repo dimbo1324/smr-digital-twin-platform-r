@@ -42,6 +42,7 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 - Frontend valve and pump control panels with pending, success, and error states.
 - GitHub Actions CI quality gates for Go API, Go simulation, frontend, and Docker Compose config validation.
 - Playwright Chromium smoke test for the core browser flow across Dashboard, Process commands, Alarms, and Events.
+- Local log artifact folder and smoke diagnostic reports under `logs/`.
 - OpenAPI 3.1 contract and JSON Schema reference files under `packages/schemas`.
 - Generated frontend API schema types committed under `apps/web/src/shared/api/generated`.
 - TanStack Query frontend data layer with typed REST hooks, query keys, polling intervals, and mutation invalidation.
@@ -309,6 +310,22 @@ The smoke test:
 - verifies telemetry, command, and event records still exist after restart.
 
 It requires a running Docker daemon. By default it removes the isolated Compose project and volumes after completion. Use `--keep-running` for debugging. On failure, the script writes diagnostics under `historian-smoke-logs/`, including Compose logs, DB counts, the last telemetry history response shape, historian status, and latest telemetry.
+
+The smoke also writes a local report under `logs/smoke/<timestamp>_historian-db-smoke/` on success and failure. The report includes sanitized JSON/text artifacts such as historian status, telemetry history before/after restart, command/event responses, Compose status, and failure diagnostics when applicable.
+
+## Local Log Artifacts
+
+Local diagnostic artifacts are written under `logs/`. Real generated log files are ignored by Git; only `logs/README.md` and `logs/.gitkeep` are committed.
+
+Common commands:
+
+```bash
+node scripts/smoke/historian-db-smoke.mjs
+make historian-smoke
+make logs-clean
+```
+
+The scripts use Node.js standard library APIs compatible with Node 22+ in CI and the local system Node v24.15.0. Generated logs contain synthetic simulation diagnostics only, can be safely deleted, and are not a production observability stack or certified audit trail.
 
 ## API Contract / Schemas
 

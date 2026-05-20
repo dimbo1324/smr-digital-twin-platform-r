@@ -132,6 +132,8 @@ node scripts/smoke/historian-db-smoke.mjs
 
 The smoke uses an isolated Compose project, checks connected historian status, writes synthetic telemetry plus a `V-101` command, restarts the simulation service, and confirms records remain available through the API.
 
+Each run writes a sanitized local report under `logs/smoke/<timestamp>_historian-db-smoke/`. These artifacts contain synthetic simulation diagnostics only and can be removed with `node scripts/logs/clean-logs.mjs`.
+
 ## Simulation Commands
 
 Supported targets:
