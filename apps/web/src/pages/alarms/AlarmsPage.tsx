@@ -75,7 +75,7 @@ export function AlarmsPage() {
             {alarms.activeAlarms.length} open
           </Badge>
         </CardHeader>
-        <CardContent>
+        <CardContent data-testid="active-alarms-list">
           {alarms.state === "loading" ? (
             <StatePanel icon={Clock3} title="Loading alarms" description="Reading current alarm state from the API." />
           ) : alarms.state === "degraded" ? (
@@ -99,7 +99,7 @@ export function AlarmsPage() {
             In-memory history of alarms that returned to normal simulation limits.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent data-testid="alarm-history-list">
           {alarms.state === "connected" && alarms.history.length === 0 ? (
             <StatePanel icon={BellRing} title="No cleared alarms yet" description="Cleared alarm instances will appear here after conditions normalize." />
           ) : (

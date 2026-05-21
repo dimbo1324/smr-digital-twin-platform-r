@@ -153,8 +153,8 @@ function SimulationStatusCard({
         <SummaryRow label="Health" value={simulationHealth} />
         <SummaryRow label="Telemetry mode" value="Synthetic" badge="mock" />
         <SummaryRow label="Transport" value="REST polling" badge="info" />
-        <SummaryRow label="MQTT" value="Not implemented" badge="offline" />
-        <SummaryRow label="Historian" value="In-memory" badge="warning" />
+        <SummaryRow label="MQTT" value="Publish-only bridge" badge="info" />
+        <SummaryRow label="Historian" value="Persistent optional / in-memory fallback" badge="warning" />
       </CardContent>
     </Card>
   );
@@ -316,7 +316,7 @@ function RecentEventsFeed({ events }: { events: DashboardLiveOverviewProps["even
         </div>
         <CardDescription>Unified command, alarm, and simulation event stream.</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-3" data-testid="dashboard-recent-events-feed">
         {events.state === "loading" ? (
           <StateNotice label="Loading recent events..." />
         ) : events.state === "degraded" ? (
@@ -370,13 +370,13 @@ function CurrentLimitationsPanel() {
     "Simulation-only valve/pump commands",
     "Alarm lifecycle",
     "Unified events page",
-    "In-memory trends",
+    "Persistent/in-memory trends",
+    "Simulation-only PID",
+    "Publish-only MQTT bridge",
   ];
   const notImplemented = [
-    "MQTT",
+    "MQTT command ingestion",
     "WebSocket/SSE",
-    "Persistent historian",
-    "PID controller",
     "Auth/RBAC",
     "Report export",
   ];

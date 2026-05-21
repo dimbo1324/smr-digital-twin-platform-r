@@ -43,7 +43,7 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 - MQTT bridge status endpoint and minimal Dashboard/Settings status labels.
 - Frontend valve and pump control panels with pending, success, and error states.
 - GitHub Actions CI quality gates for Go API, Go simulation, frontend, and Docker Compose config validation.
-- Playwright Chromium smoke test for the core browser flow across Dashboard, Process commands, Alarms, and Events.
+- Expanded Playwright Chromium E2E suite for Dashboard, Process commands, PID/manual-auto arbitration, Alarms, Events, Trends, Settings, MQTT status, and historian status.
 - Local log artifact folder and smoke diagnostic reports under `logs/`.
 - OpenAPI 3.1 contract and JSON Schema reference files under `packages/schemas`.
 - Generated frontend API schema types committed under `apps/web/src/shared/api/generated`.
@@ -226,7 +226,7 @@ Automated CI jobs:
 - **API types**: `npm run api:types` regenerates frontend contract types before frontend checks.
 - **API schemas**: `npm run api:validate-schemas` compiles JSON Schema contract files.
 - **Compose**: `docker compose config --quiet` from the repository root.
-- **E2E Smoke**: starts the Go simulation and API services, launches the Vite frontend through Playwright, and runs the Chromium smoke flow.
+- **E2E Browser**: starts the Go simulation and API services, launches the Vite frontend through Playwright, and runs the expanded Chromium browser regression suite.
 - **Historian DB Smoke**: verifies Docker Compose persistence through PostgreSQL/TimescaleDB.
 - **MQTT Bridge Smoke**: verifies the Docker Compose MQTT broker receives publish-only synthetic telemetry and command/event status messages.
 
@@ -263,18 +263,20 @@ cd ../..
 docker compose config --quiet
 ```
 
-## E2E Smoke Tests
+## E2E Browser Tests
 
-Playwright smoke tests live in `apps/web/tests/e2e`.
+Playwright browser tests live in `apps/web/tests/e2e`.
 
-The current smoke verifies:
+The expanded suite verifies synthetic simulation workflows only:
 
-- Dashboard loads with live platform sections.
-- Process page loads with valve, pump, and flow telemetry.
-- `V-101` accepts a simulation-only set-position command.
-- `P-101` accepts a simulation-only start command after normalizing state if needed.
-- Events page shows command-related entries and filters remain usable.
-- Alarms page loads active/history sections and can acknowledge an active alarm when one exists.
+- Dashboard live status, historian status, MQTT status, and simulation-only boundary copy.
+- Process manual `V-101` and `P-101` command flows.
+- Manual to AUTO mode, PID active state, and valve command arbitration.
+- Alarm activate, acknowledge, clear, and related events.
+- Events filtering and sorting.
+- Trends chart/source labels with live or fallback data.
+- Settings capability/status copy for MQTT, historian, PID/manual-auto, and safety boundary.
+- Basic degraded integration state rendering via Playwright route mocks.
 
 Local commands:
 
@@ -286,7 +288,7 @@ npm run test:e2e:headed
 npm run test:e2e:ui
 ```
 
-For local runs, API and simulation should be reachable at `http://127.0.0.1:8080` and `http://127.0.0.1:8081`; the Playwright config starts only the Vite frontend dev server. CI starts the Go backend services before running the smoke.
+For local runs, API and simulation should be reachable at `http://127.0.0.1:8080` and `http://127.0.0.1:8081`; the Playwright config starts only the Vite frontend dev server. CI starts the Go backend services before running the browser suite. Full PostgreSQL/TimescaleDB and MQTT broker behavior is covered by the separate historian and MQTT smoke scripts.
 
 ## Historian DB Smoke Test
 
@@ -401,7 +403,7 @@ Default behavior:
 
 - local development defaults to `warn`;
 - production builds default to `off`;
-- the CI Playwright smoke job runs with `VITE_API_RUNTIME_VALIDATION=strict`.
+- the CI Playwright browser regression job runs with `VITE_API_RUNTIME_VALIDATION=strict`.
 
 This is a dev/test contract-hardening layer, not a production security gateway. Backend command and alarm handlers still perform their own request validation for simulation operations.
 
@@ -509,7 +511,7 @@ curl "http://localhost:8081/api/v1/simulation/events/recent?limit=50"
 
 1. Stabilize architecture truth, domain levels, live process UI, and dev commands.
 2. Add simulation-only command layer for valve and pump with event/audit trail.
-3. Add OpenAPI schemas, generated frontend types, React Query API layer, runtime validation, and Playwright smoke coverage.
+3. Add OpenAPI schemas, generated frontend types, React Query API layer, runtime validation, and expanded Playwright browser coverage.
 4. Harden API contract tooling, simulation domain boundaries, and quality gates.
 5. Add persistent historian storage for telemetry, events, commands, and alarm history.
 6. Add publish-only MQTT bridge for simulated telemetry and integration smoke coverage.
