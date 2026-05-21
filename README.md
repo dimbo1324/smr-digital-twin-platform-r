@@ -223,7 +223,7 @@ Automated CI jobs:
 
 - **API**: `go test ./...` and `go vet ./...` in `apps/api`.
 - **Simulation**: `go test ./...` and `go vet ./...` in `apps/simulation`.
-- **Web**: `npm ci`, `npm run typecheck`, `npm run lint`, and `npm run build` in `apps/web`.
+- **Web**: `npm ci`, `npm run typecheck`, `npm run lint`, `npm run test`, and `npm run build` in `apps/web`.
 - **API types**: `npm run api:types` regenerates frontend contract types before frontend checks.
 - **API schemas**: `npm run api:validate-schemas` compiles JSON Schema contract files.
 - **Frontend component tests**: `npm run test` runs Vitest/React Testing Library rendering and interaction checks.
@@ -279,6 +279,8 @@ The expanded suite verifies synthetic simulation workflows only:
 - Trends chart/source labels with live or fallback data.
 - Settings capability/status copy for MQTT, historian, PID/manual-auto, and safety boundary.
 - Basic degraded integration state rendering via Playwright route mocks.
+- Accessibility baseline checks with axe for serious/critical violations across core pages.
+- Keyboard navigation for skip link, sticky sidebar navigation, and PID/valve inputs.
 
 Local commands:
 
@@ -286,11 +288,14 @@ Local commands:
 cd apps/web
 npm run test:e2e:install
 npm run test:e2e
+npm run test:a11y
 npm run test:e2e:headed
 npm run test:e2e:ui
 ```
 
 For local runs, API and simulation should be reachable at `http://127.0.0.1:8080` and `http://127.0.0.1:8081`; the Playwright config starts only the Vite frontend dev server. CI starts the Go backend services before running the browser suite. Full PostgreSQL/TimescaleDB and MQTT broker behavior is covered by the separate historian and MQTT smoke scripts.
+
+The desktop layout keeps the primary sidebar sticky and keyboard-reachable while the page scrolls. On narrower screens the sidebar falls back to the responsive static layout so it does not cover HMI content. The skip link moves keyboard users directly to the main simulation-only workspace.
 
 ## Frontend Component Tests
 

@@ -151,6 +151,7 @@ export function ControlValvePanel({
             <div
               className="mt-3 rounded-2xl border border-warning/30 bg-warning/10 p-3 text-xs leading-5 text-warning"
               data-testid="valve-command-disabled-reason"
+              role="status"
             >
               {disabledReason}
             </div>
@@ -209,6 +210,8 @@ export function ControlValvePanel({
                 className="h-10 w-24 rounded-full border border-border/80 bg-card/70 px-3 text-sm text-foreground"
                 disabled={isPending || Boolean(disabledReason)}
                 data-testid="valve-set-position-input"
+                aria-label="Valve target position percent"
+                aria-invalid={positionInvalid}
               />
               <Button
                 disabled={!canSend || positionInvalid}
@@ -255,6 +258,8 @@ function CommandFeedbackView({ feedback }: { feedback: CommandFeedback }) {
     <div
       className="mt-4 flex items-start gap-2 rounded-2xl border border-border/70 bg-surface-subtle/70 p-3 text-sm text-foreground"
       data-testid="valve-command-feedback"
+      role={isError ? "alert" : "status"}
+      aria-live={isError ? "assertive" : "polite"}
     >
       {isError ? (
         <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-danger" aria-hidden="true" />

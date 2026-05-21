@@ -140,6 +140,8 @@ function CommandFeedbackView({ feedback }: { feedback: CommandFeedback }) {
     <div
       className="mt-4 flex items-start gap-2 rounded-2xl border border-border/70 bg-surface-subtle/70 p-3 text-sm text-foreground"
       data-testid="pump-command-feedback"
+      role={isError ? "alert" : "status"}
+      aria-live={isError ? "assertive" : "polite"}
     >
       {isError ? (
         <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-danger" aria-hidden="true" />
