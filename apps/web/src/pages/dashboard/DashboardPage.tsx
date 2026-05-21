@@ -92,14 +92,14 @@ export function DashboardPage() {
               </div>
             </div>
             <div className="mt-5 grid grid-cols-2 gap-3">
-              <Metric label="API status" value={apiStatus} />
+              <Metric label="API status" value={apiStatus} testId="dashboard-system-status" />
               <Metric label="Environment" value={environment} />
               <Metric label="Mode" value={mode} />
               <Metric label="Telemetry" value={telemetrySource} />
-              <Metric label="Historian" value={historianLabel} />
-              <Metric label="MQTT bridge" value={mqttLabel} />
-              <Metric label="Active alarms" value={String(alarms.activeAlarms.filter((alarm) => alarm.status === "ACTIVE").length)} />
-              <Metric label="Recent events" value={String(recentEvents.events.length)} />
+              <Metric label="Historian" value={historianLabel} testId="dashboard-historian-status" />
+              <Metric label="MQTT bridge" value={mqttLabel} testId="dashboard-mqtt-status" />
+              <Metric label="Active alarms" value={String(alarms.activeAlarms.filter((alarm) => alarm.status === "ACTIVE").length)} testId="dashboard-active-alarms-count" />
+              <Metric label="Recent events" value={String(recentEvents.events.length)} testId="dashboard-recent-events" />
             </div>
           </div>
         </div>
@@ -116,9 +116,9 @@ export function DashboardPage() {
   );
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
+function Metric({ label, value, testId }: { label: string; value: string; testId?: string }) {
   return (
-    <div className="rounded-2xl border border-border/60 bg-surface-elevated/70 p-4">
+    <div className="rounded-2xl border border-border/60 bg-surface-elevated/70 p-4" data-testid={testId}>
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="mt-1 text-xl font-semibold text-foreground">{value}</p>
     </div>

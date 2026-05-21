@@ -36,7 +36,7 @@ export function TrendsPage() {
         </p>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-3">
+      <section className="grid gap-4 md:grid-cols-3" data-testid="trends-telemetry-cards">
         {trendPoints.map((point) => (
           <TelemetryValue key={point.tag} point={point} />
         ))}
@@ -50,7 +50,7 @@ export function TrendsPage() {
               Synthetic telemetry history from backend API. Static fallback is labelled on the chart when history is unavailable.
             </CardDescription>
           </div>
-          <Badge variant={state === "connected" ? "success" : "warning"}>
+          <Badge variant={state === "connected" ? "success" : "warning"} data-testid="trends-source-badge">
             {historian.status?.status === "connected"
               ? "persistent historian"
               : state === "connected"

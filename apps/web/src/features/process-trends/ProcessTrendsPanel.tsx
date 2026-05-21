@@ -85,7 +85,7 @@ export function ProcessTrendsPanel({ history, dataState = "loading" }: ProcessTr
           </CardDescription>
         </div>
         <div className="flex flex-wrap gap-2">
-          <span className="rounded-full border border-border/80 bg-background/40 px-3 py-1 text-xs text-muted-foreground">
+          <span className="rounded-full border border-border/80 bg-background/40 px-3 py-1 text-xs text-muted-foreground" data-testid="historian-source-badge">
             {dataState === "connected" ? "Simulation history" : dataState}
           </span>
           {usingFallback ? (
@@ -116,7 +116,7 @@ export function ProcessTrendsPanel({ history, dataState = "loading" }: ProcessTr
           ))}
         </div>
 
-        <div className="h-[380px] rounded-2xl border border-border/60 bg-surface-subtle/60 p-3">
+        <div className="h-[380px] rounded-2xl border border-border/60 bg-surface-subtle/60 p-3" data-testid="trends-chart">
           <ResponsiveContainer width="100%" height="100%">
             <RechartsLineChart data={chartData} margin={{ left: 0, right: 16 }}>
               <CartesianGrid stroke={chartTheme.grid} vertical={false} />

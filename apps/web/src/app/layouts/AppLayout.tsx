@@ -4,7 +4,7 @@ import { Topbar } from "@/widgets/topbar/Topbar";
 
 export function AppLayout() {
   return (
-    <div className="app-background min-h-screen text-foreground transition-colors duration-500">
+    <div className="app-background min-h-screen text-foreground transition-colors duration-500" data-testid="app-shell">
       <div className="lg:grid lg:min-h-screen lg:grid-cols-[292px_minmax(0,1fr)]">
         <AppSidebar />
         <div className="min-w-0">

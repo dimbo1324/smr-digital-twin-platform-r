@@ -42,6 +42,7 @@ export function SettingsPage() {
         <SettingsPanel
           title="Historian Settings"
           description="Persistence status for synthetic simulation telemetry, commands, events, and alarms."
+          testId="settings-historian-status"
           rows={[
             ["Status", historian.status?.status ?? "checking"],
             ["Mode", historian.status?.mode ?? "in_memory"],
@@ -53,6 +54,7 @@ export function SettingsPage() {
         <SettingsPanel
           title="MQTT Bridge Settings"
           description="Publish-only MQTT status for synthetic simulation payloads."
+          testId="settings-mqtt-status"
           rows={[
             ["Status", mqtt.status?.status ?? "checking"],
             ["Mode", "Publish-only"],
@@ -61,7 +63,7 @@ export function SettingsPage() {
           ]}
         />
 
-        <Card>
+        <Card data-testid="settings-capability-matrix">
           <CardHeader>
             <CardTitle>UI Settings</CardTitle>
             <CardDescription>
@@ -123,7 +125,7 @@ export function SettingsPage() {
         </Card>
       </section>
 
-      <Card>
+      <Card data-testid="settings-safety-boundary">
         <CardHeader>
           <CardTitle>Simulation Scenario Controls</CardTitle>
           <CardDescription>
@@ -163,13 +165,15 @@ function SettingsPanel({
   title,
   description,
   rows,
+  testId,
 }: {
   title: string;
   description: string;
   rows: Array<[string, string]>;
+  testId?: string;
 }) {
   return (
-    <Card>
+    <Card data-testid={testId}>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>

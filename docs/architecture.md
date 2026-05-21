@@ -49,21 +49,21 @@ flowchart LR
 
 The current live transport is still REST polling. Query intervals are set per data type: telemetry is refreshed most frequently, while system status, events, commands, alarm history, assets, and scenarios use slower refresh or cache windows. Mutations do not perform optimistic updates yet; they invalidate related query keys so the UI reflects the API and simulation state after the backend accepts the operation.
 
-Runtime API validation is available in the frontend HTTP client for selected request and response payloads. It is controlled by `VITE_API_RUNTIME_VALIDATION=off|warn|strict`; local development defaults to `warn`, production defaults to `off`, and CI e2e smoke runs in `strict` mode. This catches contract drift between real JSON payloads and JSON Schema/OpenAPI definitions during development and tests without turning the frontend into a production security gateway.
+Runtime API validation is available in the frontend HTTP client for selected request and response payloads. It is controlled by `VITE_API_RUNTIME_VALIDATION=off|warn|strict`; local development defaults to `warn`, production defaults to `off`, and the CI E2E browser regression suite runs in `strict` mode. This catches contract drift between real JSON payloads and JSON Schema/OpenAPI definitions during development and tests without turning the frontend into a production security gateway.
 
-## Browser Smoke Quality Gate
+## Browser Regression Quality Gate
 
-The CI pipeline includes a Playwright Chromium smoke job for the main simulator workflow, a historian DB smoke job for the full Docker Compose persistence path, and an MQTT bridge smoke job for the publish-only IIoT path:
+The CI pipeline includes a Playwright Chromium browser regression job for key simulator workflows, a historian DB smoke job for the full Docker Compose persistence path, and an MQTT bridge smoke job for the publish-only IIoT path:
 
 ```mermaid
 flowchart LR
     CI["GitHub Actions e2e job"] --> SIM["Go simulation service"]
     CI --> API["Go API gateway"]
     CI --> WEB["Vite frontend via Playwright webServer"]
-    WEB --> FLOW["Dashboard -> Process -> Commands -> Events -> Alarms"]
+    WEB --> FLOW["Dashboard -> Process -> PID -> Alarms -> Events -> Trends -> Settings"]
 ```
 
-The smoke test is intentionally narrow. It checks that the browser can load the main pages, submit simulation-only `V-101` and `P-101` commands through the UI, observe command-related events, and keep alarm/event views usable. It does not replace deeper component tests, visual regression, multi-browser certification, or production SCADA validation.
+The browser regression suite verifies synthetic simulation workflows only. It covers Dashboard status visibility, manual `V-101`/`P-101` command flows, manual-to-AUTO PID arbitration, alarm activate/acknowledge/clear, Events filtering/sorting, Trends source labels, Settings capability copy, and basic degraded historian/MQTT UI states via route mocks. It does not replace deeper component tests, visual regression, accessibility testing, multi-browser certification, or production SCADA validation.
 
 The historian DB smoke runs `docker compose up --build -d` in an isolated Compose project, waits for the PostgreSQL/TimescaleDB historian to report `connected`, writes telemetry plus a simulation-only `V-101` command, restarts the simulation service, and verifies history/command/event records survive the restart. It verifies demo persistence of synthetic data only, not production audit compliance.
 

@@ -111,6 +111,7 @@ export function EventsPage() {
                 onChange={(event) => setSortOrder(event.target.value as SortOrder)}
                 className="mt-2 h-10 w-full rounded-full border border-border/80 bg-card/70 px-3 text-sm text-foreground"
                 data-testid="events-sort-toggle"
+                aria-label="events-sort-order"
               >
                 <option value="newest">Newest first</option>
                 <option value="oldest">Oldest first</option>
