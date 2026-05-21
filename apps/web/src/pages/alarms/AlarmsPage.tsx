@@ -58,7 +58,10 @@ export function AlarmsPage() {
       </section>
 
       {alarms.feedback ? (
-        <div className={`rounded-2xl border p-4 text-sm ${alarms.feedback.type === "success" ? "border-success/30 bg-success/10 text-success" : "border-destructive/30 bg-destructive/10 text-destructive"}`}>
+        <div
+          className={`rounded-2xl border p-4 text-sm ${alarms.feedback.type === "success" ? "border-success/30 bg-success/10 text-success" : "border-destructive/30 bg-destructive/10 text-destructive"}`}
+          role={alarms.feedback.type === "success" ? "status" : "alert"}
+        >
           {alarms.feedback.message}
         </div>
       ) : null}

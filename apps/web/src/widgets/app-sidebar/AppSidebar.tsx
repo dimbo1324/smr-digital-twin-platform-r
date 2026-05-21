@@ -12,8 +12,11 @@ export function AppSidebar() {
     systemStatus.state === "connected" && systemStatus.status.simulationConnected;
 
   return (
-    <aside className="border-b border-border/70 bg-card/70 backdrop-blur-xl lg:min-h-screen lg:border-b-0 lg:border-r">
-      <div className="flex h-full flex-col gap-5 p-4 lg:sticky lg:top-0 lg:min-h-screen lg:p-5">
+    <aside
+      className="border-b border-border/70 bg-card/70 backdrop-blur-xl lg:sticky lg:top-0 lg:h-screen lg:self-start lg:overflow-hidden lg:border-b-0 lg:border-r"
+      data-testid="app-sidebar"
+    >
+      <div className="flex h-full min-h-0 flex-col gap-5 p-4 lg:h-screen lg:overflow-y-auto lg:p-5">
         <div className="rounded-2xl border border-border/70 bg-surface-elevated/70 p-4 shadow-panel">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
@@ -53,15 +56,20 @@ export function AppSidebar() {
           </div>
         </div>
 
-        <nav className="grid gap-1.5 sm:grid-cols-5 lg:grid-cols-1" aria-label="Primary">
+        <nav
+          className="grid gap-1.5 sm:grid-cols-5 lg:grid-cols-1"
+          aria-label="Primary navigation"
+          data-testid="primary-navigation"
+        >
           {navigationItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
+              aria-label={`Go to ${item.title}`}
               data-testid={`nav-${item.title.toLowerCase()}`}
               className={({ isActive }) =>
                 cn(
-                  "group relative flex items-center gap-3 rounded-2xl px-3 py-3 text-sm text-muted-foreground transition-[background-color,color,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-muted/60 hover:text-foreground",
+                  "group relative flex items-center gap-3 rounded-2xl px-3 py-3 text-sm text-muted-foreground transition-[background-color,color,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-muted/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                   isActive &&
                     "bg-primary/10 text-foreground shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.18)]",
                 )

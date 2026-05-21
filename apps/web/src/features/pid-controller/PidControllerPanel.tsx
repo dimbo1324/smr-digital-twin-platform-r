@@ -159,8 +159,8 @@ export function PidControllerPanel({ pidStatus, state }: PidControllerPanelProps
           />
         </div>
 
-        {validationError ? <p className="text-xs text-danger">{validationError}</p> : null}
-        {state === "degraded" ? <p className="text-sm text-danger">PID status is unavailable from the API.</p> : null}
+        {validationError ? <p className="text-xs text-danger" role="alert">{validationError}</p> : null}
+        {state === "degraded" ? <p className="text-sm text-danger" role="alert">PID status is unavailable from the API.</p> : null}
 
         <div className="flex flex-wrap gap-2">
           <Button
@@ -196,7 +196,7 @@ export function PidControllerPanel({ pidStatus, state }: PidControllerPanelProps
             "TIC-101 is a simulation-only PID controller for a synthetic thermal loop. It does not control real equipment."}
         </div>
 
-        {feedback ? <p className="text-sm text-muted-foreground">{feedback}</p> : null}
+        {feedback ? <p className="text-sm text-muted-foreground" role="status">{feedback}</p> : null}
       </CardContent>
     </Card>
   );

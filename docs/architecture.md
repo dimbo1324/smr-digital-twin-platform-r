@@ -63,7 +63,9 @@ flowchart LR
     WEB --> FLOW["Dashboard -> Process -> PID -> Alarms -> Events -> Trends -> Settings"]
 ```
 
-The browser regression suite verifies synthetic simulation workflows only. It covers Dashboard status visibility, manual `V-101`/`P-101` command flows, manual-to-AUTO PID arbitration, alarm activate/acknowledge/clear, Events filtering/sorting, Trends source labels, Settings capability copy, and basic degraded historian/MQTT UI states via route mocks. It does not replace deeper component tests, visual regression, accessibility testing, multi-browser certification, or production SCADA validation.
+The browser regression suite verifies synthetic simulation workflows only. It covers Dashboard status visibility, manual `V-101`/`P-101` command flows, manual-to-AUTO PID arbitration, alarm activate/acknowledge/clear, Events filtering/sorting, Trends source labels, Settings capability copy, basic degraded historian/MQTT UI states via route mocks, axe-powered accessibility baseline checks, and keyboard navigation through the skip link, primary sidebar, and core control inputs. It does not replace deeper component tests, visual regression, a full human WCAG audit, multi-browser certification, or production SCADA validation.
+
+The desktop HMI layout keeps the primary sidebar as a sticky, semantic navigation region with its own overflow when needed. The main content remains separate from the sidebar, and smaller viewports fall back to the responsive static layout so navigation does not cover the simulation workspace.
 
 Vitest and React Testing Library cover component-level rendering and interaction checks for HMI status cards, MQTT/historian labels, control mode/PID panels, valve/pump controls, alarms, event filters, Trends source badges, and Settings capability copy. These tests mock frontend hooks and fixtures; they do not perform real plant control or external integration.
 

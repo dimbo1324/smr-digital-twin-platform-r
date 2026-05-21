@@ -10,7 +10,7 @@
     --card-foreground: 224 32% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 224 32% 11%;
-    --primary: 198 84% 42%;
+    --primary: 198 84% 30%;
     --primary-foreground: 0 0% 100%;
     --secondary: 220 24% 94%;
     --secondary-foreground: 224 28% 16%;
@@ -34,7 +34,7 @@
     --offline-foreground: 220 18% 96%;
     --border: 220 18% 84%;
     --input: 220 18% 88%;
-    --ring: 198 84% 42%;
+    --ring: 198 84% 30%;
     --surface: 0 0% 100%;
     --surface-elevated: 216 42% 98%;
     --surface-subtle: 220 38% 96%;
@@ -118,6 +118,12 @@
   select,
   textarea {
     font: inherit;
+  }
+
+  input,
+  select,
+  textarea {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
   }
 
   input,
