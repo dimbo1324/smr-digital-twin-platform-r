@@ -113,6 +113,10 @@ func (h *Handler) HistorianStatus(w http.ResponseWriter, _ *http.Request) {
 	writeData(w, h.engine.HistorianStatus(), 0)
 }
 
+func (h *Handler) MQTTStatus(w http.ResponseWriter, _ *http.Request) {
+	writeData(w, h.engine.MQTTStatus(), 0)
+}
+
 func (h *Handler) UpdatePIDConfig(w http.ResponseWriter, r *http.Request) {
 	var request model.PIDConfigUpdateRequest
 	r.Body = http.MaxBytesReader(w, r.Body, maxJSONBodyBytes)

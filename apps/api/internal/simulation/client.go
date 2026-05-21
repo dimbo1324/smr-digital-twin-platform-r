@@ -68,6 +68,10 @@ func (c *Client) HistorianStatus(ctx context.Context) (HistorianStatus, error) {
 	return get[HistorianStatus](ctx, c, "/api/v1/simulation/historian/status")
 }
 
+func (c *Client) MQTTStatus(ctx context.Context) (MQTTStatus, error) {
+	return get[MQTTStatus](ctx, c, "/api/v1/simulation/mqtt/status")
+}
+
 func (c *Client) UpdatePIDConfig(ctx context.Context, request PIDConfigUpdateRequest) (PIDStatus, error) {
 	return patchJSON[PIDStatus](ctx, c, "/api/v1/simulation/pid/config", request)
 }

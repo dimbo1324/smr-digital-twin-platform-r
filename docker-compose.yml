@@ -56,10 +56,18 @@ services:
       HISTORIAN_TELEMETRY_SAMPLE_MS: 1000
       HISTORIAN_MAX_BATCH_SIZE: 500
       DATABASE_URL: postgres://smr:smr@postgres:5432/smr_twin?sslmode=disable
+      MQTT_ENABLED: "true"
+      MQTT_BROKER_URL: tcp://mqtt:1883
+      MQTT_CLIENT_ID: smr-simulation-publisher
+      MQTT_TOPIC_PREFIX: smr/site-001/unit-001
+      MQTT_QOS: 0
+      MQTT_RETAIN: "false"
     ports:
       - "8081:8081"
     depends_on:
       postgres:
+        condition: service_healthy
+      mqtt:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8081/health >/dev/null 2>&1 || exit 1"]
@@ -67,6 +75,19 @@ services:
       timeout: 3s
       retries: 12
       start_period: 10s
+
+  mqtt:
+    image: eclipse-mosquitto:2
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./infra/mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_pub -h 127.0.0.1 -p 1883 -t smr/healthcheck -m ok >/dev/null 2>&1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
 
   postgres:
     image: timescale/timescaledb:latest-pg16

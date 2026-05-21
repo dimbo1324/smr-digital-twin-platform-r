@@ -17,6 +17,7 @@ Current milestone:
 - alarm lifecycle proxy endpoints for active, history, and acknowledge workflows
 - recent command/alarm/event proxy endpoints, DB-backed when the simulation historian is connected and in-memory otherwise
 - historian status proxy endpoint
+- publish-only MQTT bridge status proxy endpoint
 - SMR Unit Overview and Thermal Process Loop telemetry through `/api/v1/telemetry/latest`
 - OpenAPI/JSON Schema contract documentation under `packages/schemas`
 - structured request logging
@@ -25,7 +26,7 @@ Current milestone:
 
 Out of scope for this step:
 
-- MQTT ingestion
+- MQTT command ingestion or MQTT-based control
 - WebSocket/SSE streaming
 - auth/RBAC
 - production audit/compliance storage
@@ -98,6 +99,7 @@ curl -X PATCH http://localhost:8080/api/v1/pid/config \
   -H "Content-Type: application/json" \
   -d '{"setpoint":288,"kp":0.9,"ki":0.05,"kd":0.1,"requestedBy":"demo-operator"}'
 curl http://localhost:8080/api/v1/historian/status
+curl http://localhost:8080/api/v1/mqtt/status
 curl http://localhost:8080/api/v1/alarms/active
 curl http://localhost:8080/api/v1/alarms/history
 curl -X POST http://localhost:8080/api/v1/alarms/alarm-id/acknowledge \
@@ -199,6 +201,12 @@ Possible statuses include:
 - `unavailable_fallback`
 
 If the simulation service is unavailable, the API returns a degraded in-memory fallback status instead of implying that persistent storage is connected.
+
+### `GET /api/v1/mqtt/status`
+
+Returns the current simulation MQTT bridge status. The bridge publishes synthetic simulation data only and is publish-only: it does not expose MQTT command ingestion, actuator control topics, or real plant connectivity.
+
+If the simulation service is unavailable, the API returns an unavailable MQTT status instead of implying that the bridge is connected.
 
 ### `POST /api/v1/commands`
 

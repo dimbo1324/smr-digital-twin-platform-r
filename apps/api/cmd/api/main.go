@@ -44,6 +44,7 @@ func main() {
 		PIDStatus:        http.HandlerFunc(gateway.PIDStatus),
 		UpdatePIDConfig:  http.HandlerFunc(gateway.UpdatePIDConfig),
 		HistorianStatus:  http.HandlerFunc(gateway.HistorianStatus),
+		MQTTStatus:       http.HandlerFunc(gateway.MQTTStatus),
 		ActiveAlarms:     http.HandlerFunc(gateway.ActiveAlarms),
 		AlarmHistory:     http.HandlerFunc(gateway.AlarmHistory),
 		AcknowledgeAlarm: http.HandlerFunc(gateway.AcknowledgeAlarm),

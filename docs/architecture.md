@@ -7,6 +7,8 @@ flowchart LR
     Web["Frontend HMI<br/>apps/web"] --> API["Backend API Gateway<br/>apps/api"]
     API --> Simulation["Simulation Engine<br/>apps/simulation"]
     Simulation --> API
+    Simulation --> MQTT["MQTT Publisher<br/>publish-only synthetic data"]
+    MQTT --> Broker["Eclipse Mosquitto<br/>local demo broker"]
 ```
 
 The frontend calls only `apps/api`. The simulation service remains an internal backend dependency so the API layer can normalize responses, expose fallback behavior, and later add auth, audit, rate limiting, and observability without changing the frontend contract.
@@ -51,7 +53,7 @@ Runtime API validation is available in the frontend HTTP client for selected req
 
 ## Browser Smoke Quality Gate
 
-The CI pipeline includes a Playwright Chromium smoke job for the main simulator workflow and a separate historian DB smoke job for the full Docker Compose persistence path:
+The CI pipeline includes a Playwright Chromium smoke job for the main simulator workflow, a historian DB smoke job for the full Docker Compose persistence path, and an MQTT bridge smoke job for the publish-only IIoT path:
 
 ```mermaid
 flowchart LR
@@ -64,6 +66,8 @@ flowchart LR
 The smoke test is intentionally narrow. It checks that the browser can load the main pages, submit simulation-only `V-101` and `P-101` commands through the UI, observe command-related events, and keep alarm/event views usable. It does not replace deeper component tests, visual regression, multi-browser certification, or production SCADA validation.
 
 The historian DB smoke runs `docker compose up --build -d` in an isolated Compose project, waits for the PostgreSQL/TimescaleDB historian to report `connected`, writes telemetry plus a simulation-only `V-101` command, restarts the simulation service, and verifies history/command/event records survive the restart. It verifies demo persistence of synthetic data only, not production audit compliance.
+
+The MQTT bridge smoke runs the full Docker Compose stack with the local Mosquitto broker, waits for `GET /api/v1/mqtt/status` to report `connected`, subscribes to synthetic telemetry and command/event topics, and verifies publish-only messages. It does not create MQTT command input topics and does not control the simulator through MQTT.
 
 Smoke and integration scripts write sanitized local diagnostic artifacts under `logs/`, including success summaries and failure details. These artifacts are local/CI troubleshooting output for synthetic simulation data only; they are not an observability stack or production audit archive.
 
@@ -166,6 +170,24 @@ When `HISTORIAN_ENABLED=true` and `DATABASE_URL` is reachable, migrations run on
 
 The historian is not a compliance audit system. It has no immutability, retention policy, auth/RBAC, or regulatory guarantees.
 
+## MQTT Bridge
+
+The MQTT bridge is owned by `apps/simulation`, close to the synthetic telemetry, event, alarm, command, PID, control, historian, and system status sources:
+
+```mermaid
+flowchart LR
+    ENG["Simulation Engine"] --> PUB["MQTT Publisher"]
+    PUB --> Broker["Eclipse Mosquitto"]
+    Broker --> Client["External demo MQTT clients"]
+```
+
+It publishes JSON envelopes under the default `smr/site-001/unit-001` topic prefix, including `schemaVersion`, `publishedAt`, `source`, `simulationOnly: true`, `topicType`, and `data`. The bridge is optional, disabled by default outside Docker Compose, and exposes status through:
+
+- `GET /api/v1/mqtt/status`
+- `GET /api/v1/simulation/mqtt/status`
+
+This is publish-only. There are no MQTT command ingestion topics, no MQTT actuator control path, and no production broker auth/ACL/TLS in the current milestone.
+
 ## Alarm And Event Operations Flow
 
 The current alarm workflow is also REST plus polling:
@@ -198,4 +220,4 @@ Alarm and event state is owned by `apps/simulation`. Recent records remain avail
 - Telemetry, command, event, and alarm history are persistent only when the optional PostgreSQL/TimescaleDB historian is enabled and connected; otherwise they fall back to in-memory storage.
 - Process commands are implemented only for simulated `V-101` and `P-101` assets.
 - Command/event history is not an immutable audit store.
-- MQTT, report export, auth/RBAC, and Kubernetes are not part of the current milestone.
+- MQTT command ingestion, report export, auth/RBAC, and Kubernetes are not part of the current milestone.

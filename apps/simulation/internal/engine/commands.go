@@ -341,6 +341,7 @@ func (e *Engine) appendCommandLocked(command model.Command) {
 		e.state.commands = e.state.commands[len(e.state.commands)-maxCommandHistory:]
 	}
 	e.persistCommandAsync(command)
+	e.publishCommandMQTT(command)
 }
 
 func (e *Engine) replaceCommandLocked(command model.Command) {
@@ -348,6 +349,7 @@ func (e *Engine) replaceCommandLocked(command model.Command) {
 		if e.state.commands[index].ID == command.ID {
 			e.state.commands[index] = command
 			e.persistCommandAsync(command)
+			e.publishCommandMQTT(command)
 			return
 		}
 	}
@@ -397,6 +399,7 @@ func (e *Engine) appendEventRecordLocked(event model.Event) {
 		e.state.events = e.state.events[len(e.state.events)-maxEventHistory:]
 	}
 	e.persistEventAsync(event)
+	e.publishEventMQTT(event)
 }
 
 func (e *Engine) appendEquipmentEventLocked(message, targetTag, commandID string, timestamp time.Time) {
@@ -428,6 +431,7 @@ func (e *Engine) failCommandLocked(commandID string, now time.Time, code, messag
 		command.ErrorMessage = message
 		command.ResultMessage = message
 		e.persistCommandAsync(command)
+		e.publishCommandMQTT(command)
 		return command
 	})
 	e.appendEventLocked(model.EventTypeCommandFailed, model.EventSeverityWarning, "simulation", message, targetTag, commandID, now, nil)

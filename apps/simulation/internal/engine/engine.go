@@ -23,6 +23,22 @@ type Config struct {
 	HistorianStatus           model.HistorianStatus
 	HistorianOperationTimeout time.Duration
 	HistorianTelemetrySample  time.Duration
+	MQTTPublisher             MQTTPublisher
+	MQTTPublishInterval       time.Duration
+	MQTTStatus                model.MQTTStatus
+}
+
+type MQTTPublisher interface {
+	PublishTelemetrySnapshot(model.TelemetrySnapshot)
+	PublishEvent(model.Event)
+	PublishActiveAlarms([]model.Alarm)
+	PublishCommand(model.Command)
+	PublishPIDStatus(model.PIDStatus)
+	PublishControlStatus(model.ControlStatus)
+	PublishHistorianStatus(model.HistorianStatus)
+	PublishSimulationStatus(model.SimulationStatus)
+	Status() model.MQTTStatus
+	Close()
 }
 
 type Engine struct {
@@ -36,6 +52,10 @@ type Engine struct {
 	historianOperationTimeout time.Duration
 	historianTelemetrySample  time.Duration
 	lastHistorianSample       time.Time
+	mqttPublisher             MQTTPublisher
+	mqttStatus                model.MQTTStatus
+	mqttPublishInterval       time.Duration
+	lastMQTTPublish           time.Time
 	evaluator                 *alarms.Evaluator
 	random                    *rand.Rand
 	cancel                    context.CancelFunc
@@ -54,6 +74,9 @@ func New(cfg Config, logger *slog.Logger) *Engine {
 	if cfg.HistorianTelemetrySample <= 0 {
 		cfg.HistorianTelemetrySample = time.Second
 	}
+	if cfg.MQTTPublishInterval <= 0 {
+		cfg.MQTTPublishInterval = time.Second
+	}
 
 	now := time.Now().UTC()
 	ring := history.NewRingBuffer(cfg.HistorySize)
@@ -69,6 +92,9 @@ func New(cfg Config, logger *slog.Logger) *Engine {
 		historianStatus:           cfg.HistorianStatus,
 		historianOperationTimeout: cfg.HistorianOperationTimeout,
 		historianTelemetrySample:  cfg.HistorianTelemetrySample,
+		mqttPublisher:             cfg.MQTTPublisher,
+		mqttStatus:                cfg.MQTTStatus,
+		mqttPublishInterval:       cfg.MQTTPublishInterval,
 		evaluator:                 alarms.NewEvaluator(),
 		random:                    rand.New(rand.NewSource(cfg.Seed)),
 	}
@@ -102,6 +128,9 @@ func (e *Engine) Stop(_ context.Context) error {
 	if e.historian != nil {
 		e.historian.Close()
 	}
+	if e.mqttPublisher != nil {
+		e.mqttPublisher.Close()
+	}
 	e.logger.Info("simulation_engine_stopped")
 	return nil
 }
@@ -130,6 +159,13 @@ func (e *Engine) HistorianStatus() model.HistorianStatus {
 		return e.historian.Status()
 	}
 	return e.historianStatus
+}
+
+func (e *Engine) MQTTStatus() model.MQTTStatus {
+	if e.mqttPublisher != nil {
+		return e.mqttPublisher.Status()
+	}
+	return e.mqttStatus
 }
 
 func (e *Engine) SetScenario(scenario model.ScenarioName) error {
@@ -204,6 +240,10 @@ func (e *Engine) Reset() {
 func (e *Engine) Status() model.SimulationStatus {
 	e.mu.RLock()
 	defer e.mu.RUnlock()
+	return e.statusLocked()
+}
+
+func (e *Engine) statusLocked() model.SimulationStatus {
 	return model.SimulationStatus{
 		Running:                 e.state.running,
 		Mode:                    e.state.snapshot.Mode,
@@ -271,6 +311,10 @@ func (e *Engine) tickLocked(now time.Time) {
 	if e.historian != nil && (e.lastHistorianSample.IsZero() || now.Sub(e.lastHistorianSample) >= e.historianTelemetrySample) {
 		e.lastHistorianSample = now
 		e.persistTelemetryAsync(snapshot)
+	}
+	if e.mqttPublisher != nil && (e.lastMQTTPublish.IsZero() || now.Sub(e.lastMQTTPublish) >= e.mqttPublishInterval) {
+		e.lastMQTTPublish = now
+		e.publishPeriodicMQTTLocked(snapshot)
 	}
 }
 

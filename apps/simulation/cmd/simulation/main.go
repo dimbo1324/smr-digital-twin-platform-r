@@ -13,6 +13,7 @@ import (
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/historian"
 	httpapi "github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/http"
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/logging"
+	mqttpub "github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/mqtt"
 )
 
 func main() {
@@ -23,6 +24,7 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	historianCfg := historian.LoadConfig()
+	mqttCfg := mqttpub.LoadConfig()
 	var historianRepo historian.Repository
 	historianStatus := historian.DisabledStatus(historianCfg)
 	if historianCfg.Enabled {
@@ -41,6 +43,26 @@ func main() {
 			logger.Info("historian_connected", slog.String("database", "postgresql/timescaledb"))
 		}
 	}
+	var mqttPublisher engine.MQTTPublisher
+	mqttStatus := mqttpub.DisabledStatus(mqttCfg)
+	if mqttCfg.Enabled {
+		setupCtx, cancel := context.WithTimeout(ctx, mqttCfg.ConnectTimeout)
+		publisher, err := mqttpub.NewPublisher(setupCtx, mqttCfg, logger)
+		cancel()
+		if err != nil {
+			mqttStatus = mqttpub.UnavailableStatus(mqttCfg, err.Error(), time.Now().UTC())
+			mqttPublisher = mqttpub.NewNoopPublisher(mqttStatus)
+			logger.Warn("mqtt_bridge_unavailable_publish_disabled", slog.Any("error", err))
+			if mqttCfg.Required {
+				logger.Error("mqtt_required_failed", slog.Any("error", err))
+				os.Exit(1)
+			}
+		} else {
+			mqttPublisher = publisher
+			status := publisher.Status()
+			logger.Info("mqtt_bridge_enabled", slog.String("broker", status.BrokerURL), slog.String("topic_prefix", mqttCfg.TopicPrefix))
+		}
+	}
 
 	simEngine := engine.New(engine.Config{
 		TickInterval:              cfg.TickInterval(),
@@ -50,6 +72,9 @@ func main() {
 		HistorianStatus:           historianStatus,
 		HistorianOperationTimeout: historianCfg.OperationTimeout,
 		HistorianTelemetrySample:  historianCfg.TelemetrySample,
+		MQTTPublisher:             mqttPublisher,
+		MQTTStatus:                mqttStatus,
+		MQTTPublishInterval:       mqttCfg.PublishInterval,
 	}, logger)
 
 	if err := simEngine.Start(ctx); err != nil {
