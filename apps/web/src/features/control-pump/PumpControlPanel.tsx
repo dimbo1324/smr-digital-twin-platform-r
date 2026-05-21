@@ -96,7 +96,7 @@ export function PumpControlPanel({
             </div>
           </div>
 
-          <div className="mt-4 grid gap-2 text-xs text-muted-foreground sm:grid-cols-3">
+          <div className="mt-4 grid grid-cols-[repeat(auto-fit,minmax(8.75rem,1fr))] gap-2 text-xs text-muted-foreground">
             <StatusItem label="RPM" value={formatTelemetryValue(pumpRpmPoint)} testId="pump-rpm" />
             <StatusItem label="Source" value={telemetrySourceLabel(pumpStatePoint)} variant={pumpStatePoint?.source === "simulation" ? "success" : "mock"} />
             <StatusItem label="Updated" value={formatTelemetryAge(getTelemetryAge(telemetryPoints, "P-101.STATE"))} />
@@ -165,9 +165,9 @@ function StatusItem({
   testId?: string;
 }) {
   return (
-    <div className="rounded-xl border border-border/70 bg-card/50 px-3 py-2" data-testid={testId}>
-      <span>{label}</span>
-      <Badge variant={variant} className="mt-2">
+    <div className="min-w-0 rounded-xl border border-border/70 bg-card/50 px-3 py-2" data-testid={testId}>
+      <span className="break-words">{label}</span>
+      <Badge variant={variant} className="mt-2 whitespace-normal break-words">
         {value}
       </Badge>
     </div>

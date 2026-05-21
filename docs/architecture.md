@@ -53,7 +53,7 @@ Runtime API validation is available in the frontend HTTP client for selected req
 
 ## Browser Regression Quality Gate
 
-The CI pipeline includes a Playwright Chromium browser regression job for key simulator workflows, a historian DB smoke job for the full Docker Compose persistence path, and an MQTT bridge smoke job for the publish-only IIoT path:
+The CI pipeline includes fast frontend component tests, a Playwright Chromium browser regression job for key simulator workflows, a historian DB smoke job for the full Docker Compose persistence path, and an MQTT bridge smoke job for the publish-only IIoT path:
 
 ```mermaid
 flowchart LR
@@ -64,6 +64,8 @@ flowchart LR
 ```
 
 The browser regression suite verifies synthetic simulation workflows only. It covers Dashboard status visibility, manual `V-101`/`P-101` command flows, manual-to-AUTO PID arbitration, alarm activate/acknowledge/clear, Events filtering/sorting, Trends source labels, Settings capability copy, and basic degraded historian/MQTT UI states via route mocks. It does not replace deeper component tests, visual regression, accessibility testing, multi-browser certification, or production SCADA validation.
+
+Vitest and React Testing Library cover component-level rendering and interaction checks for HMI status cards, MQTT/historian labels, control mode/PID panels, valve/pump controls, alarms, event filters, Trends source badges, and Settings capability copy. These tests mock frontend hooks and fixtures; they do not perform real plant control or external integration.
 
 The historian DB smoke runs `docker compose up --build -d` in an isolated Compose project, waits for the PostgreSQL/TimescaleDB historian to report `connected`, writes telemetry plus a simulation-only `V-101` command, restarts the simulation service, and verifies history/command/event records survive the restart. It verifies demo persistence of synthetic data only, not production audit compliance.
 

@@ -97,14 +97,14 @@ export function PidControllerPanel({ pidStatus, state }: PidControllerPanelProps
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-3">
           <Metric label="PV TT-101" value={formatNumber(pidStatus?.processValue)} unit="C" />
           <Metric label="Setpoint" value={formatNumber(pidStatus?.setpoint)} unit="C" />
           <Metric label="Error" value={formatNumber(pidStatus?.error)} unit="C" testId="pid-error" />
           <Metric label="Output" value={formatNumber(pidStatus?.output)} unit="%" testId="pid-output" />
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-3">
           <Metric label="P term" value={formatNumber(pidStatus?.pTerm)} unit="%" testId="pid-p-term" />
           <Metric label="I term" value={formatNumber(pidStatus?.iTerm)} unit="%" testId="pid-i-term" />
           <Metric label="D term" value={formatNumber(pidStatus?.dTerm)} unit="%" testId="pid-d-term" />
@@ -132,7 +132,7 @@ export function PidControllerPanel({ pidStatus, state }: PidControllerPanelProps
           ) : null}
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-4">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-3">
           <NumberField
             label="Setpoint C"
             value={form.setpoint}
@@ -204,10 +204,10 @@ export function PidControllerPanel({ pidStatus, state }: PidControllerPanelProps
 
 function Metric({ label, value, unit, testId }: { label: string; value: string; unit: string; testId?: string }) {
   return (
-    <div className="rounded-2xl border border-border/70 bg-card/50 p-3" data-testid={testId}>
+    <div className="min-w-0 rounded-2xl border border-border/70 bg-card/50 p-3" data-testid={testId}>
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <Activity className="h-3.5 w-3.5" aria-hidden="true" />
-        <span>{label}</span>
+        <span className="min-w-0 break-words">{label}</span>
       </div>
       <p className="mt-2 font-mono text-lg font-semibold text-foreground">
         {value} <span className="text-xs font-normal text-muted-foreground">{unit}</span>

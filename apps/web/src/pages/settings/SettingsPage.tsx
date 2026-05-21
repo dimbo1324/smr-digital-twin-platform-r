@@ -189,9 +189,9 @@ function SettingsPanel({
 
 function SettingRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex flex-col gap-2 rounded-2xl border border-border/70 bg-surface-elevated/60 p-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex min-w-0 flex-col gap-2 rounded-2xl border border-border/70 bg-surface-elevated/60 p-4 sm:flex-row sm:items-center sm:justify-between">
       <span className="text-sm text-muted-foreground">{label}</span>
-      <span className="text-sm font-medium text-foreground">{value}</span>
+      <span className="min-w-0 break-words text-sm font-medium text-foreground sm:text-right">{value}</span>
     </div>
   );
 }
