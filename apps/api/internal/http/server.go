@@ -20,6 +20,7 @@ type Handlers struct {
 	PIDStatus        http.Handler
 	UpdatePIDConfig  http.Handler
 	HistorianStatus  http.Handler
+	MQTTStatus       http.Handler
 	ActiveAlarms     http.Handler
 	AlarmHistory     http.Handler
 	AcknowledgeAlarm http.Handler

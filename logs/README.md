@@ -18,5 +18,6 @@ Useful commands:
 
 ```sh
 node scripts/smoke/historian-db-smoke.mjs
+node scripts/smoke/mqtt-bridge-smoke.mjs
 node scripts/logs/clean-logs.mjs
 ```

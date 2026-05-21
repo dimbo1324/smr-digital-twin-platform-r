@@ -1,6 +1,6 @@
 # SMR Twin Simulation Service
 
-Go simulation-only telemetry engine for the SMR Twin Platform MVP. It generates deterministic synthetic telemetry, in-memory fallback history, optional PostgreSQL/TimescaleDB historian records, alarm lifecycle state, recent events, control mode arbitration, a synthetic TIC-101 PID loop, and scenario states for the backend API.
+Go simulation-only telemetry engine for the SMR Twin Platform MVP. It generates deterministic synthetic telemetry, in-memory fallback history, optional PostgreSQL/TimescaleDB historian records, alarm lifecycle state, recent events, control mode arbitration, a synthetic TIC-101 PID loop, publish-only MQTT messages, and scenario states for the backend API.
 
 The service exposes two synthetic telemetry layers:
 
@@ -42,6 +42,16 @@ Default port: `8081`.
 | `HISTORIAN_TELEMETRY_SAMPLE_MS` | `1000` |
 | `HISTORIAN_MAX_BATCH_SIZE` | `500` |
 | `HISTORIAN_OPERATION_TIMEOUT_MS` | `500` |
+| `MQTT_ENABLED` | `false` |
+| `MQTT_REQUIRED` | `false` |
+| `MQTT_BROKER_URL` | `tcp://mqtt:1883` |
+| `MQTT_CLIENT_ID` | `smr-simulation-publisher` |
+| `MQTT_TOPIC_PREFIX` | `smr/site-001/unit-001` |
+| `MQTT_QOS` | `0` |
+| `MQTT_RETAIN` | `false` |
+| `MQTT_PUBLISH_INTERVAL_MS` | `1000` |
+| `MQTT_CONNECT_TIMEOUT_MS` | `5000` |
+| `MQTT_WRITE_TIMEOUT_MS` | `3000` |
 
 ## Endpoints
 
@@ -60,6 +70,7 @@ curl -X PATCH http://localhost:8081/api/v1/simulation/pid/config \
   -H "Content-Type: application/json" \
   -d '{"setpoint":288,"kp":0.9,"ki":0.05,"kd":0.1,"requestedBy":"demo-operator"}'
 curl http://localhost:8081/api/v1/simulation/historian/status
+curl http://localhost:8081/api/v1/simulation/mqtt/status
 curl http://localhost:8081/api/v1/simulation/alarms/active
 curl http://localhost:8081/api/v1/simulation/alarms/history
 curl -X POST http://localhost:8081/api/v1/simulation/alarms/alarm-id/acknowledge \
@@ -133,6 +144,44 @@ node scripts/smoke/historian-db-smoke.mjs
 The smoke uses an isolated Compose project, checks connected historian status, writes synthetic telemetry plus a `V-101` command, restarts the simulation service, and confirms records remain available through the API.
 
 Each run writes a sanitized local report under `logs/smoke/<timestamp>_historian-db-smoke/`. These artifacts contain synthetic simulation diagnostics only and can be removed with `node scripts/logs/clean-logs.mjs`.
+
+## MQTT Bridge
+
+When `MQTT_ENABLED=true`, the simulation service connects to the configured broker and publishes synthetic simulation data. Docker Compose enables this against the local Eclipse Mosquitto demo broker.
+
+Default topic prefix:
+
+```text
+smr/site-001/unit-001
+```
+
+Published topics include:
+
+- `telemetry/snapshot`
+- `telemetry/tags/<tag>`
+- `events`
+- `alarms/active`
+- `commands/status`
+- `control/tic-101/pid/status`
+- `control/tic-101/mode`
+- `historian/status`
+- `system/status`
+
+Payloads use a JSON envelope with `schemaVersion`, `publishedAt`, `source`, `simulationOnly: true`, `siteId`, `unitId`, `topicType`, and `data`.
+
+The bridge is publish-only. It does not subscribe to MQTT topics, does not ingest MQTT commands, and cannot control simulated or real equipment. If the broker is unavailable and `MQTT_REQUIRED=false`, the service continues running with degraded MQTT status.
+
+Status endpoint:
+
+- `GET /api/v1/simulation/mqtt/status`
+
+Smoke test:
+
+```bash
+node scripts/smoke/mqtt-bridge-smoke.mjs
+```
+
+Each run writes a sanitized local report under `logs/smoke/<timestamp>_mqtt-bridge-smoke/`.
 
 ## Simulation Commands
 

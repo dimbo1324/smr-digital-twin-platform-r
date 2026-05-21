@@ -55,10 +55,11 @@ The MVP includes:
 - Synthetic alarm lifecycle for `ACTIVE`, `ACKNOWLEDGED`, and `CLEARED` instances.
 - Unified event stream for commands, alarms, PID/control, scenarios, and simulation events.
 - Scenario controls for predefined synthetic scenarios.
+- Publish-only MQTT bridge for synthetic telemetry, events, alarms, commands, PID/control, historian, and system status.
 - Docker Compose environment for local development.
 - Basic backend, simulation, and frontend checks.
 
-The following are planned extensions rather than current implementation: MQTT, production-grade audit retention, alarm shelving, declarative scenario definitions, report export, auth/RBAC, and WebSocket/SSE transport.
+The following are planned extensions rather than current implementation: MQTT command ingestion/control, production-grade audit retention, alarm shelving, declarative scenario definitions, report export, auth/RBAC, and WebSocket/SSE transport.
 
 ## Out of Scope
 
@@ -148,7 +149,7 @@ Core assets:
 - Pressure transmitter: `PT-101`
 - Flow transmitter: `FT-101`
 - Level transmitter: `LT-101`
-- PID controller placeholder: `TIC-101`
+- Simulation-only PID controller: `TIC-101`
 
 Shared model concepts:
 
@@ -169,14 +170,14 @@ See `docs/mvp-domain-model.md` for the current domain contract, including the sp
 
 ## Messaging Model
 
-Initial MQTT topic convention:
+Current publish-only MQTT topic convention:
 
 ```text
-smr/{site}/{unit}/equipment/{tag}/telemetry
-smr/{site}/{unit}/equipment/{tag}/state
-smr/{site}/{unit}/commands/{tag}
+smr/{site}/{unit}/telemetry/snapshot
+smr/{site}/{unit}/telemetry/tags/{tag}
+smr/{site}/{unit}/commands/status
 smr/{site}/{unit}/events
-smr/{site}/{unit}/alarms
+smr/{site}/{unit}/alarms/active
 ```
 
 Telemetry messages should include:

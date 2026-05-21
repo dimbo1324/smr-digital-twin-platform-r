@@ -679,6 +679,27 @@
           }
         }
       }
+    },
+    "/api/v1/mqtt/status": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Get simulation MQTT bridge status",
+        "description": "Returns publish-only MQTT bridge status for synthetic simulation data. The bridge does not ingest MQTT commands and cannot control equipment.",
+        "responses": {
+          "200": {
+            "description": "MQTT bridge status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MQTTStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2221,6 +2242,105 @@
         "properties": {
           "data": {
             "$ref": "#/components/schemas/HistorianStatus"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ApiMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "MQTTStatus": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "connected": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "disabled",
+              "connected",
+              "degraded",
+              "unavailable"
+            ]
+          },
+          "brokerUrl": {
+            "type": "string"
+          },
+          "clientId": {
+            "type": "string"
+          },
+          "topicPrefix": {
+            "type": "string"
+          },
+          "qos": {
+            "type": "integer"
+          },
+          "retain": {
+            "type": "boolean"
+          },
+          "publishIntervalMs": {
+            "type": "integer"
+          },
+          "lastConnectedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastDisconnectedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastSuccessfulPublishAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastErrorAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastErrorMessage": {
+            "type": "string"
+          },
+          "messagesPublished": {
+            "type": "integer"
+          },
+          "messagesFailed": {
+            "type": "integer"
+          },
+          "simulationOnly": {
+            "type": "boolean"
+          },
+          "safetyDisclaimer": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "enabled",
+          "connected",
+          "status",
+          "brokerUrl",
+          "clientId",
+          "topicPrefix",
+          "qos",
+          "retain",
+          "publishIntervalMs",
+          "messagesPublished",
+          "messagesFailed",
+          "simulationOnly",
+          "safetyDisclaimer"
+        ]
+      },
+      "MQTTStatusResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/MQTTStatus"
           },
           "meta": {
             "$ref": "#/components/schemas/ApiMeta"

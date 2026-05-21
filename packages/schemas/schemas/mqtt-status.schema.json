@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://smr-twin.local/schemas/mqtt-status.schema.json",
+  "title": "MQTTStatus",
+  "type": "object",
+  "properties": {
+    "enabled": { "type": "boolean" },
+    "connected": { "type": "boolean" },
+    "status": { "type": "string", "enum": ["disabled", "connected", "degraded", "unavailable"] },
+    "brokerUrl": { "type": "string" },
+    "clientId": { "type": "string" },
+    "topicPrefix": { "type": "string" },
+    "qos": { "type": "integer", "minimum": 0, "maximum": 2 },
+    "retain": { "type": "boolean" },
+    "publishIntervalMs": { "type": "integer", "minimum": 0 },
+    "lastConnectedAt": { "type": "string", "format": "date-time" },
+    "lastDisconnectedAt": { "type": "string", "format": "date-time" },
+    "lastSuccessfulPublishAt": { "type": "string", "format": "date-time" },
+    "lastErrorAt": { "type": "string", "format": "date-time" },
+    "lastErrorMessage": { "type": "string" },
+    "messagesPublished": { "type": "integer", "minimum": 0 },
+    "messagesFailed": { "type": "integer", "minimum": 0 },
+    "simulationOnly": { "type": "boolean" },
+    "safetyDisclaimer": { "type": "string" }
+  },
+  "required": [
+    "enabled",
+    "connected",
+    "status",
+    "brokerUrl",
+    "clientId",
+    "topicPrefix",
+    "qos",
+    "retain",
+    "publishIntervalMs",
+    "messagesPublished",
+    "messagesFailed",
+    "simulationOnly",
+    "safetyDisclaimer"
+  ],
+  "additionalProperties": false
+}

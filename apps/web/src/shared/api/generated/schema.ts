@@ -355,6 +355,30 @@ export interface components {
       "data": components["schemas"]["HistorianStatus"];
       "meta": components["schemas"]["ApiMeta"];
     };
+    "MQTTStatus": {
+      "enabled": boolean;
+      "connected": boolean;
+      "status": "disabled" | "connected" | "degraded" | "unavailable";
+      "brokerUrl": string;
+      "clientId": string;
+      "topicPrefix": string;
+      "qos": number;
+      "retain": boolean;
+      "publishIntervalMs": number;
+      "lastConnectedAt"?: string;
+      "lastDisconnectedAt"?: string;
+      "lastSuccessfulPublishAt"?: string;
+      "lastErrorAt"?: string;
+      "lastErrorMessage"?: string;
+      "messagesPublished": number;
+      "messagesFailed": number;
+      "simulationOnly": boolean;
+      "safetyDisclaimer": string;
+    };
+    "MQTTStatusResponse": {
+      "data": components["schemas"]["MQTTStatus"];
+      "meta": components["schemas"]["ApiMeta"];
+    };
   };
 }
 

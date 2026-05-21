@@ -148,6 +148,24 @@ func (g *Gateway) HistorianStatus(w http.ResponseWriter, r *http.Request) {
 	httpapi.WriteData(w, r, http.StatusOK, status, httpapi.MetaOptions{Source: "simulation"})
 }
 
+func (g *Gateway) MQTTStatus(w http.ResponseWriter, r *http.Request) {
+	status, err := g.client.MQTTStatus(r.Context())
+	if err != nil {
+		httpapi.WriteData(w, r, http.StatusOK, MQTTStatus{
+			Enabled:          false,
+			Connected:        false,
+			Status:           "unavailable",
+			BrokerURL:        "",
+			ClientID:         "",
+			TopicPrefix:      "",
+			SimulationOnly:   true,
+			SafetyDisclaimer: "MQTT topics contain synthetic simulation payloads only. The bridge is publish-only and cannot control equipment.",
+		}, httpapi.MetaOptions{Source: "memory", Degraded: true})
+		return
+	}
+	httpapi.WriteData(w, r, http.StatusOK, status, httpapi.MetaOptions{Source: "simulation"})
+}
+
 func (g *Gateway) UpdatePIDConfig(w http.ResponseWriter, r *http.Request) {
 	var request PIDConfigUpdateRequest
 	r.Body = http.MaxBytesReader(w, r.Body, maxJSONBodyBytes)

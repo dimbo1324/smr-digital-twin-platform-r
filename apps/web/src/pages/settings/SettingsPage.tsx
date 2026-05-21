@@ -1,5 +1,6 @@
 import { useTheme } from "@/app/providers/theme/themeContext";
 import { useHistorianStatus } from "@/entities/historian/api/useHistorianStatus";
+import { useMqttStatus } from "@/entities/mqtt/api/useMqttStatus";
 import { useSimulationScenarios } from "@/shared/api/useSimulationTelemetry";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
@@ -11,6 +12,7 @@ export function SettingsPage() {
   const { theme } = useTheme();
   const simulation = useSimulationScenarios();
   const historian = useHistorianStatus();
+  const mqtt = useMqttStatus();
 
   return (
     <PageShell data-testid="settings-page">
@@ -48,6 +50,17 @@ export function SettingsPage() {
           ]}
         />
 
+        <SettingsPanel
+          title="MQTT Bridge Settings"
+          description="Publish-only MQTT status for synthetic simulation payloads."
+          rows={[
+            ["Status", mqtt.status?.status ?? "checking"],
+            ["Mode", "Publish-only"],
+            ["Topic prefix", mqtt.status?.topicPrefix ?? "smr/site-001/unit-001"],
+            ["Command ingestion", "Not implemented"],
+          ]}
+        />
+
         <Card>
           <CardHeader>
             <CardTitle>UI Settings</CardTitle>
@@ -80,11 +93,11 @@ export function SettingsPage() {
           <CardHeader>
             <CardTitle>Data Source Settings</CardTitle>
             <CardDescription>
-              API, MQTT, and historian sources will be enabled in later milestones.
+              API, historian, and publish-only MQTT integration status for the local simulator.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {["In-memory fallback", "Backend API", "MQTT planned"].map((source) => (
+            {["In-memory fallback", "Backend API", "MQTT publish-only"].map((source) => (
               <label
                 key={source}
                 className="flex cursor-not-allowed items-center justify-between rounded-2xl border border-border/70 bg-surface-elevated/60 p-4"
@@ -104,7 +117,7 @@ export function SettingsPage() {
               </label>
             ))}
             <Badge variant={historian.status?.status === "connected" ? "success" : "warning"}>
-              Historian: {historian.status?.status ?? "checking"} / MQTT not implemented yet
+              Historian: {historian.status?.status ?? "checking"} / MQTT: {mqtt.status?.status ?? "checking"}
             </Badge>
           </CardContent>
         </Card>

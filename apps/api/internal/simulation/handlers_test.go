@@ -297,6 +297,42 @@ func TestHistorianStatusFallsBackWhenSimulationUnavailable(t *testing.T) {
 	}
 }
 
+func TestMQTTStatusProxiesSimulation(t *testing.T) {
+	server := fakeSimulationServer()
+	defer server.Close()
+	gateway := newTestGateway(server.URL, true)
+
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/api/v1/mqtt/status", nil)
+	gateway.MQTTStatus(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", recorder.Code)
+	}
+	payload := decodeMap(t, recorder.Body.Bytes())
+	data := payload["data"].(map[string]any)
+	if data["status"] != "connected" {
+		t.Fatalf("expected MQTT connected, got %v", data["status"])
+	}
+}
+
+func TestMQTTStatusFallsBackWhenSimulationUnavailable(t *testing.T) {
+	gateway := newTestGateway("http://127.0.0.1:1", true)
+
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/api/v1/mqtt/status", nil)
+	gateway.MQTTStatus(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("expected fallback status 200, got %d", recorder.Code)
+	}
+	payload := decodeMap(t, recorder.Body.Bytes())
+	meta := payload["meta"].(map[string]any)
+	if meta["degraded"] != true {
+		t.Fatalf("expected degraded MQTT fallback, got %v", meta["degraded"])
+	}
+}
+
 func TestUpdatePIDConfigProxiesRequest(t *testing.T) {
 	server := fakeSimulationServer()
 	defer server.Close()
@@ -471,6 +507,8 @@ func fakeSimulationServer() *httptest.Server {
 			_, _ = w.Write([]byte(`{"data":{"controllerTag":"TIC-101","mode":"MANUAL","authority":"USER","active":false,"pidImplemented":true,"processVariableTag":"TT-101","processValue":286.4,"setpoint":286,"manipulatedVariableTag":"V-101.POS","output":64,"outputMin":0,"outputMax":100,"kp":0.8,"ki":0.05,"kd":0.1,"error":-0.4,"pTerm":-0.32,"iTerm":0,"dTerm":0,"integral":0,"derivative":0,"saturated":false,"status":"Manual","updatedAt":"2026-05-12T12:00:00Z","safetyDisclaimer":"Simulation-only interface. No real plant control."},"meta":{"timestamp":"2026-05-12T12:00:00Z","source":"simulation","simulationOnly":true}}`))
 		case r.URL.Path == "/api/v1/simulation/historian/status":
 			_, _ = w.Write([]byte(`{"data":{"enabled":true,"mode":"persistent","status":"connected","database":"postgresql/timescaledb","writeIntervalMs":1000,"telemetrySampleMs":1000,"lastSuccessfulWriteAt":"2026-05-12T12:00:00Z","fallbackActive":false,"simulationOnly":true,"safetyDisclaimer":"The historian stores synthetic simulation data for demo, learning and portfolio purposes only."},"meta":{"timestamp":"2026-05-12T12:00:00Z","source":"simulation","simulationOnly":true}}`))
+		case r.URL.Path == "/api/v1/simulation/mqtt/status":
+			_, _ = w.Write([]byte(`{"data":{"enabled":true,"connected":true,"status":"connected","brokerUrl":"tcp://mqtt:1883","clientId":"smr-simulation-publisher","topicPrefix":"smr/site-001/unit-001","qos":0,"retain":false,"publishIntervalMs":1000,"lastConnectedAt":"2026-05-12T12:00:00Z","lastSuccessfulPublishAt":"2026-05-12T12:00:01Z","messagesPublished":12,"messagesFailed":0,"simulationOnly":true,"safetyDisclaimer":"MQTT topics contain synthetic simulation payloads only. The bridge is publish-only and cannot control equipment."},"meta":{"timestamp":"2026-05-12T12:00:00Z","source":"simulation","simulationOnly":true}}`))
 		case r.URL.Path == "/api/v1/simulation/pid/config":
 			var request PIDConfigUpdateRequest
 			_ = json.NewDecoder(r.Body).Decode(&request)

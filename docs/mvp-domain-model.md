@@ -14,6 +14,8 @@ Core API DTOs are also represented in the machine-readable contract layer:
 
 The generated frontend types are used for core API shapes such as `Asset`, `TelemetryPoint`, `Command`, `AlarmInstance`, `Event`, `SystemStatus`, `Scenario`, and response metadata. Runtime schema validation is implemented in the frontend HTTP client for selected dev/test API boundaries. Generated Go server code and Go runtime validation from JSON Schema are not implemented yet.
 
+The MQTT bridge exposes synthetic simulation data through publish-only JSON envelopes. MQTT status is part of the API contract, but MQTT command ingestion is intentionally not implemented.
+
 The frontend data layer consumes those generated types through a typed REST client and TanStack Query hooks. REST polling remains the current real-time mechanism; WebSocket/SSE transport is planned for a later milestone.
 
 ## Safety Boundary
@@ -455,6 +457,7 @@ Implemented now:
 - Scenario start/stop/reset endpoints.
 - Manual/auto/disabled `TIC-101` mode and `V-101` command arbitration.
 - Simulation-only `TIC-101` PID controller.
+- Publish-only MQTT bridge and `MQTTStatus` endpoint.
 
 Partial:
 
@@ -466,7 +469,7 @@ Partial:
 
 Not implemented:
 
-- MQTT.
+- MQTT command ingestion or MQTT-based control.
 - Production-grade command/audit storage.
 - Report export.
 - Auth/RBAC.
@@ -475,5 +478,5 @@ Not implemented:
 
 - Event/audit pagination and retention policy.
 - Alarm shelving and richer operator workflow.
-- MQTT telemetry bridge.
+- Production MQTT broker hardening, auth/ACL/TLS, and optional command-ingestion design.
 - Report export.

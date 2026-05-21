@@ -19,6 +19,9 @@ export const queryKeys = {
   historian: {
     status: ["historian", "status"] as const,
   },
+  mqtt: {
+    status: ["mqtt", "status"] as const,
+  },
   commands: {
     recent: ["commands", "recent"] as const,
   },

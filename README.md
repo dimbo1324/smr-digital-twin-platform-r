@@ -21,7 +21,7 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 - React + TypeScript frontend shell with Dashboard, Process, Alarms, Events, Trends, and Settings pages.
 - Go API service with health, system status, assets, latest telemetry, history, alarm lifecycle, event, command, and scenario proxy endpoints.
 - Go simulation service with deterministic synthetic telemetry, scenarios, active alarm generation, in-memory fallback history, and optional PostgreSQL/TimescaleDB historian writes.
-- Docker Compose stack for `web`, `api`, `simulation`, and local TimescaleDB/PostgreSQL.
+- Docker Compose stack for `web`, `api`, `simulation`, local TimescaleDB/PostgreSQL, and a local Eclipse Mosquitto broker.
 - Polling-based live telemetry from frontend to API.
 - Dashboard overview backed by live API status, synthetic telemetry, active alarms, alarm history, command history, and recent events.
 - API proxy from backend to simulation service, with clearly labelled in-memory fallback data for selected endpoints.
@@ -39,6 +39,8 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 - Valve `V-101` and pump `P-101` state machines that update synthetic telemetry.
 - Command history and event/audit trail for simulation command attempts, persisted when the historian is connected and kept in memory as fallback.
 - Persistent historian status endpoint and minimal Dashboard/Trends/Settings historian source labels.
+- Publish-only MQTT bridge for synthetic telemetry snapshots, events, alarms, command status, PID status, control mode, historian status, and system status.
+- MQTT bridge status endpoint and minimal Dashboard/Settings status labels.
 - Frontend valve and pump control panels with pending, success, and error states.
 - GitHub Actions CI quality gates for Go API, Go simulation, frontend, and Docker Compose config validation.
 - Playwright Chromium smoke test for the core browser flow across Dashboard, Process commands, Alarms, and Events.
@@ -62,7 +64,7 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 ## Planned Next
 
 - Alarm shelving and richer operator workflow.
-- MQTT bridge for simulated telemetry.
+- MQTT command ingestion and broker production hardening.
 - WebSocket or SSE real-time transport.
 - Report export.
 - Auth/RBAC.
@@ -70,7 +72,8 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 
 ## Not Implemented Yet
 
-- MQTT broker or MQTT ingestion.
+- MQTT command ingestion or MQTT-based control.
+- Production MQTT broker auth/ACL/TLS.
 - Kafka, Redpanda, or NATS.
 - InfluxDB, Redis, or MinIO persistence.
 - Production auth/RBAC.
@@ -88,9 +91,9 @@ flowchart LR
     API --> Simulation["Simulation Service<br/>Go synthetic telemetry"]
     Simulation --> API
     API --> Frontend
-    API -. planned .-> MQTT["MQTT Broker"]
-    API -. planned .-> TSDB["Time-Series DB"]
-    API -. planned .-> Events["Event / Audit Store"]
+    Simulation --> MQTT["MQTT Broker<br/>publish-only synthetic data"]
+    Simulation --> TSDB["PostgreSQL / TimescaleDB<br/>optional historian"]
+    Simulation --> Events["Unified Event Stream"]
 ```
 
 The frontend calls only `apps/api`. The simulation service remains an internal backend dependency so the API layer can later add auth, audit, rate limiting, observability, persistence, and transport changes without forcing frontend contract churn.
@@ -136,6 +139,7 @@ See [MVP Domain Model](docs/mvp-domain-model.md) for the current contract and pl
 - Simulation commands apply only to in-memory simulated assets.
 - Manual/auto/disabled mode changes apply only to in-memory `TIC-101` simulation state.
 - `AUTO` mode lets the simulation-only `TIC-101` PID controller apply an in-memory `V-101.POS` target.
+- MQTT publishes synthetic simulation data only and does not accept commands or control equipment.
 - Command history, event records, alarm lifecycle, and telemetry history store only synthetic simulation data. When PostgreSQL/TimescaleDB is enabled, the persistent historian is for demo, learning, and portfolio use only.
 - Alarm acknowledge/clear actions apply only to synthetic in-memory alarm instances.
 - UI and API copy must preserve the distinction between monitoring, simulation, advisory concepts, and real control.
@@ -147,7 +151,7 @@ See [MVP Domain Model](docs/mvp-domain-model.md) for the current contract and pl
 | Frontend / HMI | React, TypeScript, Vite, Tailwind CSS, shadcn-style UI primitives, Recharts, TanStack Query |
 | Backend | Go, REST, structured logging, simulation gateway |
 | Simulation | Go synthetic telemetry engine |
-| Messaging | MQTT planned, not implemented |
+| Messaging | Eclipse Mosquitto local demo broker plus publish-only MQTT bridge for synthetic data |
 | Data | In-memory fallback plus optional PostgreSQL/TimescaleDB historian for synthetic telemetry/events/commands/alarms |
 | DevOps | Docker, Docker Compose, Makefile |
 | Security | Safety boundary and in-memory command audit now; auth/RBAC and persistent audit planned |
@@ -223,6 +227,8 @@ Automated CI jobs:
 - **API schemas**: `npm run api:validate-schemas` compiles JSON Schema contract files.
 - **Compose**: `docker compose config --quiet` from the repository root.
 - **E2E Smoke**: starts the Go simulation and API services, launches the Vite frontend through Playwright, and runs the Chromium smoke flow.
+- **Historian DB Smoke**: verifies Docker Compose persistence through PostgreSQL/TimescaleDB.
+- **MQTT Bridge Smoke**: verifies the Docker Compose MQTT broker receives publish-only synthetic telemetry and command/event status messages.
 
 ## Frontend Data Layer
 
@@ -323,9 +329,38 @@ Common commands:
 node scripts/smoke/historian-db-smoke.mjs
 make historian-smoke
 make logs-clean
+node scripts/smoke/mqtt-bridge-smoke.mjs
 ```
 
 The scripts use Node.js standard library APIs compatible with Node 22+ in CI and the local system Node v24.15.0. Generated logs contain synthetic simulation diagnostics only, can be safely deleted, and are not a production observability stack or certified audit trail.
+
+## MQTT Bridge
+
+The MQTT bridge is a publish-only integration layer for local IIoT/demo workflows. It publishes synthetic simulation payloads to the local Mosquitto broker and cannot control equipment.
+
+Default topic prefix:
+
+```text
+smr/site-001/unit-001
+```
+
+Example topics:
+
+- `smr/site-001/unit-001/telemetry/snapshot`
+- `smr/site-001/unit-001/events`
+- `smr/site-001/unit-001/alarms/active`
+- `smr/site-001/unit-001/commands/status`
+- `smr/site-001/unit-001/control/tic-101/pid/status`
+- `smr/site-001/unit-001/control/tic-101/mode`
+
+Smoke test:
+
+```bash
+node scripts/smoke/mqtt-bridge-smoke.mjs
+make mqtt-smoke
+```
+
+Each run writes a sanitized report under `logs/smoke/<timestamp>_mqtt-bridge-smoke/`.
 
 ## API Contract / Schemas
 
@@ -377,6 +412,7 @@ This is a dev/test contract-hardening layer, not a production security gateway. 
 | Web HMI | http://localhost:5173 |
 | API | http://localhost:8080 |
 | Simulation service | http://localhost:8081 |
+| MQTT broker | tcp://localhost:1883 |
 
 Current Docker Compose services:
 
@@ -384,8 +420,9 @@ Current Docker Compose services:
 - `api`
 - `simulation`
 - `postgres`
+- `mqtt`
 
-No MQTT broker, Redis, Grafana, or object storage service is included in this milestone.
+No Redis, Grafana, or object storage service is included in this milestone. The MQTT broker is a local anonymous demo broker only and is not a production security configuration.
 
 ## Available API Endpoints
 
@@ -406,6 +443,7 @@ curl -X PATCH http://localhost:8080/api/v1/pid/config \
   -H "Content-Type: application/json" \
   -d '{"setpoint":288,"kp":0.9,"ki":0.05,"kd":0.1,"requestedBy":"demo-operator"}'
 curl http://localhost:8080/api/v1/historian/status
+curl http://localhost:8080/api/v1/mqtt/status
 curl http://localhost:8080/api/v1/alarms/active
 curl http://localhost:8080/api/v1/alarms/history
 curl -X POST http://localhost:8080/api/v1/alarms/alarm-id/acknowledge \
@@ -436,6 +474,7 @@ curl http://localhost:8081/api/v1/simulation/pid/status
 curl -X PATCH http://localhost:8081/api/v1/simulation/pid/config \
   -H "Content-Type: application/json" \
   -d '{"setpoint":288,"kp":0.9,"ki":0.05,"kd":0.1,"requestedBy":"demo-operator"}'
+curl http://localhost:8081/api/v1/simulation/mqtt/status
 curl http://localhost:8081/api/v1/simulation/alarms/active
 curl http://localhost:8081/api/v1/simulation/alarms/history
 curl -X POST http://localhost:8081/api/v1/simulation/alarms/alarm-id/acknowledge \
@@ -458,6 +497,7 @@ curl "http://localhost:8081/api/v1/simulation/events/recent?limit=50"
 - Command arbitration currently applies primarily to the `TIC-101` / `V-101` control loop; `P-101` remains manually controllable.
 - `AUTO` mode lets the simulation-only `TIC-101` PID calculate an in-memory `V-101.POS` target.
 - Events are simulation records backed by the historian when available, with in-memory fallback if the DB is disabled or unavailable.
+- MQTT publishing is one-way and publish-only; MQTT command ingestion, broker auth/ACL, and TLS are not implemented.
 - Data source switching in UI is not a real runtime integration switch yet.
 - Frontend uses route-level code splitting; deeper vendor/chart chunk tuning can be added later if needed.
 - Dashboard data is live for the local simulator, but it still uses REST polling and synthetic simulation sources.
@@ -472,7 +512,7 @@ curl "http://localhost:8081/api/v1/simulation/events/recent?limit=50"
 3. Add OpenAPI schemas, generated frontend types, React Query API layer, runtime validation, and Playwright smoke coverage.
 4. Harden API contract tooling, simulation domain boundaries, and quality gates.
 5. Add persistent historian storage for telemetry, events, commands, and alarm history.
-6. Add MQTT bridge for simulated telemetry.
+6. Add publish-only MQTT bridge for simulated telemetry and integration smoke coverage.
 7. Add retention/downsampling and richer trend query controls.
 8. Add report export.
 9. Add auth/RBAC, observability, deployment hardening, and extended CI checks.
