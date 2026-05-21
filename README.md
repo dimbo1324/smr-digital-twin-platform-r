@@ -49,6 +49,7 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 - Generated frontend API schema types committed under `apps/web/src/shared/api/generated`.
 - TanStack Query frontend data layer with typed REST hooks, query keys, polling intervals, and mutation invalidation.
 - Runtime API validation in the frontend HTTP client for dev/test contract drift detection, including control mode payloads.
+- Vitest + React Testing Library component tests for key HMI/status/control UI surfaces.
 - Explicit safety boundary in docs and UI copy.
 
 ## Partially Implemented
@@ -225,6 +226,7 @@ Automated CI jobs:
 - **Web**: `npm ci`, `npm run typecheck`, `npm run lint`, and `npm run build` in `apps/web`.
 - **API types**: `npm run api:types` regenerates frontend contract types before frontend checks.
 - **API schemas**: `npm run api:validate-schemas` compiles JSON Schema contract files.
+- **Frontend component tests**: `npm run test` runs Vitest/React Testing Library rendering and interaction checks.
 - **Compose**: `docker compose config --quiet` from the repository root.
 - **E2E Browser**: starts the Go simulation and API services, launches the Vite frontend through Playwright, and runs the expanded Chromium browser regression suite.
 - **Historian DB Smoke**: verifies Docker Compose persistence through PostgreSQL/TimescaleDB.
@@ -289,6 +291,18 @@ npm run test:e2e:ui
 ```
 
 For local runs, API and simulation should be reachable at `http://127.0.0.1:8080` and `http://127.0.0.1:8081`; the Playwright config starts only the Vite frontend dev server. CI starts the Go backend services before running the browser suite. Full PostgreSQL/TimescaleDB and MQTT broker behavior is covered by the separate historian and MQTT smoke scripts.
+
+## Frontend Component Tests
+
+Fast component tests live beside frontend source files and use Vitest, React Testing Library, jest-dom, jsdom, and user-event. They verify UI rendering and interactions without real network calls.
+
+```bash
+cd apps/web
+npm run test
+npm run test:watch
+```
+
+Component tests cover status rendering, MQTT/historian labels, control mode and PID panels, valve/pump controls, alarm rows, Events filters, Trends source labels, and Settings capability copy. They complement, but do not replace, Playwright browser workflows and Docker smoke scripts.
 
 ## Historian DB Smoke Test
 

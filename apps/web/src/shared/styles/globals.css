@@ -120,6 +120,16 @@
     font: inherit;
   }
 
+  input,
+  textarea,
+  select,
+  pre,
+  code,
+  [contenteditable="true"],
+  .select-text {
+    user-select: text;
+  }
+
   ::selection {
     background: hsl(var(--primary) / 0.22);
   }

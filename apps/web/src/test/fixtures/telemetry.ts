@@ -1,0 +1,48 @@
+import type { TelemetryDisplayPoint } from "@/entities/telemetry/model/types";
+
+export const syntheticTelemetryFixture: TelemetryDisplayPoint[] = [
+  {
+    tag: "V-101.POS",
+    label: "Valve position",
+    value: 64.5,
+    unit: "%",
+    quality: "GOOD",
+    status: "normal",
+    timestamp: "2026-05-21T06:00:00Z",
+    trend: "stable",
+    source: "simulation",
+  },
+  {
+    tag: "V-101.STATE",
+    label: "Valve state",
+    value: "HOLDING",
+    unit: "",
+    quality: "GOOD",
+    status: "normal",
+    timestamp: "2026-05-21T06:00:00Z",
+    trend: "stable",
+    source: "simulation",
+  },
+  {
+    tag: "P-101.STATE",
+    label: "Pump state",
+    value: "RUNNING",
+    unit: "",
+    quality: "GOOD",
+    status: "normal",
+    timestamp: "2026-05-21T06:00:00Z",
+    trend: "stable",
+    source: "simulation",
+  },
+  {
+    tag: "P-101.RPM",
+    label: "Pump RPM",
+    value: 1480,
+    unit: "rpm",
+    quality: "GOOD",
+    status: "normal",
+    timestamp: "2026-05-21T06:00:00Z",
+    trend: "stable",
+    source: "simulation",
+  },
+];

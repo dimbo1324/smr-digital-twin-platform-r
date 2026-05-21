@@ -61,7 +61,7 @@ export function ControlModePanel({ controlStatus, state }: ControlModePanelProps
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(11rem,1fr))] gap-3">
           <StatusTile label="Controller" value={controlStatus?.controllerTag ?? "TIC-101"} />
           <StatusTile label="Authority" value={authority} testId="control-authority-current" />
           <StatusTile label="Controlled variable" value={controlStatus?.controlledVariableTag ?? "TT-101"} />
@@ -150,9 +150,9 @@ function ModeButton({
 
 function StatusTile({ label, value, testId }: { label: string; value: string; testId?: string }) {
   return (
-    <div className="rounded-2xl border border-border/70 bg-card/50 p-3" data-testid={testId}>
+    <div className="min-w-0 rounded-2xl border border-border/70 bg-card/50 p-3" data-testid={testId}>
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 font-mono text-sm font-medium text-foreground">{value}</p>
+      <p className="mt-1 break-words font-mono text-sm font-medium text-foreground">{value}</p>
     </div>
   );
 }

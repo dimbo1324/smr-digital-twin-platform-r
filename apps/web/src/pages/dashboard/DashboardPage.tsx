@@ -118,9 +118,9 @@ export function DashboardPage() {
 
 function Metric({ label, value, testId }: { label: string; value: string; testId?: string }) {
   return (
-    <div className="rounded-2xl border border-border/60 bg-surface-elevated/70 p-4" data-testid={testId}>
+    <div className="min-w-0 rounded-2xl border border-border/60 bg-surface-elevated/70 p-4" data-testid={testId}>
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 text-xl font-semibold text-foreground">{value}</p>
+      <p className="mt-1 break-words text-xl font-semibold text-foreground">{value}</p>
     </div>
   );
 }
