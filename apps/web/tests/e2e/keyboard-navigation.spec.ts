@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { setDemoUserBeforeLoad } from "./helpers/auth";
 import { prepareManualState, waitForApiHealth } from "./helpers/api";
 import { gotoDashboard, gotoProcess } from "./helpers/navigation";
 
@@ -47,6 +48,7 @@ test("sidebar stays available during desktop scroll without overlaying main cont
 });
 
 test("PID and valve controls are reachable and editable from the keyboard", async ({ page, request }) => {
+  await setDemoUserBeforeLoad(page, "demo-admin");
   await prepareManualState(request);
   await gotoProcess(page);
 

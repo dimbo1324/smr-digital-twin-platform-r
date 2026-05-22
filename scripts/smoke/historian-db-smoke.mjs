@@ -497,6 +497,7 @@ async function postJson(url, body) {
     headers: {
       Accept: "application/json",
       "Content-Type": "application/json",
+      "X-Demo-User": "demo-admin",
     },
     body: JSON.stringify(body),
   });

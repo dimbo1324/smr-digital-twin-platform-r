@@ -1,9 +1,11 @@
 import { expect, test } from "@playwright/test";
+import { setDemoUserBeforeLoad } from "./helpers/auth";
 import { prepareManualState, waitForEventType } from "./helpers/api";
 import { gotoProcess } from "./helpers/navigation";
 import { sendValveSetPosition, updatePidSettings } from "./helpers/ui-flows";
 
 test("manual to auto PID active flow and valve arbitration", async ({ page, request }) => {
+  await setDemoUserBeforeLoad(page, "demo-admin");
   await prepareManualState(request);
 
   await test.step("update PID settings while inactive", async () => {

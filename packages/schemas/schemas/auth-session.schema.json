@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://smr-twin.local/schemas/auth-session.schema.json",
+  "title": "AuthSession",
+  "type": "object",
+  "properties": {
+    "userId": { "type": "string" },
+    "displayName": { "type": "string" },
+    "role": {
+      "type": "string",
+      "enum": ["VIEWER", "ENGINEER", "OPERATOR", "SUPERVISOR", "ADMIN"]
+    },
+    "permissions": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "source": { "type": "string", "const": "demo" },
+    "simulationOnly": { "type": "boolean", "const": true },
+    "disclaimer": { "type": "string" }
+  },
+  "required": ["userId", "displayName", "role", "permissions", "source", "simulationOnly", "disclaimer"],
+  "additionalProperties": false
+}

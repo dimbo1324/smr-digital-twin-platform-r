@@ -5,7 +5,6 @@ export async function sendCommand(request: CommandRequest): Promise<CommandRecor
   const commandRequest = {
     ...request,
     source: "frontend",
-    requestedBy: "demo-engineer",
     payload: {
       reason: "operator_demo",
       ...request.payload,

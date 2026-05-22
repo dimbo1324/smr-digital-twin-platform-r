@@ -18,6 +18,8 @@ func (s *Server) routes() http.Handler {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /health", s.handleHealth)
+	mux.Handle("GET /api/v1/auth/session", handlerOrNotImplemented(s.handlers.AuthSession))
+	mux.Handle("GET /api/v1/auth/users", handlerOrNotImplemented(s.handlers.AuthUsers))
 	mux.Handle("GET /api/v1/system/status", s.handlers.SystemStatus)
 	mux.Handle("GET /api/v1/assets", s.handlers.Assets)
 	mux.Handle("GET /api/v1/telemetry/latest", s.handlers.LatestTelemetry)
@@ -43,6 +45,15 @@ func (s *Server) routes() http.Handler {
 	})
 
 	return mux
+}
+
+func handlerOrNotImplemented(handler http.Handler) http.Handler {
+	if handler != nil {
+		return handler
+	}
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		WriteError(w, r, http.StatusNotImplemented, "NOT_IMPLEMENTED", "Handler not configured")
+	})
 }
 
 func (s *Server) handleHealth(w http.ResponseWriter, _ *http.Request) {

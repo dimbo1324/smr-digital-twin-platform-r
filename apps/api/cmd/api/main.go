@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/api/internal/assets"
+	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/api/internal/auth"
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/api/internal/config"
 	httpapi "github.com/dimbo1324/smr-digital-twin-platform-r/apps/api/internal/http"
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/api/internal/platform/logger"
@@ -33,8 +34,11 @@ func main() {
 	})
 	simulationClient := simulation.NewClient(cfg.SimulationBaseURL, cfg.SimulationTimeout, cfg.SimulationEnabled)
 	gateway := simulation.NewGateway(simulationClient, assetService, telemetryService, systemService, log)
+	authHandler := auth.NewHandler()
 
 	server := httpapi.NewServer(cfg, log, httpapi.Handlers{
+		AuthSession:      http.HandlerFunc(authHandler.Session),
+		AuthUsers:        http.HandlerFunc(authHandler.Users),
 		SystemStatus:     http.HandlerFunc(gateway.SystemStatus),
 		Assets:           http.HandlerFunc(gateway.Assets),
 		LatestTelemetry:  http.HandlerFunc(gateway.LatestTelemetry),

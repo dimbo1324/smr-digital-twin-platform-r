@@ -3,6 +3,7 @@ import { Bot, Hand, PowerOff, ShieldCheck } from "lucide-react";
 import type { ControlMode, ControlStatus } from "@/entities/control/model/types";
 import { useSetControlMode } from "@/entities/control/api/useSetControlMode";
 import { ApiError } from "@/shared/api/client";
+import { isRbacDenied } from "@/entities/auth/lib/permissions";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
@@ -10,6 +11,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 interface ControlModePanelProps {
   controlStatus?: ControlStatus;
   state: "loading" | "connected" | "degraded";
+  canChangeMode?: boolean;
+  roleDeniedReason?: string;
 }
 
 const modeCopy: Record<ControlMode, string> = {
@@ -18,7 +21,12 @@ const modeCopy: Record<ControlMode, string> = {
   DISABLED: "Control output is disabled in the simulation.",
 };
 
-export function ControlModePanel({ controlStatus, state }: ControlModePanelProps) {
+export function ControlModePanel({
+  controlStatus,
+  state,
+  canChangeMode = true,
+  roleDeniedReason,
+}: ControlModePanelProps) {
   const mutation = useSetControlMode();
   const [feedback, setFeedback] = useState<string>();
   const mode = controlStatus?.mode ?? "MANUAL";
@@ -36,7 +44,9 @@ export function ControlModePanel({ controlStatus, state }: ControlModePanelProps
       })
       .catch((error: unknown) => {
         const message =
-          error instanceof ApiError
+          isRbacDenied(error)
+            ? "Demo RBAC denied this control mode change for the current role."
+            : error instanceof ApiError
             ? `${error.code ?? "CONTROL_MODE_FAILED"}: ${error.message}`
             : error instanceof Error
               ? error.message
@@ -88,21 +98,21 @@ export function ControlModePanel({ controlStatus, state }: ControlModePanelProps
           <ModeButton
             mode="MANUAL"
             activeMode={mode}
-            disabled={mutation.isPending || state === "loading"}
+            disabled={mutation.isPending || state === "loading" || !canChangeMode}
             onClick={setMode}
             testId="control-mode-manual-button"
           />
           <ModeButton
             mode="AUTO"
             activeMode={mode}
-            disabled={mutation.isPending || state === "loading"}
+            disabled={mutation.isPending || state === "loading" || !canChangeMode}
             onClick={setMode}
             testId="control-mode-auto-button"
           />
           <ModeButton
             mode="DISABLED"
             activeMode={mode}
-            disabled={mutation.isPending || state === "loading"}
+            disabled={mutation.isPending || state === "loading" || !canChangeMode}
             onClick={setMode}
             testId="control-mode-disabled-button"
           />
@@ -111,6 +121,12 @@ export function ControlModePanel({ controlStatus, state }: ControlModePanelProps
         <div className="rounded-2xl border border-border/70 bg-background/50 p-3 text-xs leading-5 text-muted-foreground">
           {controlStatus?.safetyDisclaimer ?? "Simulation-only interface. No real plant control."}
         </div>
+
+        {!canChangeMode && roleDeniedReason ? (
+          <p className="rounded-2xl border border-warning/30 bg-warning/10 p-3 text-xs leading-5 text-warning" role="status">
+            {roleDeniedReason}
+          </p>
+        ) : null}
 
         {state === "degraded" ? (
           <p className="text-sm text-danger">Control mode status is unavailable from the API.</p>

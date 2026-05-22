@@ -4,6 +4,7 @@ export const apiBaseUrl = process.env.VITE_API_BASE_URL ?? "http://127.0.0.1:808
 
 type ControlMode = "MANUAL" | "AUTO" | "DISABLED";
 type PumpCommand = "START" | "STOP";
+type DemoUserId = "demo-viewer" | "demo-engineer" | "demo-operator" | "demo-supervisor" | "demo-admin";
 
 interface ApiEnvelope<T> {
   data: T;
@@ -44,15 +45,15 @@ export async function waitForApiHealth(request: APIRequestContext) {
 }
 
 export async function resetSimulation(request: APIRequestContext) {
-  await postJson(request, "/api/v1/simulation/reset");
+  await postJson(request, "/api/v1/simulation/reset", undefined, "demo-admin");
 }
 
 export async function stopScenario(request: APIRequestContext) {
-  await postJson(request, "/api/v1/simulation/scenarios/stop");
+  await postJson(request, "/api/v1/simulation/scenarios/stop", undefined, "demo-admin");
 }
 
 export async function startScenario(request: APIRequestContext, scenarioName: string) {
-  await postJson(request, `/api/v1/simulation/scenarios/${encodeURIComponent(scenarioName)}/start`);
+  await postJson(request, `/api/v1/simulation/scenarios/${encodeURIComponent(scenarioName)}/start`, undefined, "demo-admin");
 }
 
 export async function setControlMode(request: APIRequestContext, mode: ControlMode) {
@@ -60,7 +61,7 @@ export async function setControlMode(request: APIRequestContext, mode: ControlMo
     mode,
     requestedBy: "e2e-test",
     reason: "Expanded E2E suite setup",
-  });
+  }, "demo-admin");
 }
 
 export async function updatePidConfig(request: APIRequestContext) {
@@ -71,10 +72,10 @@ export async function updatePidConfig(request: APIRequestContext) {
     kd: 0.1,
     requestedBy: "e2e-test",
     reason: "Expanded E2E PID setup",
-  });
+  }, "demo-admin");
 }
 
-export async function sendValveCommand(request: APIRequestContext, positionPercent = 65) {
+export async function sendValveCommand(request: APIRequestContext, positionPercent = 65, userId: DemoUserId = "demo-operator") {
   const correlationId = `e2e-valve-${Date.now()}`;
   const response = await postJson<CommandRecord>(request, "/api/v1/commands", {
     targetTag: "V-101",
@@ -83,18 +84,18 @@ export async function sendValveCommand(request: APIRequestContext, positionPerce
     requestedBy: "e2e-test",
     correlationId,
     payload: { positionPercent, reason: "Expanded E2E valve command" },
-  });
+  }, userId);
   return { command: response.data, correlationId };
 }
 
-export async function sendPumpCommand(request: APIRequestContext, commandType: PumpCommand) {
+export async function sendPumpCommand(request: APIRequestContext, commandType: PumpCommand, userId: DemoUserId = "demo-operator") {
   const response = await postJson<CommandRecord>(request, "/api/v1/commands", {
     targetTag: "P-101",
     commandType,
     source: "frontend",
     requestedBy: "e2e-test",
     payload: { reason: "Expanded E2E pump command" },
-  });
+  }, userId);
   return response.data;
 }
 
@@ -118,7 +119,16 @@ export async function acknowledgeAlarm(request: APIRequestContext, alarmId: stri
   return (await postJson<Alarm>(request, `/api/v1/alarms/${encodeURIComponent(alarmId)}/acknowledge`, {
     acknowledgedBy: "e2e-test",
     comment: "Acknowledged by expanded E2E suite",
-  })).data;
+  }, "demo-supervisor")).data;
+}
+
+export async function postJsonAs<T = unknown>(
+  request: APIRequestContext,
+  userId: DemoUserId,
+  path: string,
+  body?: unknown,
+) {
+  return postJson<T>(request, path, body, userId);
 }
 
 export async function waitForActiveAlarm(request: APIRequestContext) {
@@ -162,20 +172,20 @@ async function getJson<T>(request: APIRequestContext, path: string) {
   return JSON.parse(text) as ApiEnvelope<T>;
 }
 
-async function postJson<T = unknown>(request: APIRequestContext, path: string, body?: unknown) {
+async function postJson<T = unknown>(request: APIRequestContext, path: string, body?: unknown, userId?: DemoUserId) {
   const response = await request.post(`${apiBaseUrl}${path}`, {
     data: body ?? {},
-    headers: { "Content-Type": "application/json" },
+    headers: apiHeaders(userId),
   });
   const text = await response.text();
   expectApiOk(response.status(), text, path);
   return (text ? JSON.parse(text) : { data: null }) as ApiEnvelope<T>;
 }
 
-async function patchJson<T = unknown>(request: APIRequestContext, path: string, body: unknown) {
+async function patchJson<T = unknown>(request: APIRequestContext, path: string, body: unknown, userId?: DemoUserId) {
   const response = await request.patch(`${apiBaseUrl}${path}`, {
     data: body,
-    headers: { "Content-Type": "application/json" },
+    headers: apiHeaders(userId),
   });
   const text = await response.text();
   expectApiOk(response.status(), text, path);
@@ -185,4 +195,11 @@ async function patchJson<T = unknown>(request: APIRequestContext, path: string, 
 function expectApiOk(status: number, body: string, path: string) {
   expect(status, `${path} failed with ${status}: ${body}`).toBeGreaterThanOrEqual(200);
   expect(status, `${path} failed with ${status}: ${body}`).toBeLessThan(300);
+}
+
+function apiHeaders(userId?: DemoUserId) {
+  return {
+    "Content-Type": "application/json",
+    ...(userId ? { "X-Demo-User": userId } : {}),
+  };
 }

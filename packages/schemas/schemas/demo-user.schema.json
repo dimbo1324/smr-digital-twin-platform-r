@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://smr-twin.local/schemas/demo-user.schema.json",
+  "title": "DemoUser",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string" },
+    "displayName": { "type": "string" },
+    "role": {
+      "type": "string",
+      "enum": ["VIEWER", "ENGINEER", "OPERATOR", "SUPERVISOR", "ADMIN"]
+    },
+    "permissions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "badgeLabel": { "type": "string" },
+    "description": { "type": "string" }
+  },
+  "required": ["id", "displayName", "role", "permissions", "badgeLabel", "description"],
+  "additionalProperties": false
+}

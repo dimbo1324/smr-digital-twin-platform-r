@@ -127,6 +127,7 @@ func TestAcknowledgeAlarmProxiesRequest(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	request := httptest.NewRequest(http.MethodPost, "/api/v1/alarms/alarm-1/acknowledge", bytes.NewReader([]byte(`{"comment":"seen"}`)))
 	request.SetPathValue("alarmID", "alarm-1")
+	withDemoUser(request, "demo-supervisor")
 	gateway.AcknowledgeAlarm(recorder, request)
 
 	if recorder.Code != http.StatusOK {
@@ -137,7 +138,7 @@ func TestAcknowledgeAlarmProxiesRequest(t *testing.T) {
 	if data["status"] != "ACKNOWLEDGED" {
 		t.Fatalf("expected ACKNOWLEDGED, got %v", data["status"])
 	}
-	if data["acknowledgedBy"] != "demo-operator" {
+	if data["acknowledgedBy"] != "Demo Supervisor" {
 		t.Fatalf("expected default acknowledgedBy, got %v", data["acknowledgedBy"])
 	}
 }
@@ -150,6 +151,7 @@ func TestAcknowledgeAlarmNotFoundPreservesSimulationError(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	request := httptest.NewRequest(http.MethodPost, "/api/v1/alarms/missing/acknowledge", bytes.NewReader([]byte(`{"acknowledgedBy":"demo"}`)))
 	request.SetPathValue("alarmID", "missing")
+	withDemoUser(request, "demo-supervisor")
 	gateway.AcknowledgeAlarm(recorder, request)
 
 	if recorder.Code != http.StatusNotFound {
@@ -170,6 +172,7 @@ func TestScenarioStartEndpointProxiesRequest(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	request := httptest.NewRequest(http.MethodPost, "/api/v1/simulation/scenarios/trip/start", nil)
 	request.SetPathValue("scenarioName", "trip")
+	withDemoUser(request, "demo-supervisor")
 	gateway.StartScenario(recorder, request)
 
 	if recorder.Code != http.StatusOK {
@@ -208,6 +211,7 @@ func TestSetControlModeProxiesRequest(t *testing.T) {
 
 	recorder := httptest.NewRecorder()
 	request := httptest.NewRequest(http.MethodPost, "/api/v1/control/mode", bytes.NewReader([]byte(`{"mode":"AUTO","reason":"test"}`)))
+	withDemoUser(request, "demo-supervisor")
 	gateway.SetControlMode(recorder, request)
 
 	if recorder.Code != http.StatusOK {
@@ -218,7 +222,7 @@ func TestSetControlModeProxiesRequest(t *testing.T) {
 	if data["mode"] != "AUTO" {
 		t.Fatalf("expected AUTO mode, got %v", data["mode"])
 	}
-	if data["updatedBy"] != "demo-operator" {
+	if data["updatedBy"] != "Demo Supervisor" {
 		t.Fatalf("expected default updatedBy, got %v", data["updatedBy"])
 	}
 }
@@ -230,6 +234,7 @@ func TestSetControlModeInvalidModePreservesSimulationError(t *testing.T) {
 
 	recorder := httptest.NewRecorder()
 	request := httptest.NewRequest(http.MethodPost, "/api/v1/control/mode", bytes.NewReader([]byte(`{"mode":"REMOTE"}`)))
+	withDemoUser(request, "demo-supervisor")
 	gateway.SetControlMode(recorder, request)
 
 	if recorder.Code != http.StatusBadRequest {
@@ -340,6 +345,7 @@ func TestUpdatePIDConfigProxiesRequest(t *testing.T) {
 
 	recorder := httptest.NewRecorder()
 	request := httptest.NewRequest(http.MethodPatch, "/api/v1/pid/config", bytes.NewReader([]byte(`{"setpoint":288,"kp":1.1}`)))
+	withDemoUser(request, "demo-engineer")
 	gateway.UpdatePIDConfig(recorder, request)
 
 	if recorder.Code != http.StatusOK {
@@ -359,6 +365,7 @@ func TestUpdatePIDConfigInvalidPreservesSimulationError(t *testing.T) {
 
 	recorder := httptest.NewRecorder()
 	request := httptest.NewRequest(http.MethodPatch, "/api/v1/pid/config", bytes.NewReader([]byte(`{"setpoint":500}`)))
+	withDemoUser(request, "demo-engineer")
 	gateway.UpdatePIDConfig(recorder, request)
 
 	if recorder.Code != http.StatusBadRequest {
@@ -436,6 +443,60 @@ func TestSubmitCommandSimulationUnavailableReturns502(t *testing.T) {
 
 	if recorder.Code != http.StatusBadGateway {
 		t.Fatalf("expected status 502, got %d", recorder.Code)
+	}
+}
+
+func TestRBACForbiddenForProtectedActions(t *testing.T) {
+	server := fakeSimulationServer()
+	defer server.Close()
+	gateway := newTestGateway(server.URL, true)
+
+	tests := []struct {
+		name       string
+		request    *http.Request
+		invoke     func(http.ResponseWriter, *http.Request)
+		permission string
+	}{
+		{
+			name:       "command",
+			request:    httptest.NewRequest(http.MethodPost, "/api/v1/commands", bytes.NewReader([]byte(`{"targetTag":"V-101","commandType":"OPEN","payload":{"reason":"operator_demo"}}`))),
+			invoke:     gateway.SubmitCommand,
+			permission: "SEND_COMMAND",
+		},
+		{
+			name:       "pid",
+			request:    httptest.NewRequest(http.MethodPatch, "/api/v1/pid/config", bytes.NewReader([]byte(`{"setpoint":288}`))),
+			invoke:     gateway.UpdatePIDConfig,
+			permission: "UPDATE_PID_CONFIG",
+		},
+		{
+			name:       "control",
+			request:    httptest.NewRequest(http.MethodPost, "/api/v1/control/mode", bytes.NewReader([]byte(`{"mode":"AUTO"}`))),
+			invoke:     gateway.SetControlMode,
+			permission: "CHANGE_CONTROL_MODE",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			withDemoUser(tc.request, "demo-viewer")
+			tc.invoke(recorder, tc.request)
+			if recorder.Code != http.StatusForbidden {
+				t.Fatalf("expected status 403, got %d", recorder.Code)
+			}
+			payload := decodeMap(t, recorder.Body.Bytes())
+			errPayload := payload["error"].(map[string]any)
+			if errPayload["code"] != "RBAC_FORBIDDEN" {
+				t.Fatalf("expected RBAC_FORBIDDEN, got %v", errPayload["code"])
+			}
+			if errPayload["requiredPermission"] != tc.permission {
+				t.Fatalf("expected permission %s, got %v", tc.permission, errPayload["requiredPermission"])
+			}
+			if errPayload["role"] != "VIEWER" {
+				t.Fatalf("expected role VIEWER, got %v", errPayload["role"])
+			}
+		})
 	}
 }
 
@@ -565,6 +626,10 @@ func decodeMap(t *testing.T, data []byte) map[string]any {
 		t.Fatalf("decode response: %v", err)
 	}
 	return payload
+}
+
+func withDemoUser(r *http.Request, userID string) {
+	r.Header.Set("X-Demo-User", userID)
 }
 
 func containsTelemetryTag(items []any, tag string) bool {

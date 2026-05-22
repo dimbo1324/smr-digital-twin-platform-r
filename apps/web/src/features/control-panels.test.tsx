@@ -123,6 +123,30 @@ describe("control mode and PID panels", () => {
     expect(screen.getByText(/output is saturated/i)).toBeInTheDocument();
     expect(screen.getByTestId("pid-status")).toHaveTextContent("Saturated");
   });
+
+  it("disables PID and mode controls when demo role lacks permission", () => {
+    renderWithProviders(
+      <PidControllerPanel
+        pidStatus={pidManualInactiveFixture}
+        state="connected"
+        canUpdateConfig={false}
+        roleDeniedReason="Your demo role VIEWER cannot update TIC-101 PID settings."
+      />,
+    );
+    expect(screen.getByTestId("pid-setpoint-input")).toBeDisabled();
+    expect(screen.getByTestId("pid-apply-settings-button")).toBeDisabled();
+    expect(screen.getByText(/demo role VIEWER/i)).toBeInTheDocument();
+
+    renderWithProviders(
+      <ControlModePanel
+        controlStatus={manualControlStatusFixture}
+        state="connected"
+        canChangeMode={false}
+        roleDeniedReason="Your demo role VIEWER cannot change TIC-101 control mode."
+      />,
+    );
+    expect(screen.getByTestId("control-mode-auto-button")).toBeDisabled();
+  });
 });
 
 describe("actuator control panels", () => {
@@ -192,5 +216,30 @@ describe("actuator control panels", () => {
         expect.objectContaining({ targetTag: "P-101", commandType: "START" }),
       );
     });
+  });
+
+  it("disables actuator commands when demo role lacks SEND_COMMAND", () => {
+    renderWithProviders(
+      <ControlValvePanel
+        telemetryPoints={syntheticTelemetryFixture}
+        dataState="connected"
+        controlStatus={manualControlStatusFixture}
+        canSendCommand={false}
+        roleDeniedReason="Your demo role VIEWER cannot send V-101 simulation commands."
+      />,
+    );
+    expect(screen.getByTestId("valve-apply-position-button")).toBeDisabled();
+    expect(screen.getByTestId("valve-rbac-disabled-reason")).toHaveTextContent(/VIEWER/);
+
+    renderWithProviders(
+      <PumpControlPanel
+        telemetryPoints={syntheticTelemetryFixture}
+        dataState="connected"
+        canSendCommand={false}
+        roleDeniedReason="Your demo role VIEWER cannot send P-101 simulation commands."
+      />,
+    );
+    expect(screen.getByTestId("pump-start-button")).toBeDisabled();
+    expect(screen.getByTestId("pump-rbac-disabled-reason")).toHaveTextContent(/VIEWER/);
   });
 });

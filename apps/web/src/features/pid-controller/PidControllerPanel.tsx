@@ -3,6 +3,7 @@ import { Activity, Gauge, RotateCcw, SlidersHorizontal } from "lucide-react";
 import type { PIDStatus } from "@/entities/pid/model/types";
 import { useUpdatePidConfig } from "@/entities/pid/api/useUpdatePidConfig";
 import { ApiError } from "@/shared/api/client";
+import { isRbacDenied } from "@/entities/auth/lib/permissions";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
@@ -10,6 +11,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 interface PidControllerPanelProps {
   pidStatus?: PIDStatus;
   state: "loading" | "connected" | "degraded";
+  canUpdateConfig?: boolean;
+  roleDeniedReason?: string;
 }
 
 type FormState = {
@@ -19,7 +22,12 @@ type FormState = {
   kd: string;
 };
 
-export function PidControllerPanel({ pidStatus, state }: PidControllerPanelProps) {
+export function PidControllerPanel({
+  pidStatus,
+  state,
+  canUpdateConfig = true,
+  roleDeniedReason,
+}: PidControllerPanelProps) {
   const mutation = useUpdatePidConfig();
   const [form, setForm] = useState<FormState>({
     setpoint: "",
@@ -67,7 +75,9 @@ export function PidControllerPanel({ pidStatus, state }: PidControllerPanelProps
       })
       .catch((error: unknown) => {
         const message =
-          error instanceof ApiError
+          isRbacDenied(error)
+            ? "Demo RBAC denied this PID configuration change for the current role."
+            : error instanceof ApiError
             ? `${error.code ?? "PID_CONFIG_FAILED"}: ${error.message}`
             : error instanceof Error
               ? error.message
@@ -138,24 +148,28 @@ export function PidControllerPanel({ pidStatus, state }: PidControllerPanelProps
             value={form.setpoint}
             onChange={(setpoint) => setForm((current) => ({ ...current, setpoint }))}
             testId="pid-setpoint-input"
+            disabled={!canUpdateConfig}
           />
           <NumberField
             label="Kp"
             value={form.kp}
             onChange={(kp) => setForm((current) => ({ ...current, kp }))}
             testId="pid-kp-input"
+            disabled={!canUpdateConfig}
           />
           <NumberField
             label="Ki"
             value={form.ki}
             onChange={(ki) => setForm((current) => ({ ...current, ki }))}
             testId="pid-ki-input"
+            disabled={!canUpdateConfig}
           />
           <NumberField
             label="Kd"
             value={form.kd}
             onChange={(kd) => setForm((current) => ({ ...current, kd }))}
             testId="pid-kd-input"
+            disabled={!canUpdateConfig}
           />
         </div>
 
@@ -164,7 +178,7 @@ export function PidControllerPanel({ pidStatus, state }: PidControllerPanelProps
 
         <div className="flex flex-wrap gap-2">
           <Button
-            disabled={state === "loading" || mutation.isPending || Boolean(validationError)}
+            disabled={state === "loading" || mutation.isPending || Boolean(validationError) || !canUpdateConfig}
             onClick={submit}
             data-testid="pid-apply-settings-button"
           >
@@ -196,6 +210,12 @@ export function PidControllerPanel({ pidStatus, state }: PidControllerPanelProps
             "TIC-101 is a simulation-only PID controller for a synthetic thermal loop. It does not control real equipment."}
         </div>
 
+        {!canUpdateConfig && roleDeniedReason ? (
+          <p className="rounded-2xl border border-warning/30 bg-warning/10 p-3 text-xs leading-5 text-warning" role="status">
+            {roleDeniedReason}
+          </p>
+        ) : null}
+
         {feedback ? <p className="text-sm text-muted-foreground" role="status">{feedback}</p> : null}
       </CardContent>
     </Card>
@@ -221,11 +241,13 @@ function NumberField({
   value,
   onChange,
   testId,
+  disabled = false,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   testId: string;
+  disabled?: boolean;
 }) {
   return (
     <label>
@@ -237,6 +259,7 @@ function NumberField({
         onChange={(event) => onChange(event.target.value)}
         className="mt-2 h-10 w-full rounded-full border border-border/80 bg-card/70 px-3 text-sm text-foreground"
         data-testid={testId}
+        disabled={disabled}
       />
     </label>
   );

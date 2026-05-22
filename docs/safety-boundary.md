@@ -21,7 +21,9 @@ Process controls for assets such as `V-101` and `P-101` use a simulation-only co
 - include explicit command source and requester metadata;
 - are recorded in a demo command/event trail that can be persisted by the optional historian.
 
-The current command trail is not a compliance audit store. The optional PostgreSQL/TimescaleDB historian stores only synthetic demo data and does not provide immutability, regulatory retention, or production audit guarantees. Auth/RBAC and external integrations are planned separately and must preserve the simulation-only boundary.
+The current command trail is not a compliance audit store. The optional PostgreSQL/TimescaleDB historian stores only synthetic demo data and does not provide immutability, regulatory retention, or production audit guarantees.
+
+Demo RBAC restricts synthetic simulation actions inside the portfolio platform. It is header-based, uses static demo users, has no passwords, has no OAuth/JWT production identity flow, and does not provide real plant access control. It helps demonstrate role-aware HMI behavior; it must not be treated as certified or production-grade security.
 
 Alarm and event operations are also simulation-only. Acknowledging an alarm only changes a synthetic alarm instance created by `apps/simulation`; it does not confirm, silence, or clear a real plant condition. Cleared alarm history and recent events are demo workflow records, not a regulated operational archive, even when persisted by the historian.
 

@@ -274,7 +274,7 @@ async function getJson(url, { allowFailure = false } = {}) {
 async function postJson(url, body) {
   const response = await fetch(url, {
     method: "POST",
-    headers: { Accept: "application/json", "Content-Type": "application/json" },
+    headers: { Accept: "application/json", "Content-Type": "application/json", "X-Demo-User": "demo-admin" },
     body: JSON.stringify(body),
   });
   const text = await response.text();

@@ -11,6 +11,8 @@ import { PidControllerPanel } from "@/features/pid-controller/PidControllerPanel
 import { useControlStatus } from "@/entities/control/api/useControlStatus";
 import { usePidStatus } from "@/entities/pid/api/usePidStatus";
 import { useCommandHistory } from "@/entities/commands/api/useCommandHistory";
+import { useAuthSession } from "@/entities/auth/api/useAuthSession";
+import { hasPermission, permissions, roleDeniedReason } from "@/entities/auth/lib/permissions";
 import { CommandEventPanel } from "@/widgets/command-event-panel/CommandEventPanel";
 import { ProcessDiagram } from "@/widgets/process-diagram/ProcessDiagram";
 import { useLatestTelemetry } from "@/shared/api/useSimulationTelemetry";
@@ -24,6 +26,10 @@ export function ProcessPage() {
   const control = useControlStatus();
   const pid = usePidStatus();
   const commandHistory = useCommandHistory();
+  const auth = useAuthSession();
+  const canSendCommand = hasPermission(auth.session, permissions.sendCommand);
+  const canChangeControlMode = hasPermission(auth.session, permissions.changeControlMode);
+  const canUpdatePidConfig = hasPermission(auth.session, permissions.updatePidConfig);
   const telemetryPoints =
     liveTelemetry.points.length > 0 ? liveTelemetry.points : mockTelemetryPoints;
   const processTelemetryPoints = PROCESS_LOOP_TELEMETRY_TAGS
@@ -77,17 +83,31 @@ export function ProcessPage() {
         </Card>
 
         <div className="grid gap-6">
-          <ControlModePanel controlStatus={control.controlStatus} state={control.state} />
-          <PidControllerPanel pidStatus={pid.pidStatus} state={pid.state} />
+          <ControlModePanel
+            controlStatus={control.controlStatus}
+            state={control.state}
+            canChangeMode={canChangeControlMode}
+            roleDeniedReason={roleDeniedReason(auth.session, "change TIC-101 control mode")}
+          />
+          <PidControllerPanel
+            pidStatus={pid.pidStatus}
+            state={pid.state}
+            canUpdateConfig={canUpdatePidConfig}
+            roleDeniedReason={roleDeniedReason(auth.session, "update TIC-101 PID settings")}
+          />
           <ControlValvePanel
             telemetryPoints={telemetryPoints}
             dataState={liveTelemetry.state}
             controlStatus={control.controlStatus}
+            canSendCommand={canSendCommand}
+            roleDeniedReason={roleDeniedReason(auth.session, "send V-101 simulation commands")}
             onCommandComplete={commandHistory.refresh}
           />
           <PumpControlPanel
             telemetryPoints={telemetryPoints}
             dataState={liveTelemetry.state}
+            canSendCommand={canSendCommand}
+            roleDeniedReason={roleDeniedReason(auth.session, "send P-101 simulation commands")}
             onCommandComplete={commandHistory.refresh}
           />
         </div>

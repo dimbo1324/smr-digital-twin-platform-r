@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAcknowledgeAlarm } from "@/entities/alarms/api/useAcknowledgeAlarm";
+import { isRbacDenied } from "@/entities/auth/lib/permissions";
 import { useActiveAlarms } from "@/entities/alarms/api/useActiveAlarms";
 import { useAlarmHistory } from "@/entities/alarms/api/useAlarmHistory";
 
@@ -25,7 +26,11 @@ export function useAlarms(refreshMs = 2000) {
         return alarm;
       })
       .catch((error: unknown) => {
-        const message = error instanceof Error ? error.message : "Failed to acknowledge alarm";
+        const message = isRbacDenied(error)
+          ? "Demo RBAC denied alarm acknowledgement for the current role."
+          : error instanceof Error
+            ? error.message
+            : "Failed to acknowledge alarm";
         setFeedback({ type: "error", message });
         throw error;
       });

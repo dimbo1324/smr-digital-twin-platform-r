@@ -13,6 +13,9 @@ export interface components {
     "ApiError": {
       "code": string;
       "message": string;
+      "requiredPermission"?: string;
+      "role"?: string;
+      "simulationOnly"?: boolean;
     };
     "ErrorResponse": {
       "error": components["schemas"]["ApiError"];
@@ -377,6 +380,33 @@ export interface components {
     };
     "MQTTStatusResponse": {
       "data": components["schemas"]["MQTTStatus"];
+      "meta": components["schemas"]["ApiMeta"];
+    };
+    "Role": "VIEWER" | "ENGINEER" | "OPERATOR" | "SUPERVISOR" | "ADMIN";
+    "Permission": "VIEW_DASHBOARD" | "VIEW_PROCESS" | "VIEW_ALARMS" | "VIEW_EVENTS" | "VIEW_TRENDS" | "VIEW_SETTINGS" | "SEND_COMMAND" | "CHANGE_CONTROL_MODE" | "UPDATE_PID_CONFIG" | "ACKNOWLEDGE_ALARM" | "RUN_SCENARIO" | "VIEW_DIAGNOSTICS" | "VIEW_MQTT_STATUS" | "VIEW_HISTORIAN_STATUS" | "ADMIN_DEMO_SESSION";
+    "DemoUser": {
+      "id": string;
+      "displayName": string;
+      "role": components["schemas"]["Role"];
+      "permissions": components["schemas"]["Permission"][];
+      "badgeLabel": string;
+      "description": string;
+    };
+    "AuthSession": {
+      "userId": string;
+      "displayName": string;
+      "role": components["schemas"]["Role"];
+      "permissions": components["schemas"]["Permission"][];
+      "source": string;
+      "simulationOnly": boolean;
+      "disclaimer": string;
+    };
+    "AuthSessionResponse": {
+      "data": components["schemas"]["AuthSession"];
+      "meta": components["schemas"]["ApiMeta"];
+    };
+    "DemoUsersResponse": {
+      "data": components["schemas"]["DemoUser"][];
       "meta": components["schemas"]["ApiMeta"];
     };
   };

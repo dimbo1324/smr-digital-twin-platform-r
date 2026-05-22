@@ -18,6 +18,7 @@ Current milestone:
 - recent command/alarm/event proxy endpoints, DB-backed when the simulation historian is connected and in-memory otherwise
 - historian status proxy endpoint
 - publish-only MQTT bridge status proxy endpoint
+- demo Auth/RBAC endpoints and backend enforcement for protected simulation-only actions
 - SMR Unit Overview and Thermal Process Loop telemetry through `/api/v1/telemetry/latest`
 - OpenAPI/JSON Schema contract documentation under `packages/schemas`
 - structured request logging
@@ -28,7 +29,7 @@ Out of scope for this step:
 
 - MQTT command ingestion or MQTT-based control
 - WebSocket/SSE streaming
-- auth/RBAC
+- production authentication, passwords, OAuth/JWT, or production RBAC
 - production audit/compliance storage
 - real plant integration
 
@@ -87,16 +88,20 @@ The OpenAPI contract is currently used for documentation, generated frontend Typ
 ```bash
 curl http://localhost:8080/health
 curl http://localhost:8080/api/v1/system/status
+curl http://localhost:8080/api/v1/auth/session
+curl http://localhost:8080/api/v1/auth/users
 curl http://localhost:8080/api/v1/assets
 curl http://localhost:8080/api/v1/telemetry/latest
 curl "http://localhost:8080/api/v1/telemetry/history?window=15m"
 curl http://localhost:8080/api/v1/control/status
 curl -X POST http://localhost:8080/api/v1/control/mode \
   -H "Content-Type: application/json" \
+  -H "X-Demo-User: demo-supervisor" \
   -d '{"mode":"AUTO","requestedBy":"demo-operator","reason":"Enable simulation-only PID demo"}'
 curl http://localhost:8080/api/v1/pid/status
 curl -X PATCH http://localhost:8080/api/v1/pid/config \
   -H "Content-Type: application/json" \
+  -H "X-Demo-User: demo-engineer" \
   -d '{"setpoint":288,"kp":0.9,"ki":0.05,"kd":0.1,"requestedBy":"demo-operator"}'
 curl http://localhost:8080/api/v1/historian/status
 curl http://localhost:8080/api/v1/mqtt/status
@@ -104,9 +109,11 @@ curl http://localhost:8080/api/v1/alarms/active
 curl http://localhost:8080/api/v1/alarms/history
 curl -X POST http://localhost:8080/api/v1/alarms/alarm-id/acknowledge \
   -H "Content-Type: application/json" \
+  -H "X-Demo-User: demo-supervisor" \
   -d '{"acknowledgedBy":"demo-operator","comment":"Acknowledged from Alarms page"}'
 curl -X POST http://localhost:8080/api/v1/commands \
   -H "Content-Type: application/json" \
+  -H "X-Demo-User: demo-operator" \
   -d '{"targetTag":"V-101","commandType":"OPEN","payload":{"reason":"operator_demo"}}'
 curl "http://localhost:8080/api/v1/commands/recent?limit=50"
 curl "http://localhost:8080/api/v1/events/recent?limit=50"
@@ -139,6 +146,23 @@ Returns platform-level status for the frontend dashboard/topbar, including the s
   }
 }
 ```
+
+### Demo Auth / RBAC Endpoints
+
+Demo RBAC controls synthetic simulation actions only. It is not production authentication, does not use passwords, does not use OAuth/JWT, and must not be treated as real plant access control.
+
+- `GET /api/v1/auth/session` returns the current demo session from the `X-Demo-User` header, or the default `demo-operator` session when the header is missing or unknown.
+- `GET /api/v1/auth/users` returns the static demo user registry.
+
+Protected write/action endpoints are enforced in the API gateway:
+
+- `POST /api/v1/commands` requires `SEND_COMMAND`.
+- `POST /api/v1/control/mode` requires `CHANGE_CONTROL_MODE`.
+- `PATCH /api/v1/pid/config` requires `UPDATE_PID_CONFIG`.
+- `POST /api/v1/alarms/{id}/acknowledge` requires `ACKNOWLEDGE_ALARM`.
+- scenario start/stop/reset endpoints require `RUN_SCENARIO`.
+
+Denied actions return HTTP `403` with `RBAC_FORBIDDEN`, the required permission, the current role, and `simulationOnly: true`.
 
 ### `GET /api/v1/assets`
 
@@ -210,7 +234,7 @@ If the simulation service is unavailable, the API returns an unavailable MQTT st
 
 ### `POST /api/v1/commands`
 
-Submits a simulation-only command to `apps/simulation`. The API normalizes missing `source` to `frontend`, missing `requestedBy` to `demo-engineer`, and forwards the command to the simulation service.
+Submits a simulation-only command to `apps/simulation`. The API normalizes missing `source` to `frontend`, defaults missing `requestedBy` to the current demo session display name, and forwards the command to the simulation service after demo RBAC authorization.
 
 Direct `V-101` commands are also checked by simulation command arbitration. In `AUTO` and `DISABLED`, the simulation service returns structured rejection errors such as `CONTROL_MODE_AUTO` or `CONTROL_DISABLED`.
 

@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/api/internal/assets"
@@ -125,6 +126,26 @@ func TestUnknownRouteReturnsJSON404(t *testing.T) {
 
 	if _, ok := payload["error"].(map[string]any); !ok {
 		t.Fatalf("expected error object, got %T", payload["error"])
+	}
+}
+
+func TestCORSAllowsDemoUserHeader(t *testing.T) {
+	router := newTestRouter()
+
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodOptions, "/api/v1/auth/session", nil)
+	request.Header.Set("Origin", "http://localhost:5173")
+	request.Header.Set("Access-Control-Request-Headers", "X-Demo-User")
+
+	router.ServeHTTP(response, request)
+
+	if response.Code != http.StatusNoContent {
+		t.Fatalf("expected status %d, got %d", http.StatusNoContent, response.Code)
+	}
+
+	allowedHeaders := response.Header().Get("Access-Control-Allow-Headers")
+	if !strings.Contains(allowedHeaders, "X-Demo-User") {
+		t.Fatalf("expected X-Demo-User in CORS allow headers, got %q", allowedHeaders)
 	}
 }
 

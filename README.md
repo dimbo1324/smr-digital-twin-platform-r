@@ -41,6 +41,7 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 - Persistent historian status endpoint and minimal Dashboard/Trends/Settings historian source labels.
 - Publish-only MQTT bridge for synthetic telemetry snapshots, events, alarms, command status, PID status, control mode, historian status, and system status.
 - MQTT bridge status endpoint and minimal Dashboard/Settings status labels.
+- Demo Auth/RBAC layer with static simulation-only users, a role switcher, `X-Demo-User` header, and backend enforcement for protected write/action endpoints.
 - Frontend valve and pump control panels with pending, success, and error states.
 - GitHub Actions CI quality gates for Go API, Go simulation, frontend, and Docker Compose config validation.
 - Expanded Playwright Chromium E2E suite for Dashboard, Process commands, PID/manual-auto arbitration, Alarms, Events, Trends, Settings, MQTT status, and historian status.
@@ -68,7 +69,7 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 - MQTT command ingestion and broker production hardening.
 - WebSocket or SSE real-time transport.
 - Report export.
-- Auth/RBAC.
+- Production authentication and production RBAC.
 - Observability dashboards.
 
 ## Not Implemented Yet
@@ -141,6 +142,7 @@ See [MVP Domain Model](docs/mvp-domain-model.md) for the current contract and pl
 - Manual/auto/disabled mode changes apply only to in-memory `TIC-101` simulation state.
 - `AUTO` mode lets the simulation-only `TIC-101` PID controller apply an in-memory `V-101.POS` target.
 - MQTT publishes synthetic simulation data only and does not accept commands or control equipment.
+- Demo RBAC restricts synthetic simulation actions inside the portfolio platform. It does not provide production-grade identity or access control.
 - Command history, event records, alarm lifecycle, and telemetry history store only synthetic simulation data. When PostgreSQL/TimescaleDB is enabled, the persistent historian is for demo, learning, and portfolio use only.
 - Alarm acknowledge/clear actions apply only to synthetic in-memory alarm instances.
 - UI and API copy must preserve the distinction between monitoring, simulation, advisory concepts, and real control.
@@ -155,7 +157,7 @@ See [MVP Domain Model](docs/mvp-domain-model.md) for the current contract and pl
 | Messaging | Eclipse Mosquitto local demo broker plus publish-only MQTT bridge for synthetic data |
 | Data | In-memory fallback plus optional PostgreSQL/TimescaleDB historian for synthetic telemetry/events/commands/alarms |
 | DevOps | Docker, Docker Compose, Makefile |
-| Security | Safety boundary and in-memory command audit now; auth/RBAC and persistent audit planned |
+| Security | Safety boundary, demo-only RBAC for simulation actions, and in-memory/persistent demo command trail |
 
 ## Repository Layout
 
@@ -281,6 +283,7 @@ The expanded suite verifies synthetic simulation workflows only:
 - Basic degraded integration state rendering via Playwright route mocks.
 - Accessibility baseline checks with axe for serious/critical violations across core pages.
 - Keyboard navigation for skip link, sticky sidebar navigation, and PID/valve inputs.
+- Demo RBAC role flows for read-only viewer behavior, operator commands, engineer PID tuning, supervisor alarm acknowledgement, and backend 403 enforcement.
 
 Local commands:
 
@@ -308,6 +311,30 @@ npm run test:watch
 ```
 
 Component tests cover status rendering, MQTT/historian labels, control mode and PID panels, valve/pump controls, alarm rows, Events filters, Trends source labels, and Settings capability copy. They complement, but do not replace, Playwright browser workflows and Docker smoke scripts.
+
+## Demo Auth / RBAC
+
+The demo RBAC layer restricts simulation-only actions for portfolio and learning workflows. It is not production authentication, has no passwords, has no OAuth/JWT login, and does not represent real plant access control.
+
+The frontend stores the selected demo user in localStorage and sends it to the API gateway as `X-Demo-User`. If the header is missing or unknown, the API falls back to `demo-operator` so existing local demo flows remain usable. Protected write/action endpoints are enforced in the API gateway and return `403 RBAC_FORBIDDEN` when the selected demo role lacks permission.
+
+| Role | Can view | Commands | PID tuning | Control mode | Alarm acknowledge | Scenario actions |
+| --- | --- | --- | --- | --- | --- | --- |
+| VIEWER | Yes | No | No | No | No | No |
+| ENGINEER | Yes | No | Yes | No | No | No |
+| OPERATOR | Yes | Yes | No | No | No | No |
+| SUPERVISOR | Yes | No | No | Yes | Yes | Yes |
+| ADMIN | Yes | Yes | Yes | Yes | Yes | Yes |
+
+Useful demo endpoints:
+
+```bash
+curl http://localhost:8080/api/v1/auth/session
+curl http://localhost:8080/api/v1/auth/users
+curl -H "X-Demo-User: demo-viewer" http://localhost:8080/api/v1/auth/session
+```
+
+The role switcher in the HMI is explicitly labelled as demo RBAC. It only controls synthetic simulator actions and does not secure real equipment.
 
 ## Historian DB Smoke Test
 
@@ -452,16 +479,20 @@ API gateway:
 ```bash
 curl http://localhost:8080/health
 curl http://localhost:8080/api/v1/system/status
+curl http://localhost:8080/api/v1/auth/session
+curl http://localhost:8080/api/v1/auth/users
 curl http://localhost:8080/api/v1/assets
 curl http://localhost:8080/api/v1/telemetry/latest
 curl "http://localhost:8080/api/v1/telemetry/history?window=15m"
 curl http://localhost:8080/api/v1/control/status
 curl -X POST http://localhost:8080/api/v1/control/mode \
   -H "Content-Type: application/json" \
+  -H "X-Demo-User: demo-supervisor" \
   -d '{"mode":"AUTO","requestedBy":"demo-operator","reason":"Enable simulation-only PID demo"}'
 curl http://localhost:8080/api/v1/pid/status
 curl -X PATCH http://localhost:8080/api/v1/pid/config \
   -H "Content-Type: application/json" \
+  -H "X-Demo-User: demo-engineer" \
   -d '{"setpoint":288,"kp":0.9,"ki":0.05,"kd":0.1,"requestedBy":"demo-operator"}'
 curl http://localhost:8080/api/v1/historian/status
 curl http://localhost:8080/api/v1/mqtt/status
@@ -469,9 +500,11 @@ curl http://localhost:8080/api/v1/alarms/active
 curl http://localhost:8080/api/v1/alarms/history
 curl -X POST http://localhost:8080/api/v1/alarms/alarm-id/acknowledge \
   -H "Content-Type: application/json" \
+  -H "X-Demo-User: demo-supervisor" \
   -d '{"acknowledgedBy":"demo-operator","comment":"Acknowledged from API"}'
 curl -X POST http://localhost:8080/api/v1/commands \
   -H "Content-Type: application/json" \
+  -H "X-Demo-User: demo-operator" \
   -d '{"targetTag":"V-101","commandType":"SET_POSITION","payload":{"positionPercent":75}}'
 curl "http://localhost:8080/api/v1/commands/recent?limit=50"
 curl "http://localhost:8080/api/v1/events/recent?limit=50"
@@ -519,6 +552,7 @@ curl "http://localhost:8081/api/v1/simulation/events/recent?limit=50"
 - `AUTO` mode lets the simulation-only `TIC-101` PID calculate an in-memory `V-101.POS` target.
 - Events are simulation records backed by the historian when available, with in-memory fallback if the DB is disabled or unavailable.
 - MQTT publishing is one-way and publish-only; MQTT command ingestion, broker auth/ACL, and TLS are not implemented.
+- Demo RBAC is header-based and local-demo only; passwords, OAuth/JWT production auth, persistent users, and real plant access control are not implemented.
 - Data source switching in UI is not a real runtime integration switch yet.
 - Frontend uses route-level code splitting; deeper vendor/chart chunk tuning can be added later if needed.
 - Dashboard data is live for the local simulator, but it still uses REST polling and synthetic simulation sources.
@@ -536,7 +570,7 @@ curl "http://localhost:8081/api/v1/simulation/events/recent?limit=50"
 6. Add publish-only MQTT bridge for simulated telemetry and integration smoke coverage.
 7. Add retention/downsampling and richer trend query controls.
 8. Add report export.
-9. Add auth/RBAC, observability, deployment hardening, and extended CI checks.
+9. Add production-style auth hardening, observability, deployment hardening, and extended CI checks.
 
 ## Documentation
 

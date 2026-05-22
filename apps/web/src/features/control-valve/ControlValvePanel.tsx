@@ -14,6 +14,7 @@ import {
   telemetrySourceLabel,
 } from "@/entities/telemetry/lib/selectors";
 import { ApiError } from "@/shared/api/client";
+import { isRbacDenied } from "@/entities/auth/lib/permissions";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
@@ -24,6 +25,8 @@ export interface ControlValvePanelProps {
   telemetryPoints: TelemetryDisplayPoint[];
   dataState: DataState;
   controlStatus?: ControlStatus;
+  canSendCommand?: boolean;
+  roleDeniedReason?: string;
   onCommandComplete?: () => void;
 }
 
@@ -41,6 +44,8 @@ export function ControlValvePanel({
   telemetryPoints,
   dataState,
   controlStatus,
+  canSendCommand = true,
+  roleDeniedReason,
   onCommandComplete,
 }: ControlValvePanelProps) {
   const valvePoint = findTelemetryByTag(telemetryPoints, "V-101.POS");
@@ -55,7 +60,7 @@ export function ControlValvePanel({
   const sourceVariant = valvePoint?.source === "simulation" ? "success" : dataState === "degraded" ? "warning" : "mock";
   const isPending = feedback.state === "pending" || commandMutation.isPending;
   const disabledReason = valveDisabledReason(controlStatus);
-  const canSend = dataState === "connected" && !isPending && !disabledReason;
+  const canSend = dataState === "connected" && !isPending && !disabledReason && canSendCommand;
   const positionInvalid = requestedPosition < 0 || requestedPosition > 100;
 
   const submitValveCommand = (commandType: CommandType, positionPercent?: number) => {
@@ -79,11 +84,13 @@ export function ControlValvePanel({
       })
       .catch((error: unknown) => {
         const message =
-          error instanceof ApiError
-            ? `${error.code ?? "COMMAND_FAILED"}: ${error.message}`
-            : error instanceof Error
-              ? error.message
-            : "Command request failed";
+          isRbacDenied(error)
+            ? "Demo RBAC denied this simulation command for the current role."
+            : error instanceof ApiError
+              ? `${error.code ?? "COMMAND_FAILED"}: ${error.message}`
+              : error instanceof Error
+                ? error.message
+                : "Command request failed";
         setFeedback({ state: "error", message });
       });
   };
@@ -154,6 +161,15 @@ export function ControlValvePanel({
               role="status"
             >
               {disabledReason}
+            </div>
+          ) : null}
+          {!disabledReason && !canSendCommand && roleDeniedReason ? (
+            <div
+              className="mt-3 rounded-2xl border border-warning/30 bg-warning/10 p-3 text-xs leading-5 text-warning"
+              data-testid="valve-rbac-disabled-reason"
+              role="status"
+            >
+              {roleDeniedReason}
             </div>
           ) : null}
         </div>

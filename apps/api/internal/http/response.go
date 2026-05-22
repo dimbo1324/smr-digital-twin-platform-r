@@ -20,8 +20,11 @@ type Response struct {
 }
 
 type ErrorPayload struct {
-	Code    string `json:"code"`
-	Message string `json:"message"`
+	Code               string `json:"code"`
+	Message            string `json:"message"`
+	RequiredPermission string `json:"requiredPermission,omitempty"`
+	Role               string `json:"role,omitempty"`
+	SimulationOnly     bool   `json:"simulationOnly,omitempty"`
 }
 
 type ErrorResponse struct {
@@ -49,11 +52,12 @@ func WriteData(w http.ResponseWriter, r *http.Request, status int, data any, opt
 }
 
 func WriteError(w http.ResponseWriter, r *http.Request, status int, code, message string) {
+	WriteErrorPayload(w, r, status, ErrorPayload{Code: code, Message: message})
+}
+
+func WriteErrorPayload(w http.ResponseWriter, r *http.Request, status int, payload ErrorPayload) {
 	writeJSON(w, status, ErrorResponse{
-		Error: ErrorPayload{
-			Code:    code,
-			Message: message,
-		},
+		Error: payload,
 		Meta: ResponseMeta{
 			RequestID: RequestIDFromContext(r.Context()),
 			Timestamp: time.Now().UTC(),
