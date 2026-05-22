@@ -58,15 +58,15 @@ export function EventsPage() {
             Events page for command, alarm, and simulation operations.
           </h1>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">
-            This view shows the in-memory simulation event stream. It is an operator workflow simulator,
-            not a real plant event log or compliance archive.
+            This view shows synthetic command, alarm, and simulation events from the API. It is an
+            operator workflow simulator, not a real plant event log or compliance archive.
           </p>
         </div>
 
         <div className="grid gap-3 rounded-3xl border border-border/70 bg-surface-elevated/70 p-5">
           <SummaryItem label="Total events" value={String(events.length)} />
           <SummaryItem label="Visible" value={String(visibleEvents.length)} />
-          <SummaryItem label="Storage" value="in-memory" />
+          <SummaryItem label="Storage" value="historian / fallback" />
         </div>
       </section>
 

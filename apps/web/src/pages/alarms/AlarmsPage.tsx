@@ -105,7 +105,7 @@ export function AlarmsPage() {
         <CardHeader>
           <CardTitle>Cleared Alarm History</CardTitle>
           <CardDescription>
-            In-memory history of alarms that returned to normal simulation limits.
+            Alarm history from the persistent historian when connected, with in-memory fallback otherwise.
           </CardDescription>
         </CardHeader>
         <CardContent data-testid="alarm-history-list">

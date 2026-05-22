@@ -1,6 +1,6 @@
 import { EquipmentCard } from "@/entities/equipment/ui/EquipmentCard";
 import { useAssets } from "@/entities/equipment/api/useAssets";
-import { mockTelemetryPoints } from "@/entities/telemetry/model/mockTelemetry";
+import { demoFallbackTelemetryPoints } from "@/entities/telemetry/model/demoFallbackTelemetry";
 import { findTelemetryByTag } from "@/entities/telemetry/lib/selectors";
 import { PROCESS_ASSET_TAGS, PROCESS_LOOP_TELEMETRY_TAGS } from "@/entities/telemetry/model/processTags";
 import { TelemetryValue } from "@/entities/telemetry/ui/TelemetryValue";
@@ -31,7 +31,7 @@ export function ProcessPage() {
   const canChangeControlMode = hasPermission(auth.session, permissions.changeControlMode);
   const canUpdatePidConfig = hasPermission(auth.session, permissions.updatePidConfig);
   const telemetryPoints =
-    liveTelemetry.points.length > 0 ? liveTelemetry.points : mockTelemetryPoints;
+    liveTelemetry.points.length > 0 ? liveTelemetry.points : demoFallbackTelemetryPoints;
   const processTelemetryPoints = PROCESS_LOOP_TELEMETRY_TAGS
     .map(({ tag }) => findTelemetryByTag(telemetryPoints, tag))
     .filter((point) => point !== undefined);
@@ -44,7 +44,7 @@ export function ProcessPage() {
       <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="rounded-3xl border border-border/70 bg-card/80 p-6 shadow-panel">
           <Badge variant={liveTelemetry.state === "connected" ? "success" : "mock"}>
-            {liveTelemetry.state === "connected" ? "Live synthetic telemetry" : "Mock process loop"}
+            {liveTelemetry.state === "connected" ? "Live synthetic telemetry" : "Demo fallback process loop"}
           </Badge>
           <h1 className="mt-4 text-3xl font-semibold leading-tight text-foreground">
             Clean process overview for equipment, flow direction, and telemetry quality.
@@ -70,7 +70,7 @@ export function ProcessPage() {
           <CardHeader>
             <CardTitle>Telemetry Snapshot</CardTitle>
             <CardDescription>
-              Process-loop and unit overview values from the backend API, with mock fallback when unavailable.
+              Process-loop and unit overview values from the backend API, with demo fallback when unavailable.
             </CardDescription>
           </CardHeader>
           <CardContent>

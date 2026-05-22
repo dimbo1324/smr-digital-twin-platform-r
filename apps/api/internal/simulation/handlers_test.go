@@ -65,6 +65,29 @@ func TestLatestTelemetryFallsBackWhenSimulationUnavailable(t *testing.T) {
 	}
 }
 
+func TestTelemetryHistoryPropagatesSimulationSourceMeta(t *testing.T) {
+	server := fakeSimulationServer()
+	defer server.Close()
+	gateway := newTestGateway(server.URL, true)
+
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/api/v1/telemetry/history?window=15m", nil)
+	gateway.TelemetryHistory(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", recorder.Code)
+	}
+	payload := decodeMap(t, recorder.Body.Bytes())
+	meta := payload["meta"].(map[string]any)
+	if meta["source"] != "persistent_historian" {
+		t.Fatalf("expected persistent_historian source, got %v", meta["source"])
+	}
+	data := payload["data"].([]any)
+	if len(data) != 1 {
+		t.Fatalf("expected one telemetry history snapshot, got %d", len(data))
+	}
+}
+
 func TestSystemStatusIncludesSimulationConnected(t *testing.T) {
 	server := fakeSimulationServer()
 	defer server.Close()
@@ -553,6 +576,8 @@ func fakeSimulationServer() *httptest.Server {
 			_, _ = w.Write([]byte(`{"data":{"running":true,"mode":"NORMAL","health":"OK","activeScenario":"normal","tickMs":1000,"historySize":3600,"snapshotCount":1,"lastSimulationTimestamp":"2026-05-12T12:00:00Z","simulationOnly":true},"meta":{"timestamp":"2026-05-12T12:00:00Z","source":"simulation","simulationOnly":true}}`))
 		case r.URL.Path == "/api/v1/simulation/telemetry/latest":
 			_, _ = w.Write([]byte(`{"data":{"reactorPowerPct":72,"thermalPowerMw":216,"electricPowerMw":76,"primaryTemperatureC":286,"secondaryTemperatureC":222,"primaryPressureMPa":15.1,"secondaryPressureMPa":6.2,"coolantFlowPct":88,"steamGeneratorLevelPct":62,"turbineRpm":3600,"generatorLoadPct":71,"condenserVacuumKPa":88,"feedwaterFlowPct":76,"vibrationMmS":2.1,"radiationLevelUSvH":0.18,"availabilityPct":99,"efficiencyPct":35,"loopTemperatureC":286.4,"loopPressureMPa":15.1,"loopFlowKgS":118,"tankLevelPct":72,"valvePositionPct":64,"valveState":"STOPPED","pumpState":"RUNNING","pumpRpm":1800,"heatExchangerState":"Online","pidControllerMode":"MANUAL","timestamp":"2026-05-12T12:00:00Z","mode":"NORMAL","health":"OK","simulationOnly":true,"scenario":"normal"},"meta":{"timestamp":"2026-05-12T12:00:00Z","source":"simulation","simulationOnly":true}}`))
+		case r.URL.Path == "/api/v1/simulation/telemetry/history":
+			_, _ = w.Write([]byte(`{"data":[{"loopTemperatureC":286.4,"timestamp":"2026-05-12T12:00:00Z","simulationOnly":true}],"meta":{"timestamp":"2026-05-12T12:00:00Z","source":"persistent_historian","simulationOnly":true,"count":1}}`))
 		case r.URL.Path == "/api/v1/simulation/control/status":
 			_, _ = w.Write([]byte(`{"data":{"controllerTag":"TIC-101","controlledVariableTag":"TT-101","manipulatedVariableTag":"V-101.POS","mode":"MANUAL","authority":"USER","enabled":true,"pidImplemented":false,"reason":"Operator manual control","updatedAt":"2026-05-12T12:00:00Z","updatedBy":"system","safetyDisclaimer":"Simulation-only interface. No real plant control."},"meta":{"timestamp":"2026-05-12T12:00:00Z","source":"simulation","simulationOnly":true}}`))
 		case r.URL.Path == "/api/v1/simulation/control/mode":

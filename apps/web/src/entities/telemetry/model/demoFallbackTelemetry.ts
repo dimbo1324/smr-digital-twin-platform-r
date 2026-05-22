@@ -1,8 +1,8 @@
 import type { TelemetryDisplayPoint, TrendSample } from "@/entities/telemetry/model/types";
 
-const mockTimestamp = "2026-05-04T09:45:00+03:00";
+const demoFallbackTimestamp = "2026-05-04T09:45:00+03:00";
 
-export const mockTelemetryPoints: TelemetryDisplayPoint[] = [
+export const demoFallbackTelemetryPoints: TelemetryDisplayPoint[] = [
   {
     tag: "TT-101",
     label: "Temperature",
@@ -10,9 +10,9 @@ export const mockTelemetryPoints: TelemetryDisplayPoint[] = [
     unit: "C",
     quality: "GOOD",
     status: "mock",
-    timestamp: mockTimestamp,
+    timestamp: demoFallbackTimestamp,
     trend: "stable",
-    source: "mock-ui",
+    source: "demo-fallback-ui",
   },
   {
     tag: "PT-101",
@@ -21,9 +21,9 @@ export const mockTelemetryPoints: TelemetryDisplayPoint[] = [
     unit: "MPa",
     quality: "GOOD",
     status: "mock",
-    timestamp: mockTimestamp,
+    timestamp: demoFallbackTimestamp,
     trend: "up",
-    source: "mock-ui",
+    source: "demo-fallback-ui",
   },
   {
     tag: "FT-101",
@@ -32,9 +32,9 @@ export const mockTelemetryPoints: TelemetryDisplayPoint[] = [
     unit: "kg/s",
     quality: "GOOD",
     status: "mock",
-    timestamp: mockTimestamp,
+    timestamp: demoFallbackTimestamp,
     trend: "stable",
-    source: "mock-ui",
+    source: "demo-fallback-ui",
   },
   {
     tag: "LT-101",
@@ -43,9 +43,9 @@ export const mockTelemetryPoints: TelemetryDisplayPoint[] = [
     unit: "%",
     quality: "GOOD",
     status: "normal",
-    timestamp: mockTimestamp,
+    timestamp: demoFallbackTimestamp,
     trend: "down",
-    source: "mock-ui",
+    source: "demo-fallback-ui",
   },
   {
     tag: "V-101.POS",
@@ -54,9 +54,9 @@ export const mockTelemetryPoints: TelemetryDisplayPoint[] = [
     unit: "%",
     quality: "UNCERTAIN",
     status: "warning",
-    timestamp: mockTimestamp,
+    timestamp: demoFallbackTimestamp,
     trend: "stable",
-    source: "mock-ui",
+    source: "demo-fallback-ui",
   },
   {
     tag: "V-101.STATE",
@@ -65,9 +65,9 @@ export const mockTelemetryPoints: TelemetryDisplayPoint[] = [
     unit: "",
     quality: "UNCERTAIN",
     status: "warning",
-    timestamp: mockTimestamp,
+    timestamp: demoFallbackTimestamp,
     trend: "stable",
-    source: "mock-ui",
+    source: "demo-fallback-ui",
   },
   {
     tag: "P-101.STATE",
@@ -76,9 +76,9 @@ export const mockTelemetryPoints: TelemetryDisplayPoint[] = [
     unit: "",
     quality: "BAD",
     status: "offline",
-    timestamp: mockTimestamp,
+    timestamp: demoFallbackTimestamp,
     trend: "stable",
-    source: "mock-ui",
+    source: "demo-fallback-ui",
   },
   {
     tag: "P-101.RPM",
@@ -87,20 +87,20 @@ export const mockTelemetryPoints: TelemetryDisplayPoint[] = [
     unit: "rpm",
     quality: "BAD",
     status: "offline",
-    timestamp: mockTimestamp,
+    timestamp: demoFallbackTimestamp,
     trend: "stable",
-    source: "mock-ui",
+    source: "demo-fallback-ui",
   },
   {
     tag: "HX-101.STATE",
     label: "Heat Exchanger State",
-    value: "Mock Duty",
+    value: "Reduced Duty",
     unit: "",
     quality: "UNCERTAIN",
     status: "warning",
-    timestamp: mockTimestamp,
+    timestamp: demoFallbackTimestamp,
     trend: "stable",
-    source: "mock-ui",
+    source: "demo-fallback-ui",
   },
   {
     tag: "TIC-101.MODE",
@@ -109,14 +109,14 @@ export const mockTelemetryPoints: TelemetryDisplayPoint[] = [
     unit: "",
     quality: "UNCERTAIN",
     status: "warning",
-    timestamp: mockTimestamp,
+    timestamp: demoFallbackTimestamp,
     trend: "stable",
-    source: "mock-ui",
+    source: "demo-fallback-ui",
   },
 ];
 
-export function getMockTelemetryPoint(tag: string): TelemetryDisplayPoint | undefined {
-  return mockTelemetryPoints.find((point) => point.tag === tag);
+export function getDemoFallbackTelemetryPoint(tag: string): TelemetryDisplayPoint | undefined {
+  return demoFallbackTelemetryPoints.find((point) => point.tag === tag);
 }
 
 export function formatTelemetryValue(point: TelemetryDisplayPoint | undefined): string {
@@ -132,15 +132,15 @@ export function formatTelemetryValue(point: TelemetryDisplayPoint | undefined): 
 }
 
 export function getNumericTelemetryValue(tag: string, fallback = 0): number {
-  const value = getMockTelemetryPoint(tag)?.value;
+  const value = getDemoFallbackTelemetryPoint(tag)?.value;
   return typeof value === "number" ? value : fallback;
 }
 
-export const mockTelemetrySummary = {
-  totalPoints: mockTelemetryPoints.length,
+export const demoFallbackTelemetrySummary = {
+  totalPoints: demoFallbackTelemetryPoints.length,
 };
 
-export const mockTrendSamples: TrendSample[] = [
+export const demoFallbackTrendSamples: TrendSample[] = [
   { time: "09:34", temperature: 281.4, pressure: 14.8, flow: 111, level: 76 },
   { time: "09:35", temperature: 282.1, pressure: 14.9, flow: 113, level: 75 },
   { time: "09:36", temperature: 283.2, pressure: 15.0, flow: 115, level: 75 },

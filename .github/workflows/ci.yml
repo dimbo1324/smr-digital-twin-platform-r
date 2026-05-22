@@ -45,6 +45,12 @@ jobs:
       - name: Run API vet
         run: go vet ./...
 
+      - name: Run API race tests
+        run: go test -race ./...
+
+      - name: Run API coverage summary
+        run: go test -cover ./...
+
   simulation:
     name: Simulation
     runs-on: ubuntu-latest
@@ -66,6 +72,12 @@ jobs:
 
       - name: Run simulation vet
         run: go vet ./...
+
+      - name: Run simulation race tests
+        run: go test -race ./...
+
+      - name: Run simulation coverage summary
+        run: go test -cover ./...
 
   web:
     name: Web

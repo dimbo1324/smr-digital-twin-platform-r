@@ -6,6 +6,7 @@ import { mqttConnectedFixture } from "@/test/fixtures/mqtt";
 import { renderWithProviders } from "@/test/render";
 
 const settingsMocks = vi.hoisted(() => ({
+  auth: vi.fn(),
   historian: vi.fn(),
   mqtt: vi.fn(),
   simulationScenarios: vi.fn(),
@@ -17,6 +18,10 @@ vi.mock("@/app/providers/theme/themeContext", () => ({
     theme: "light",
     toggleTheme: settingsMocks.toggleTheme,
   }),
+}));
+
+vi.mock("@/entities/auth/api/useAuthSession", () => ({
+  useAuthSession: settingsMocks.auth,
 }));
 
 vi.mock("@/entities/historian/api/useHistorianStatus", () => ({
@@ -32,6 +37,18 @@ vi.mock("@/shared/api/useSimulationTelemetry", () => ({
 }));
 
 beforeEach(() => {
+  settingsMocks.auth.mockReturnValue({
+    session: {
+      userId: "demo-admin",
+      displayName: "Demo Admin",
+      role: "ADMIN",
+      permissions: ["RUN_SCENARIO"],
+      source: "demo",
+      simulationOnly: true,
+      disclaimer: "Demo RBAC only. Not production authentication.",
+    },
+    state: "connected",
+  });
   settingsMocks.historian.mockReturnValue({
     status: historianPersistentFixture,
     state: "connected",
@@ -60,5 +77,27 @@ describe("SettingsPage", () => {
     expect(screen.getByTestId("settings-mqtt-status")).toHaveTextContent("Not implemented");
     expect(screen.getByTestId("settings-capability-matrix")).toHaveTextContent("Theme");
     expect(screen.getByTestId("settings-safety-boundary")).toHaveTextContent(/never\s+target real equipment/i);
+  });
+
+  it("disables scenario controls when the demo role lacks RUN_SCENARIO", () => {
+    settingsMocks.auth.mockReturnValue({
+      session: {
+        userId: "demo-viewer",
+        displayName: "Demo Viewer",
+        role: "VIEWER",
+        permissions: [],
+        source: "demo",
+        simulationOnly: true,
+        disclaimer: "Demo RBAC only. Not production authentication.",
+      },
+      state: "connected",
+    });
+
+    renderWithProviders(<SettingsPage />);
+
+    expect(screen.getByRole("button", { name: "Normal" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Stop scenario" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Reset simulation" })).toBeDisabled();
+    expect(screen.getByText(/Your demo role VIEWER cannot run simulation scenarios/i)).toBeVisible();
   });
 });

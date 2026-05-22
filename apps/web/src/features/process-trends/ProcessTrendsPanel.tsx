@@ -8,7 +8,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { mockTrendSamples } from "@/entities/telemetry/model/mockTelemetry";
+import { demoFallbackTrendSamples } from "@/entities/telemetry/model/demoFallbackTelemetry";
 import type { SimulationTelemetrySnapshot } from "@/entities/simulation/model/types";
 import { chartTheme } from "@/shared/config/chartTheme";
 import { Button } from "@/shared/ui/button";
@@ -60,7 +60,7 @@ export function ProcessTrendsPanel({ history, dataState = "loading" }: ProcessTr
 
   const chartData = useMemo(() => {
     if (!history || history.length === 0) {
-      return mockTrendSamples;
+      return demoFallbackTrendSamples;
     }
     return history.map((sample) => ({
       time: new Date(sample.timestamp).toLocaleTimeString([], {

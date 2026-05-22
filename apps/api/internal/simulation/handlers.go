@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"encoding/json"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -91,7 +90,11 @@ func (g *Gateway) TelemetryHistory(w http.ResponseWriter, r *http.Request) {
 		httpapi.WriteError(w, r, http.StatusServiceUnavailable, "SIMULATION_UNAVAILABLE", "Simulation history is unavailable")
 		return
 	}
-	httpapi.WriteData(w, r, http.StatusOK, history, httpapi.MetaOptions{Count: len(history), Source: "simulation"})
+	source := history.Meta.Source
+	if source == "" {
+		source = "simulation"
+	}
+	httpapi.WriteData(w, r, http.StatusOK, history.Values, httpapi.MetaOptions{Count: len(history.Values), Source: source, Degraded: history.Meta.Degraded})
 }
 
 func (g *Gateway) ControlStatus(w http.ResponseWriter, r *http.Request) {
@@ -108,12 +111,8 @@ func (g *Gateway) SetControlMode(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	var request ModeChangeRequest
-	r.Body = http.MaxBytesReader(w, r.Body, maxJSONBodyBytes)
-	decoder := json.NewDecoder(r.Body)
-	decoder.DisallowUnknownFields()
-	if err := decoder.Decode(&request); err != nil {
-		httpapi.WriteError(w, r, http.StatusBadRequest, "MALFORMED_JSON", "Control mode request body is invalid JSON")
+	request, ok := httpapi.DecodeJSONBody[ModeChangeRequest](w, r, maxJSONBodyBytes, "Control mode request body is invalid JSON")
+	if !ok {
 		return
 	}
 	if request.RequestedBy == "" {
@@ -176,12 +175,8 @@ func (g *Gateway) UpdatePIDConfig(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	var request PIDConfigUpdateRequest
-	r.Body = http.MaxBytesReader(w, r.Body, maxJSONBodyBytes)
-	decoder := json.NewDecoder(r.Body)
-	decoder.DisallowUnknownFields()
-	if err := decoder.Decode(&request); err != nil {
-		httpapi.WriteError(w, r, http.StatusBadRequest, "MALFORMED_JSON", "PID config request body is invalid JSON")
+	request, ok := httpapi.DecodeJSONBody[PIDConfigUpdateRequest](w, r, maxJSONBodyBytes, "PID config request body is invalid JSON")
+	if !ok {
 		return
 	}
 	if request.RequestedBy == "" {
@@ -218,12 +213,8 @@ func (g *Gateway) AcknowledgeAlarm(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	var request AlarmAcknowledgeRequest
-	r.Body = http.MaxBytesReader(w, r.Body, maxJSONBodyBytes)
-	decoder := json.NewDecoder(r.Body)
-	decoder.DisallowUnknownFields()
-	if err := decoder.Decode(&request); err != nil {
-		httpapi.WriteError(w, r, http.StatusBadRequest, "MALFORMED_JSON", "Alarm acknowledge request body is invalid JSON")
+	request, ok := httpapi.DecodeJSONBody[AlarmAcknowledgeRequest](w, r, maxJSONBodyBytes, "Alarm acknowledge request body is invalid JSON")
+	if !ok {
 		return
 	}
 	if request.AcknowledgedBy == "" {
@@ -289,12 +280,8 @@ func (g *Gateway) SubmitCommand(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	var request CommandRequest
-	r.Body = http.MaxBytesReader(w, r.Body, maxJSONBodyBytes)
-	decoder := json.NewDecoder(r.Body)
-	decoder.DisallowUnknownFields()
-	if err := decoder.Decode(&request); err != nil {
-		httpapi.WriteError(w, r, http.StatusBadRequest, "MALFORMED_JSON", "Command request body is invalid JSON")
+	request, ok := httpapi.DecodeJSONBody[CommandRequest](w, r, maxJSONBodyBytes, "Command request body is invalid JSON")
+	if !ok {
 		return
 	}
 
@@ -414,9 +401,9 @@ func telemetryPointsFromSnapshot(s TelemetrySnapshot) []telemetry.TelemetryPoint
 		numberPoint("LT-101", "Tank Level", s.TankLevelPct, "%", s.Timestamp),
 		numberPoint("V-101.POS", "Valve Position", s.ValvePositionPct, "%", s.Timestamp),
 		textPointWithQuality("V-101.STATE", "Valve State", valueOrFallback(s.ValveState, "STOPPED"), telemetry.QualityGood, s.Timestamp),
-		textPointWithQuality("P-101.STATE", "Pump State", valueOrFallback(s.PumpState, "Mock"), telemetry.QualityGood, s.Timestamp),
+		textPointWithQuality("P-101.STATE", "Pump State", valueOrFallback(s.PumpState, "Unknown"), telemetry.QualityGood, s.Timestamp),
 		numberPoint("P-101.RPM", "Pump Speed", s.PumpRPM, "rpm", s.Timestamp),
-		textPointWithQuality("HX-101.STATE", "Heat Exchanger State", valueOrFallback(s.HeatExchangerState, "Mock Duty"), telemetry.QualityGood, s.Timestamp),
+		textPointWithQuality("HX-101.STATE", "Heat Exchanger State", valueOrFallback(s.HeatExchangerState, "Reduced Duty"), telemetry.QualityGood, s.Timestamp),
 		textPointWithQuality("TIC-101.MODE", "PID Controller Mode", valueOrFallback(s.PIDControllerMode, "Disabled"), telemetry.QualityUncertain, s.Timestamp),
 		numberPoint("TIC-101.SETPOINT", "PID Setpoint", s.PIDSetpointC, "C", s.Timestamp),
 		numberPoint("TIC-101.PV", "PID Process Value", s.PIDProcessValueC, "C", s.Timestamp),

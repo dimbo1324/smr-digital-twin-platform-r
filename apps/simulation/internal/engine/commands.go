@@ -359,7 +359,13 @@ func (e *Engine) replaceCommandLocked(command model.Command) {
 func (e *Engine) updateCommandLocked(commandID string, update func(model.Command) model.Command) {
 	for index := len(e.state.commands) - 1; index >= 0; index-- {
 		if e.state.commands[index].ID == commandID {
-			e.state.commands[index] = update(e.state.commands[index])
+			previous := e.state.commands[index]
+			command := update(previous)
+			e.state.commands[index] = command
+			if command != previous {
+				e.persistCommandAsync(command)
+				e.publishCommandMQTT(command)
+			}
 			return
 		}
 	}
@@ -430,8 +436,6 @@ func (e *Engine) failCommandLocked(commandID string, now time.Time, code, messag
 		command.ErrorCode = code
 		command.ErrorMessage = message
 		command.ResultMessage = message
-		e.persistCommandAsync(command)
-		e.publishCommandMQTT(command)
 		return command
 	})
 	e.appendEventLocked(model.EventTypeCommandFailed, model.EventSeverityWarning, "simulation", message, targetTag, commandID, now, nil)

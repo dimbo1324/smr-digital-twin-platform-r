@@ -32,7 +32,7 @@ export function StatusSummary() {
     {
       label: "Thermal Loop",
       value: telemetry.state === "connected" ? "Live" : "Fallback",
-      detail: simulationConnected ? "Backend -> simulation" : "Mock/offline state",
+      detail: simulationConnected ? "Backend -> simulation" : "Demo fallback/offline state",
       icon: Activity,
       variant: telemetry.state === "connected" ? "success" : "mock",
       metric: telemetry.state === "connected" ? "api source" : "fallback",

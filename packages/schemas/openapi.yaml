@@ -349,7 +349,7 @@
         "summary": "List cleared in-memory alarm history",
         "responses": {
           "200": {
-            "description": "Cleared alarm instances from in-memory history",
+            "description": "Cleared synthetic alarm instances from the persistent historian when connected, with in-memory fallback otherwise",
             "content": {
               "application/json": {
                 "schema": {

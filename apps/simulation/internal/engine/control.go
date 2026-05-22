@@ -166,7 +166,7 @@ func defaultControlReason(mode model.ControlMode) string {
 	case model.ControlModeManual:
 		return "Operator manual control"
 	case model.ControlModeAuto:
-		return "Reserved for future simulated PID control"
+		return "Simulation-only TIC-101 PID control"
 	case model.ControlModeDisabled:
 		return "Control output disabled in simulation"
 	default:

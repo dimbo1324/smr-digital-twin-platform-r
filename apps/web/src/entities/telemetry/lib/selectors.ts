@@ -82,7 +82,7 @@ export function telemetrySourceLabel(point: TelemetryDisplayPoint | undefined): 
     return "simulation";
   }
 
-  if (point.source?.includes("mock")) {
+  if (point.source?.includes("demo-fallback") || point.source?.includes("mock")) {
     return "mock";
   }
 

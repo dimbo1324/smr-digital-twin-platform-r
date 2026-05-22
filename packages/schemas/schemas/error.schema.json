@@ -8,7 +8,10 @@
       "type": "object",
       "properties": {
         "code": { "type": "string" },
-        "message": { "type": "string" }
+        "message": { "type": "string" },
+        "requiredPermission": { "type": "string" },
+        "role": { "type": "string" },
+        "simulationOnly": { "type": "boolean" }
       },
       "required": ["code", "message"],
       "additionalProperties": false

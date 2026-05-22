@@ -48,6 +48,7 @@ type Engine struct {
 	state                     state
 	history                   *history.RingBuffer
 	historian                 historian.Repository
+	historianWriter           *historianWriter
 	historianStatus           model.HistorianStatus
 	historianOperationTimeout time.Duration
 	historianTelemetrySample  time.Duration
@@ -83,12 +84,18 @@ func New(cfg Config, logger *slog.Logger) *Engine {
 	initial := initialState(now)
 	ring.Add(initial.snapshot)
 
+	var writer *historianWriter
+	if cfg.Historian != nil {
+		writer = newHistorianWriter(cfg.Historian, cfg.HistorianOperationTimeout, logger)
+	}
+
 	return &Engine{
 		cfg:                       cfg,
 		logger:                    logger,
 		state:                     initial,
 		history:                   ring,
 		historian:                 cfg.Historian,
+		historianWriter:           writer,
 		historianStatus:           cfg.HistorianStatus,
 		historianOperationTimeout: cfg.HistorianOperationTimeout,
 		historianTelemetrySample:  cfg.HistorianTelemetrySample,
@@ -126,6 +133,9 @@ func (e *Engine) Stop(_ context.Context) error {
 	}
 	e.state.running = false
 	if e.historian != nil {
+		if e.historianWriter != nil {
+			e.historianWriter.Close()
+		}
 		e.historian.Close()
 	}
 	if e.mqttPublisher != nil {
@@ -142,13 +152,33 @@ func (e *Engine) Snapshot() model.TelemetrySnapshot {
 }
 
 func (e *Engine) History(window time.Duration) []model.TelemetrySnapshot {
+	return e.HistoryWithSource(window).Values
+}
+
+type HistoryResult struct {
+	Values   []model.TelemetrySnapshot
+	Source   string
+	Degraded bool
+}
+
+func (e *Engine) HistoryWithSource(window time.Duration) HistoryResult {
 	if e.historian != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), e.historianOperationTimeout)
 		defer cancel()
-		if values, err := e.historian.QueryTelemetryHistory(ctx, window, time.Now().UTC()); err == nil && len(values) > 0 {
-			return values
+		values, err := e.historian.QueryTelemetryHistory(ctx, window, time.Now().UTC())
+		if err == nil && len(values) > 0 {
+			return HistoryResult{Values: values, Source: "persistent_historian"}
 		}
+		memoryValues := e.memoryHistory(window)
+		if err == nil {
+			return HistoryResult{Values: memoryValues, Source: "persistent_connected_empty_memory_fallback"}
+		}
+		return HistoryResult{Values: memoryValues, Source: "persistent_read_failed_in_memory_fallback", Degraded: true}
 	}
+	return HistoryResult{Values: e.memoryHistory(window), Source: "in_memory_fallback"}
+}
+
+func (e *Engine) memoryHistory(window time.Duration) []model.TelemetrySnapshot {
 	e.mu.RLock()
 	defer e.mu.RUnlock()
 	return e.history.Window(window, e.state.snapshot.Timestamp)
@@ -276,8 +306,8 @@ func (e *Engine) Assets() []model.Asset {
 		asset("feedwater-system", "FW-SYSTEM", "Feedwater System", "auxiliary", "unit-overview", model.AssetStatusOK, "Synthetic feedwater overview.", now, []model.AssetMetric{{Name: "Flow", Value: s.FeedwaterFlowPct, Unit: "%"}}),
 		asset("protection-system", "PROTECTION", "Protection System", "safety-simulation", "unit-overview", statusForHealth(s.Health), "Simulation-only protection status.", now, []model.AssetMetric{{Name: "Availability", Value: s.AvailabilityPct, Unit: "%"}}),
 		asset("tank-101", "T-101", "Tank", "tank", "thermal-process-loop", model.AssetStatusOK, "Synthetic process-loop tank.", now, []model.AssetMetric{{Name: "Level", Value: s.TankLevelPct, Unit: "%"}}),
-		asset("pump-101", "P-101", "Pump", "pump", "thermal-process-loop", processAssetStatus(s.PumpState), "Synthetic process-loop pump placeholder.", now, []model.AssetMetric{{Name: "Flow", Value: s.LoopFlowKGS, Unit: "kg/s"}}),
-		asset("valve-101", "V-101", "Control Valve", "valve", "thermal-process-loop", model.AssetStatusOK, "Synthetic process-loop control valve placeholder.", now, []model.AssetMetric{{Name: "Position", Value: s.ValvePositionPct, Unit: "%"}}),
+		asset("pump-101", "P-101", "Pump", "pump", "thermal-process-loop", processAssetStatus(s.PumpState), "Synthetic process-loop pump.", now, []model.AssetMetric{{Name: "Flow", Value: s.LoopFlowKGS, Unit: "kg/s"}}),
+		asset("valve-101", "V-101", "Control Valve", "valve", "thermal-process-loop", model.AssetStatusOK, "Synthetic process-loop control valve.", now, []model.AssetMetric{{Name: "Position", Value: s.ValvePositionPct, Unit: "%"}}),
 		asset("hx-101", "HX-101", "Heat Exchanger", "heat-exchanger", "thermal-process-loop", processAssetStatus(s.HeatExchangerState), "Synthetic process-loop heat exchanger.", now, []model.AssetMetric{{Name: "Temperature", Value: s.LoopTemperatureC, Unit: "C"}}),
 		asset("tt-101", "TT-101", "Loop Temperature Transmitter", "sensor", "thermal-process-loop", model.AssetStatusOK, "Synthetic process-loop temperature point.", now, []model.AssetMetric{{Name: "Temperature", Value: s.LoopTemperatureC, Unit: "C"}}),
 		asset("pt-101", "PT-101", "Loop Pressure Transmitter", "sensor", "thermal-process-loop", model.AssetStatusOK, "Synthetic process-loop pressure point.", now, []model.AssetMetric{{Name: "Pressure", Value: s.LoopPressureMPa, Unit: "MPa"}}),
@@ -342,7 +372,7 @@ func processAssetStatus(state string) model.AssetStatus {
 	switch state {
 	case string(model.PumpStateStopped), "Offline":
 		return model.AssetStatusOffline
-	case string(model.PumpStateStarting), string(model.PumpStateStopping), "Mock Duty":
+	case string(model.PumpStateStarting), string(model.PumpStateStopping), "Reduced Duty":
 		return model.AssetStatusWarning
 	default:
 		return model.AssetStatusOK
