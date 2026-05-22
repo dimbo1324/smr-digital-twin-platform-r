@@ -1,4 +1,6 @@
 import { useTheme } from "@/app/providers/theme/themeContext";
+import { useAuthSession } from "@/entities/auth/api/useAuthSession";
+import { hasPermission, permissions, roleDeniedReason } from "@/entities/auth/lib/permissions";
 import { useHistorianStatus } from "@/entities/historian/api/useHistorianStatus";
 import { useMqttStatus } from "@/entities/mqtt/api/useMqttStatus";
 import { useSimulationScenarios } from "@/shared/api/useSimulationTelemetry";
@@ -13,6 +15,9 @@ export function SettingsPage() {
   const simulation = useSimulationScenarios();
   const historian = useHistorianStatus();
   const mqtt = useMqttStatus();
+  const auth = useAuthSession();
+  const canRunScenario = hasPermission(auth.session, permissions.runScenario);
+  const scenarioDeniedReason = roleDeniedReason(auth.session, "run simulation scenarios");
 
   return (
     <PageShell data-testid="settings-page">
@@ -140,6 +145,7 @@ export function SettingsPage() {
                 key={scenario.name}
                 variant="outline"
                 onClick={() => void simulation.actions.start(scenario.name)}
+                disabled={!canRunScenario}
                 className="justify-start"
               >
                 {scenario.title}
@@ -147,14 +153,19 @@ export function SettingsPage() {
             ))}
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
-            <Button variant="outline" onClick={() => void simulation.actions.stop()}>
+            <Button variant="outline" onClick={() => void simulation.actions.stop()} disabled={!canRunScenario}>
               Stop scenario
             </Button>
-            <Button variant="outline" onClick={() => void simulation.actions.reset()}>
+            <Button variant="outline" onClick={() => void simulation.actions.reset()} disabled={!canRunScenario}>
               Reset simulation
             </Button>
             <Badge variant="warning">Simulation-only controls</Badge>
           </div>
+          {!canRunScenario ? (
+            <p className="mt-3 rounded-2xl border border-warning/40 bg-warning/10 p-3 text-sm text-warning-foreground">
+              {scenarioDeniedReason}
+            </p>
+          ) : null}
         </CardContent>
       </Card>
     </PageShell>

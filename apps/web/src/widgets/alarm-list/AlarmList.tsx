@@ -38,7 +38,7 @@ export interface AlarmListProps {
 
 export function AlarmList({
   title = "Alarm History",
-  description = "Mock alarm lifecycle records.",
+  description = "Synthetic alarm lifecycle records.",
   alarms,
 }: AlarmListProps) {
   return (

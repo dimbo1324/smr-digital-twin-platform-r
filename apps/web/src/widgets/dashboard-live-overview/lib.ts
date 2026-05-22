@@ -48,8 +48,8 @@ export function telemetrySource(point: TelemetryDisplayPoint): string {
     return "Simulation / Synthetic";
   }
 
-  if (point.source?.includes("mock")) {
-    return "Mock";
+  if (point.source?.includes("demo-fallback") || point.source?.includes("mock")) {
+    return "Demo fallback";
   }
 
   return point.source ?? "Fallback";

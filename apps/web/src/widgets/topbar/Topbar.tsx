@@ -29,9 +29,9 @@ function getDescription(title: string) {
     case "Events":
       return "Unified event stream for commands, alarms, and simulation state.";
     case "Trends":
-      return "Historian-style trend exploration with in-memory telemetry.";
+      return "Historian-style trend exploration with persistent or fallback telemetry.";
     case "Settings":
-      return "Local shell preferences and future integration placeholders.";
+      return "Local shell preferences, demo RBAC, and integration status.";
     default:
       return "Simulation-only interface. No real plant control.";
   }
@@ -91,7 +91,7 @@ export function Topbar() {
         <div className="flex flex-col gap-2 rounded-2xl border border-warning/20 bg-warning/10 px-4 py-3 text-sm text-foreground sm:flex-row sm:items-center sm:justify-between">
           <span className="font-medium">Simulation-only interface. No real plant control.</span>
           <span className="text-muted-foreground">
-            Valve and pump commands mutate only in-memory simulation state.
+            Valve and pump commands mutate only synthetic simulation state.
           </span>
         </div>
       </div>

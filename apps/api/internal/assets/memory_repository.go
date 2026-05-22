@@ -101,7 +101,7 @@ func NewMemoryRepository() *MemoryRepository {
 				Type:        AssetTypePIDController,
 				Status:      AssetStatusNormal,
 				Area:        "thermal-loop",
-				Description: "In-memory fallback PID placeholder for future control logic",
+				Description: "In-memory fallback TIC-101 PID controller for synthetic simulation",
 				Metadata:    metadata,
 			},
 		},

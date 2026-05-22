@@ -295,4 +295,4 @@ The package layout is intentionally split by future service boundaries:
 - `internal/assets` for asset registry
 - `internal/telemetry` for latest telemetry and future ingestion integration
 - `internal/system` for platform/service status aggregation
-- `internal/platform/postgres` as a placeholder for the future database layer
+- `internal/platform/postgres` as a reserved helper package for API-side PostgreSQL integration if the gateway later needs direct storage access

@@ -59,7 +59,7 @@ The MVP includes:
 - Docker Compose environment for local development.
 - Basic backend, simulation, and frontend checks.
 
-The following are planned extensions rather than current implementation: MQTT command ingestion/control, production-grade audit retention, alarm shelving, declarative scenario definitions, report export, auth/RBAC, and WebSocket/SSE transport.
+The following are planned extensions rather than current implementation: MQTT command ingestion/control, production-grade audit retention, alarm shelving, declarative scenario definitions, report export, production auth/RBAC beyond the demo layer, and WebSocket/SSE transport.
 
 ## Out of Scope
 

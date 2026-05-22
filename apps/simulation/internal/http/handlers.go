@@ -20,6 +20,7 @@ type responseMeta struct {
 	Source         string    `json:"source"`
 	SimulationOnly bool      `json:"simulationOnly"`
 	Count          int       `json:"count,omitempty"`
+	Degraded       bool      `json:"degraded,omitempty"`
 }
 
 type response struct {
@@ -74,8 +75,8 @@ func (h *Handler) History(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "INVALID_WINDOW", "Supported windows are 5m, 15m, 30m, and 1h")
 		return
 	}
-	values := h.engine.History(window)
-	writeData(w, values, len(values))
+	result := h.engine.HistoryWithSource(window)
+	writeDataWithMeta(w, result.Values, len(result.Values), result.Source, result.Degraded)
 }
 
 func (h *Handler) ControlStatus(w http.ResponseWriter, _ *http.Request) {
@@ -276,7 +277,11 @@ func parseRecentLimit(w http.ResponseWriter, r *http.Request) (int, bool) {
 }
 
 func writeData(w http.ResponseWriter, data any, count int) {
-	writeJSON(w, http.StatusOK, response{Data: data, Meta: responseMeta{Timestamp: time.Now().UTC(), Source: "simulation", SimulationOnly: true, Count: count}})
+	writeDataWithMeta(w, data, count, "simulation", false)
+}
+
+func writeDataWithMeta(w http.ResponseWriter, data any, count int, source string, degraded bool) {
+	writeJSON(w, http.StatusOK, response{Data: data, Meta: responseMeta{Timestamp: time.Now().UTC(), Source: source, SimulationOnly: true, Count: count, Degraded: degraded}})
 }
 
 func writeError(w http.ResponseWriter, status int, code, message string) {

@@ -27,7 +27,7 @@ export async function setControlMode(request: ModeChangeRequest): Promise<Contro
 function defaultModeReason(mode: ModeChangeRequest["mode"]) {
   switch (mode) {
     case "AUTO":
-      return "Prepare for future simulated PID control";
+      return "Enable simulation-only TIC-101 PID control";
     case "DISABLED":
       return "Disable simulation control output";
     default:

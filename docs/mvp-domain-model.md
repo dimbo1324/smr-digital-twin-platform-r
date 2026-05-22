@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document defines the current MVP domain vocabulary for SMR Twin Platform. It keeps the project aligned around what is implemented now, what is synthetic/mock, and what is planned next.
+This document defines the current MVP domain vocabulary for SMR Twin Platform. It keeps the project aligned around what is implemented now, what is synthetic/demo fallback, and what is planned next.
 
 SMR Twin Platform is a simulation-only digital twin platform for SMR energy systems. No real plant control is implemented or intended.
 

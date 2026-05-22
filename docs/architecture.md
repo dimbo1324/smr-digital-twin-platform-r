@@ -172,7 +172,7 @@ When `HISTORIAN_ENABLED=true` and `DATABASE_URL` is reachable, migrations run on
 - `GET /api/v1/historian/status`
 - `GET /api/v1/simulation/historian/status`
 
-The historian is not a compliance audit system. It has no immutability, retention policy, auth/RBAC, or regulatory guarantees.
+The historian is not a compliance audit system. It has no immutability, retention policy, production auth/RBAC, or regulatory guarantees.
 
 ## MQTT Bridge
 

@@ -22,7 +22,7 @@ func (r *MemoryRepository) Latest(_ context.Context) ([]TelemetryPoint, error) {
 		textPoint("V-101.STATE", "Valve State", "STOPPED", "", QualityUncertain, now),
 		textPoint("P-101.STATE", "Pump State", "Offline", "", QualityBad, now),
 		numberPoint("P-101.RPM", "Pump Speed", 0, "rpm", QualityBad, now),
-		textPoint("HX-101.STATE", "Heat Exchanger State", "Mock Duty", "", QualityUncertain, now),
+		textPoint("HX-101.STATE", "Heat Exchanger State", "Reduced Duty", "", QualityUncertain, now),
 		textPoint("TIC-101.MODE", "PID Controller Mode", "Disabled", "", QualityUncertain, now),
 	}, nil
 }
@@ -35,7 +35,7 @@ func numberPoint(tag, name string, value float64, unit string, quality Quality, 
 		Unit:      unit,
 		Quality:   quality,
 		Timestamp: timestamp,
-		Source:    "mock-api",
+		Source:    "demo-fallback-api",
 	}
 }
 
@@ -47,6 +47,6 @@ func textPoint(tag, name, value, unit string, quality Quality, timestamp time.Ti
 		Unit:      unit,
 		Quality:   quality,
 		Timestamp: timestamp,
-		Source:    "mock-api",
+		Source:    "demo-fallback-api",
 	}
 }

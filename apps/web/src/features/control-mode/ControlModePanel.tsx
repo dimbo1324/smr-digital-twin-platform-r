@@ -89,7 +89,7 @@ export function ControlModePanel({
             <ShieldCheck className="h-5 w-5 text-primary" aria-hidden="true" />
           </div>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">{modeCopy[mode]}</p>
-          <p className="mt-2 text-xs text-muted-foreground" data-testid="control-mode-pid-placeholder">
+          <p className="mt-2 text-xs text-muted-foreground" data-testid="control-mode-pid-status">
             PID implemented: {controlStatus?.pidImplemented ? "yes" : "no"}. AUTO mode applies only to in-memory simulation state.
           </p>
         </div>

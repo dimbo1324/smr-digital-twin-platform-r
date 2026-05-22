@@ -3,13 +3,21 @@ package simulation
 import "time"
 
 type envelope[T any] struct {
-	Data T `json:"data"`
-	Meta struct {
-		Timestamp      time.Time `json:"timestamp"`
-		Source         string    `json:"source"`
-		SimulationOnly bool      `json:"simulationOnly"`
-		Count          int       `json:"count,omitempty"`
-	} `json:"meta"`
+	Data T            `json:"data"`
+	Meta ResponseMeta `json:"meta"`
+}
+
+type ResponseMeta struct {
+	Timestamp      time.Time `json:"timestamp"`
+	Source         string    `json:"source"`
+	SimulationOnly bool      `json:"simulationOnly"`
+	Count          int       `json:"count,omitempty"`
+	Degraded       bool      `json:"degraded,omitempty"`
+}
+
+type TelemetryHistoryResult struct {
+	Values []TelemetrySnapshot
+	Meta   ResponseMeta
 }
 
 type TelemetrySnapshot struct {

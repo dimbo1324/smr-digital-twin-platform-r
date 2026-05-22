@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { getMockTelemetryPoint } from "@/entities/telemetry/model/mockTelemetry";
+import { getDemoFallbackTelemetryPoint } from "@/entities/telemetry/model/demoFallbackTelemetry";
 import { useHistorianStatus } from "@/entities/historian/api/useHistorianStatus";
 import { findTelemetryByTag } from "@/entities/telemetry/lib/selectors";
 import { TREND_TELEMETRY_TAGS } from "@/entities/telemetry/model/processTags";
@@ -17,7 +17,7 @@ export function TrendsPage() {
   const latestTelemetry = useLatestTelemetry(2000);
   const historian = useHistorianStatus();
   const trendPoints = TREND_TELEMETRY_TAGS
-    .map(({ tag }) => findTelemetryByTag(latestTelemetry.points, tag) ?? getMockTelemetryPoint(tag))
+    .map(({ tag }) => findTelemetryByTag(latestTelemetry.points, tag) ?? getDemoFallbackTelemetryPoint(tag))
     .filter((point) => point !== undefined);
   const summaryState = latestTelemetry.state === "connected" ? "Live telemetry summary" : "Fallback telemetry summary";
 
@@ -31,8 +31,8 @@ export function TrendsPage() {
           Trends workspace for synthetic process telemetry.
         </h1>
         <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">
-          Summary cards use latest API telemetry when available. The chart uses in-memory
-          simulation history and clearly labels static fallback curves.
+          Summary cards use latest API telemetry when available. The chart uses backend
+          telemetry history and clearly labels persistent, in-memory, or static fallback data.
         </p>
       </section>
 

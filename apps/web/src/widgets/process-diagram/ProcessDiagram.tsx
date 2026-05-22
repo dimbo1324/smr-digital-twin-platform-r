@@ -67,7 +67,7 @@ function pointSourceVariant(point: TelemetryDisplayPoint | undefined): SourceVar
     return "success";
   }
 
-  return point.source?.includes("mock") ? "mock" : "warning";
+  return point.source?.includes("demo-fallback") || point.source?.includes("mock") ? "mock" : "warning";
 }
 
 function buildNodes(telemetryPoints: TelemetryDisplayPoint[]): ProcessNode[] {

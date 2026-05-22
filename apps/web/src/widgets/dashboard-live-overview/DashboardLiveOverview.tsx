@@ -355,7 +355,7 @@ function SystemBoundaryPanel({ systemStatus }: { systemStatus: SystemStatusState
       <CardContent className="grid gap-3 sm:grid-cols-2">
         <BoundaryItem icon={RadioTower} label="Data source" value={source} />
         <BoundaryItem icon={Gauge} label="Telemetry" value="Synthetic process data" />
-        <BoundaryItem icon={Database} label="Storage" value="In-memory history" />
+        <BoundaryItem icon={Database} label="Storage" value="Persistent historian when connected; in-memory fallback otherwise" />
         <BoundaryItem icon={Activity} label="Transport" value="REST polling" />
         <BoundaryItem icon={TerminalSquare} label="Control" value="Simulation-only commands" />
         <BoundaryItem icon={ShieldCheck} label="Real plant control" value="Not supported" />
@@ -373,11 +373,12 @@ function CurrentLimitationsPanel() {
     "Persistent/in-memory trends",
     "Simulation-only PID",
     "Publish-only MQTT bridge",
+    "Demo RBAC",
   ];
   const notImplemented = [
     "MQTT command ingestion",
     "WebSocket/SSE",
-    "Auth/RBAC",
+    "Production auth/OAuth",
     "Report export",
   ];
 

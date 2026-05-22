@@ -159,7 +159,7 @@ func heatExchangerStateForSnapshot(snapshot model.TelemetrySnapshot) string {
 		return "Offline"
 	}
 	if snapshot.Health == model.HealthWarning || snapshot.Health == model.HealthAlarm {
-		return "Mock Duty"
+		return "Reduced Duty"
 	}
 	return "Online"
 }

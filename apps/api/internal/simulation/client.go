@@ -43,13 +43,17 @@ func (c *Client) LatestTelemetry(ctx context.Context) (TelemetrySnapshot, error)
 	return get[TelemetrySnapshot](ctx, c, "/api/v1/simulation/telemetry/latest")
 }
 
-func (c *Client) TelemetryHistory(ctx context.Context, window string) ([]TelemetrySnapshot, error) {
+func (c *Client) TelemetryHistory(ctx context.Context, window string) (TelemetryHistoryResult, error) {
 	if window == "" {
 		window = "15m"
 	}
 	query := url.Values{}
 	query.Set("window", window)
-	return get[[]TelemetrySnapshot](ctx, c, "/api/v1/simulation/telemetry/history?"+query.Encode())
+	payload, err := getEnvelope[[]TelemetrySnapshot](ctx, c, "/api/v1/simulation/telemetry/history?"+query.Encode())
+	if err != nil {
+		return TelemetryHistoryResult{}, err
+	}
+	return TelemetryHistoryResult{Values: payload.Data, Meta: payload.Meta}, nil
 }
 
 func (c *Client) ControlStatus(ctx context.Context) (ControlStatus, error) {
@@ -129,6 +133,10 @@ func get[T any](ctx context.Context, c *Client, path string) (T, error) {
 	return do[T](ctx, c, http.MethodGet, path)
 }
 
+func getEnvelope[T any](ctx context.Context, c *Client, path string) (envelope[T], error) {
+	return doEnvelope[T](ctx, c, http.MethodGet, path, nil)
+}
+
 func post[T any](ctx context.Context, c *Client, path string) (T, error) {
 	return do[T](ctx, c, http.MethodPost, path)
 }
@@ -146,21 +154,29 @@ func do[T any](ctx context.Context, c *Client, method, path string) (T, error) {
 }
 
 func doWithBody[T any](ctx context.Context, c *Client, method, path string, body any) (T, error) {
-	var zero T
+	payload, err := doEnvelope[T](ctx, c, method, path, body)
+	if err != nil {
+		var zero T
+		return zero, err
+	}
+	return payload.Data, nil
+}
+
+func doEnvelope[T any](ctx context.Context, c *Client, method, path string, body any) (envelope[T], error) {
 	if !c.enabled {
-		return zero, ErrDisabled
+		return envelope[T]{}, ErrDisabled
 	}
 	var reader io.Reader = bytes.NewReader(nil)
 	if body != nil {
 		payload, err := json.Marshal(body)
 		if err != nil {
-			return zero, err
+			return envelope[T]{}, err
 		}
 		reader = bytes.NewReader(payload)
 	}
 	request, err := http.NewRequestWithContext(ctx, method, c.baseURL+path, reader)
 	if err != nil {
-		return zero, err
+		return envelope[T]{}, err
 	}
 	request.Header.Set("Accept", "application/json")
 	if body != nil {
@@ -169,23 +185,23 @@ func doWithBody[T any](ctx context.Context, c *Client, method, path string, body
 
 	response, err := c.http.Do(request)
 	if err != nil {
-		return zero, err
+		return envelope[T]{}, err
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
 		var payload errorEnvelope
 		if err := json.NewDecoder(response.Body).Decode(&payload); err == nil && payload.Error.Code != "" {
-			return zero, ResponseError{StatusCode: response.StatusCode, Code: payload.Error.Code, Message: payload.Error.Message}
+			return envelope[T]{}, ResponseError{StatusCode: response.StatusCode, Code: payload.Error.Code, Message: payload.Error.Message}
 		}
-		return zero, ResponseError{StatusCode: response.StatusCode, Code: "SIMULATION_ERROR", Message: fmt.Sprintf("simulation response status %d", response.StatusCode)}
+		return envelope[T]{}, ResponseError{StatusCode: response.StatusCode, Code: "SIMULATION_ERROR", Message: fmt.Sprintf("simulation response status %d", response.StatusCode)}
 	}
 
 	var payload envelope[T]
 	if err := json.NewDecoder(response.Body).Decode(&payload); err != nil {
-		return zero, err
+		return envelope[T]{}, err
 	}
-	return payload.Data, nil
+	return payload, nil
 }
 
 var ErrDisabled = fmt.Errorf("simulation client disabled")
