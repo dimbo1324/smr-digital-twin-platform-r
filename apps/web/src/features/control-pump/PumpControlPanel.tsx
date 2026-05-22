@@ -12,6 +12,7 @@ import {
   telemetrySourceLabel,
 } from "@/entities/telemetry/lib/selectors";
 import { ApiError } from "@/shared/api/client";
+import { isRbacDenied } from "@/entities/auth/lib/permissions";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
@@ -21,6 +22,8 @@ type DataState = "loading" | "connected" | "degraded";
 export interface PumpControlPanelProps {
   telemetryPoints: TelemetryDisplayPoint[];
   dataState: DataState;
+  canSendCommand?: boolean;
+  roleDeniedReason?: string;
   onCommandComplete?: () => void;
 }
 
@@ -33,6 +36,8 @@ type CommandFeedback =
 export function PumpControlPanel({
   telemetryPoints,
   dataState,
+  canSendCommand = true,
+  roleDeniedReason,
   onCommandComplete,
 }: PumpControlPanelProps) {
   const pumpStatePoint = findTelemetryByTag(telemetryPoints, "P-101.STATE");
@@ -40,7 +45,7 @@ export function PumpControlPanel({
   const pumpState = getTextTelemetryValue(telemetryPoints, "P-101.STATE", "UNKNOWN");
   const [feedback, setFeedback] = useState<CommandFeedback>({ state: "idle" });
   const commandMutation = useSendCommand();
-  const canSend = dataState === "connected" && feedback.state !== "pending" && !commandMutation.isPending;
+  const canSend = dataState === "connected" && feedback.state !== "pending" && !commandMutation.isPending && canSendCommand;
 
   const submitPumpCommand = (commandType: CommandType) => {
     setFeedback({ state: "pending", message: `${commandType} command is being sent...` });
@@ -60,7 +65,9 @@ export function PumpControlPanel({
       })
       .catch((error: unknown) => {
         const message =
-          error instanceof ApiError
+          isRbacDenied(error)
+            ? "Demo RBAC denied this pump command for the current role."
+            : error instanceof ApiError
             ? `${error.code ?? "COMMAND_FAILED"}: ${error.message}`
             : error instanceof Error
               ? error.message
@@ -105,6 +112,15 @@ export function PumpControlPanel({
           <div className="mt-4 rounded-2xl border border-border/70 bg-background/50 p-3 text-xs leading-5 text-muted-foreground">
             Commands mutate only the local simulation state. They are not real plant control commands.
           </div>
+          {!canSendCommand && roleDeniedReason ? (
+            <div
+              className="mt-3 rounded-2xl border border-warning/30 bg-warning/10 p-3 text-xs leading-5 text-warning"
+              data-testid="pump-rbac-disabled-reason"
+              role="status"
+            >
+              {roleDeniedReason}
+            </div>
+          ) : null}
         </div>
 
         <div className="mt-4 grid gap-2 sm:grid-cols-2">

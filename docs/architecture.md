@@ -11,7 +11,7 @@ flowchart LR
     MQTT --> Broker["Eclipse Mosquitto<br/>local demo broker"]
 ```
 
-The frontend calls only `apps/api`. The simulation service remains an internal backend dependency so the API layer can normalize responses, expose fallback behavior, and later add auth, audit, rate limiting, and observability without changing the frontend contract.
+The frontend calls only `apps/api`. The simulation service remains an internal backend dependency so the API layer can normalize responses, expose fallback behavior, enforce demo RBAC for protected actions, and later add production auth hardening, rate limiting, and observability without changing the frontend contract.
 
 The simulation engine is synthetic and deterministic. It generates telemetry for portfolio/demo workflows only and is not a real plant model.
 
@@ -63,7 +63,7 @@ flowchart LR
     WEB --> FLOW["Dashboard -> Process -> PID -> Alarms -> Events -> Trends -> Settings"]
 ```
 
-The browser regression suite verifies synthetic simulation workflows only. It covers Dashboard status visibility, manual `V-101`/`P-101` command flows, manual-to-AUTO PID arbitration, alarm activate/acknowledge/clear, Events filtering/sorting, Trends source labels, Settings capability copy, basic degraded historian/MQTT UI states via route mocks, axe-powered accessibility baseline checks, and keyboard navigation through the skip link, primary sidebar, and core control inputs. It does not replace deeper component tests, visual regression, a full human WCAG audit, multi-browser certification, or production SCADA validation.
+The browser regression suite verifies synthetic simulation workflows only. It covers Dashboard status visibility, manual `V-101`/`P-101` command flows, manual-to-AUTO PID arbitration, alarm activate/acknowledge/clear, Events filtering/sorting, Trends source labels, Settings capability copy, demo RBAC role flows, basic degraded historian/MQTT UI states via route mocks, axe-powered accessibility baseline checks, and keyboard navigation through the skip link, primary sidebar, and core control inputs. It does not replace deeper component tests, visual regression, a full human WCAG audit, multi-browser certification, or production SCADA validation.
 
 The desktop HMI layout keeps the primary sidebar as a sticky, semantic navigation region with its own overflow when needed. The main content remains separate from the sidebar, and smaller viewports fall back to the responsive static layout so navigation does not cover the simulation workspace.
 
@@ -192,6 +192,22 @@ It publishes JSON envelopes under the default `smr/site-001/unit-001` topic pref
 
 This is publish-only. There are no MQTT command ingestion topics, no MQTT actuator control path, and no production broker auth/ACL/TLS in the current milestone.
 
+## Demo Auth / RBAC Layer
+
+Demo RBAC lives in `apps/api` as the frontend-facing enforcement boundary. The HMI sends the selected static demo user with `X-Demo-User`; missing or unknown headers fall back to `demo-operator` for local demo compatibility.
+
+```mermaid
+flowchart LR
+    UI["Frontend role switcher"] --> API["API auth middleware"]
+    API --> Registry["Static demo user registry"]
+    API --> Guard["Permission checks for write actions"]
+    Guard --> SIM["Simulation service"]
+```
+
+The API exposes `GET /api/v1/auth/session` and `GET /api/v1/auth/users`. Write/action endpoints such as commands, control mode changes, PID config updates, alarm acknowledgement, and scenario operations require demo permissions and return structured `403 RBAC_FORBIDDEN` errors when denied.
+
+This is not production authentication. There are no passwords, OAuth/JWT flows, persistent users, or real plant access-control guarantees. The simulation service remains a local/internal demo dependency and is not hardened as a public security boundary.
+
 ## Alarm And Event Operations Flow
 
 The current alarm workflow is also REST plus polling:
@@ -224,4 +240,4 @@ Alarm and event state is owned by `apps/simulation`. Recent records remain avail
 - Telemetry, command, event, and alarm history are persistent only when the optional PostgreSQL/TimescaleDB historian is enabled and connected; otherwise they fall back to in-memory storage.
 - Process commands are implemented only for simulated `V-101` and `P-101` assets.
 - Command/event history is not an immutable audit store.
-- MQTT command ingestion, report export, auth/RBAC, and Kubernetes are not part of the current milestone.
+- MQTT command ingestion, report export, production auth/RBAC, and Kubernetes are not part of the current milestone.

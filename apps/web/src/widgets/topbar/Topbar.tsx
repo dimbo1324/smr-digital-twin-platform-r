@@ -1,9 +1,10 @@
-import { Clock3, DatabaseZap, ShieldAlert, UserRound, Wifi, WifiOff } from "lucide-react";
+import { Clock3, DatabaseZap, ShieldAlert, Wifi, WifiOff } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { navigationItems } from "@/shared/config/navigation";
 import { useSystemStatus } from "@/shared/api/useSystemStatus";
 import { Badge } from "@/shared/ui/badge";
 import { ThemeToggle } from "@/shared/ui/theme-toggle";
+import { DemoRoleSwitcher } from "@/features/demo-auth/DemoRoleSwitcher";
 
 const pageMeta: Record<string, { title: string; eyebrow: string; description: string }> =
   Object.fromEntries(
@@ -78,10 +79,7 @@ export function Topbar() {
               <ShieldAlert className="h-3.5 w-3.5" aria-hidden="true" />
               No Live Control
             </Badge>
-            <Badge variant="secondary">
-              <UserRound className="h-3.5 w-3.5" aria-hidden="true" />
-              Engineer
-            </Badge>
+            <DemoRoleSwitcher />
             <Badge variant="outline">
               <Clock3 className="h-3.5 w-3.5" aria-hidden="true" />
               {lastSyncLabel}

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { setDemoUserBeforeLoad } from "./helpers/auth";
 import {
   acknowledgeAlarm,
   getActiveAlarms,
@@ -11,6 +12,7 @@ import {
 import { gotoAlarms, gotoEvents } from "./helpers/navigation";
 
 test("alarm activate acknowledge and clear flow", async ({ page, request }) => {
+  await setDemoUserBeforeLoad(page, "demo-supervisor");
   await prepareManualState(request);
 
   await test.step("activate deterministic synthetic alarm", async () => {

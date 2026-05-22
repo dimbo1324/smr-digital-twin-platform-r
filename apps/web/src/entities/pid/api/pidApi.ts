@@ -13,7 +13,6 @@ export async function updatePidConfig(request: PIDConfigUpdateRequest): Promise<
   const response = await apiPatch<PIDStatus, PIDConfigUpdateRequest>(
     "/api/v1/pid/config",
     {
-      requestedBy: "demo-operator",
       reason: "Tune synthetic TIC-101 PID loop",
       ...request,
     },

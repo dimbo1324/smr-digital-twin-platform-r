@@ -4,6 +4,7 @@ import {
   validateApiResponse,
 } from "@/shared/api/validation/api-validation";
 import type { ApiSchemaName } from "@/shared/api/validation/schemas";
+import { getSelectedDemoUserId } from "@/entities/auth/model/storage";
 
 type ApiMeta = components["schemas"]["ApiMeta"];
 
@@ -38,9 +39,7 @@ export async function apiGet<T>(
 ): Promise<ApiEnvelope<T>> {
   const response = await fetch(`${getApiBaseUrl()}${path}`, {
     method: "GET",
-    headers: {
-      Accept: "application/json",
-    },
+    headers: apiHeaders(),
     signal: options.signal,
   });
 
@@ -62,9 +61,7 @@ export async function apiPost<TResponse, TBody = unknown>(
     await validateApiRequest(options.requestSchema, body, path);
   }
 
-  const headers: HeadersInit = {
-    Accept: "application/json",
-  };
+  const headers = apiHeaders();
   if (body !== undefined) {
     headers["Content-Type"] = "application/json";
   }
@@ -94,9 +91,7 @@ export async function apiPatch<TResponse, TBody = unknown>(
     await validateApiRequest(options.requestSchema, body, path);
   }
 
-  const headers: HeadersInit = {
-    Accept: "application/json",
-  };
+  const headers = apiHeaders();
   if (body !== undefined) {
     headers["Content-Type"] = "application/json";
   }
@@ -115,6 +110,13 @@ export async function apiPatch<TResponse, TBody = unknown>(
   const payload = (await response.json()) as ApiEnvelope<TResponse>;
   await validateApiResponse(options.responseSchema, payload.data, path);
   return payload;
+}
+
+function apiHeaders(): Record<string, string> {
+  return {
+    Accept: "application/json",
+    "X-Demo-User": getSelectedDemoUserId(),
+  };
 }
 
 async function toApiError(response: Response): Promise<ApiClientError> {

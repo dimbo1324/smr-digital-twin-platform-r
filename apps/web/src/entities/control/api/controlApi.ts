@@ -13,7 +13,6 @@ export async function setControlMode(request: ModeChangeRequest): Promise<Contro
   const response = await apiPost<ControlStatus, ModeChangeRequest>(
     "/api/v1/control/mode",
     {
-      requestedBy: "demo-operator",
       reason: defaultModeReason(request.mode),
       ...request,
     },

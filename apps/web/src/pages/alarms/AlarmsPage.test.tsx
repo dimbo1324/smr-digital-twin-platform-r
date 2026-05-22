@@ -25,6 +25,21 @@ vi.mock("@/entities/alarms/api/useAlarms", () => ({
   }),
 }));
 
+vi.mock("@/entities/auth/api/useAuthSession", () => ({
+  useAuthSession: () => ({
+    session: {
+      userId: "demo-supervisor",
+      displayName: "Demo Supervisor",
+      role: "SUPERVISOR",
+      permissions: ["ACKNOWLEDGE_ALARM"],
+      source: "demo",
+      simulationOnly: true,
+      disclaimer: "Demo RBAC only. Not production authentication.",
+    },
+    state: "connected",
+  }),
+}));
+
 beforeEach(() => {
   alarmMocks.acknowledge.mockReset();
   alarmMocks.acknowledge.mockResolvedValue(acknowledgedAlarmFixture);

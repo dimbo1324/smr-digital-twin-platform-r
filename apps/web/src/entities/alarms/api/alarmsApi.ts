@@ -22,8 +22,8 @@ export async function acknowledgeAlarm(
   payload: AlarmAcknowledgeRequest = {},
 ): Promise<Alarm> {
   const acknowledgeRequest = {
-    acknowledgedBy: payload.acknowledgedBy ?? "demo-operator",
     comment: payload.comment ?? "Acknowledged from Alarms page",
+    ...payload,
   };
   const response = await apiPost<AlarmInstance, AlarmAcknowledgeRequest>(
     `/api/v1/alarms/${encodeURIComponent(id)}/acknowledge`,

@@ -16,6 +16,8 @@ The generated frontend types are used for core API shapes such as `Asset`, `Tele
 
 The MQTT bridge exposes synthetic simulation data through publish-only JSON envelopes. MQTT status is part of the API contract, but MQTT command ingestion is intentionally not implemented.
 
+The demo Auth/RBAC layer exposes static demo users, roles, permissions, and a current session through the API gateway. It demonstrates role-aware restrictions for synthetic simulator actions only and is not production authentication.
+
 The frontend data layer consumes those generated types through a typed REST client and TanStack Query hooks. REST polling remains the current real-time mechanism; WebSocket/SSE transport is planned for a later milestone.
 
 ## Safety Boundary
@@ -293,6 +295,49 @@ The current implementation stores recent command, alarm, PID, control, scenario,
 
 The event schema describes the unified event stream only. It does not imply persistent audit storage or compliance-grade retention.
 
+## Demo Auth / RBAC Model
+
+Role:
+
+- `VIEWER`
+- `ENGINEER`
+- `OPERATOR`
+- `SUPERVISOR`
+- `ADMIN`
+
+Permission examples:
+
+- `SEND_COMMAND`
+- `CHANGE_CONTROL_MODE`
+- `UPDATE_PID_CONFIG`
+- `ACKNOWLEDGE_ALARM`
+- `RUN_SCENARIO`
+- `VIEW_DIAGNOSTICS`
+- `VIEW_MQTT_STATUS`
+- `VIEW_HISTORIAN_STATUS`
+- `ADMIN_DEMO_SESSION`
+
+DemoUser:
+
+- `id`
+- `displayName`
+- `role`
+- `permissions`
+- `badgeLabel`
+- `description`
+
+AuthSession:
+
+- `userId`
+- `displayName`
+- `role`
+- `permissions`
+- `source: demo`
+- `simulationOnly: true`
+- `disclaimer`
+
+The frontend sends `X-Demo-User` to the API gateway. Missing or unknown users fall back to `demo-operator` for local demo compatibility. The API gateway enforces protected write/action endpoints and returns `RBAC_FORBIDDEN` for denied actions. This layer is demo-only and does not include passwords, OAuth/JWT, persistent users, or production access-control guarantees.
+
 ## Persistent Historian Records
 
 The optional historian stores synthetic simulation records when PostgreSQL/TimescaleDB is enabled:
@@ -458,6 +503,7 @@ Implemented now:
 - Manual/auto/disabled `TIC-101` mode and `V-101` command arbitration.
 - Simulation-only `TIC-101` PID controller.
 - Publish-only MQTT bridge and `MQTTStatus` endpoint.
+- Demo Auth/RBAC users, permissions, role switcher, session endpoint, and protected action enforcement.
 
 Partial:
 
@@ -471,8 +517,8 @@ Not implemented:
 
 - MQTT command ingestion or MQTT-based control.
 - Production-grade command/audit storage.
+- Production authentication or production RBAC.
 - Report export.
-- Auth/RBAC.
 
 ## Planned Extensions
 

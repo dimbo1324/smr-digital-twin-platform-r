@@ -1,7 +1,9 @@
 import alarmSchema from "../../../../../../packages/schemas/schemas/alarm.schema.json";
+import authSessionSchema from "../../../../../../packages/schemas/schemas/auth-session.schema.json";
 import assetSchema from "../../../../../../packages/schemas/schemas/asset.schema.json";
 import commandSchema from "../../../../../../packages/schemas/schemas/command.schema.json";
 import commandRequestSchema from "../../../../../../packages/schemas/schemas/command-request.schema.json";
+import demoUserSchema from "../../../../../../packages/schemas/schemas/demo-user.schema.json";
 import controlStatusSchema from "../../../../../../packages/schemas/schemas/control-status.schema.json";
 import acknowledgeAlarmRequestSchema from "../../../../../../packages/schemas/schemas/acknowledge-alarm-request.schema.json";
 import eventSchema from "../../../../../../packages/schemas/schemas/event.schema.json";
@@ -20,12 +22,15 @@ export const apiSchemaNames = [
   "AcknowledgeAlarmRequest",
   "AlarmInstance",
   "AlarmInstanceList",
+  "AuthSession",
   "Asset",
   "AssetList",
   "Command",
   "CommandList",
   "CommandRequest",
   "ControlStatus",
+  "DemoUser",
+  "DemoUserList",
   "Event",
   "EventList",
   "HistorianStatus",
@@ -56,12 +61,15 @@ export const apiSchemas: Record<ApiSchemaName, unknown> = {
   AcknowledgeAlarmRequest: acknowledgeAlarmRequestSchema,
   AlarmInstance: alarmSchema,
   AlarmInstanceList: arrayOf("AlarmInstanceList", alarmSchema),
+  AuthSession: authSessionSchema,
   Asset: assetSchema,
   AssetList: arrayOf("AssetList", assetSchema),
   Command: commandSchema,
   CommandList: arrayOf("CommandList", commandSchema),
   CommandRequest: commandRequestSchema,
   ControlStatus: controlStatusSchema,
+  DemoUser: demoUserSchema,
+  DemoUserList: arrayOf("DemoUserList", demoUserSchema),
   Event: eventSchema,
   EventList: arrayOf("EventList", eventSchema),
   HistorianStatus: historianStatusSchema,

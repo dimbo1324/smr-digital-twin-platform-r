@@ -11,6 +11,8 @@ import (
 )
 
 type Handlers struct {
+	AuthSession      http.Handler
+	AuthUsers        http.Handler
 	SystemStatus     http.Handler
 	Assets           http.Handler
 	LatestTelemetry  http.Handler

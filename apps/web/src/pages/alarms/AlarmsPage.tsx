@@ -6,6 +6,8 @@ import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { PageShell } from "@/shared/ui/page-shell";
+import { useAuthSession } from "@/entities/auth/api/useAuthSession";
+import { hasPermission, permissions, roleDeniedReason } from "@/entities/auth/lib/permissions";
 import {
   Table,
   TableBody,
@@ -31,6 +33,8 @@ const statusVariant: Record<Alarm["status"], "warning" | "mock" | "success"> = {
 
 export function AlarmsPage() {
   const alarms = useAlarms();
+  const auth = useAuthSession();
+  const canAcknowledgeAlarm = hasPermission(auth.session, permissions.acknowledgeAlarm);
   const activeCount = alarms.activeAlarms.filter((alarm) => alarm.status === "ACTIVE").length;
   const acknowledgedCount = alarms.activeAlarms.filter((alarm) => alarm.status === "ACKNOWLEDGED").length;
 
@@ -90,6 +94,8 @@ export function AlarmsPage() {
               alarms={alarms.activeAlarms}
               acknowledgingId={alarms.acknowledgingId}
               onAcknowledge={alarms.acknowledge}
+              canAcknowledge={canAcknowledgeAlarm}
+              deniedReason={roleDeniedReason(auth.session, "acknowledge simulation alarms")}
             />
           )}
         </CardContent>
@@ -118,10 +124,14 @@ function AlarmTable({
   alarms,
   acknowledgingId,
   onAcknowledge,
+  canAcknowledge = true,
+  deniedReason,
 }: {
   alarms: Alarm[];
   acknowledgingId?: string;
   onAcknowledge?: (id: string) => Promise<Alarm>;
+  canAcknowledge?: boolean;
+  deniedReason?: string;
 }) {
   return (
     <Table>
@@ -162,14 +172,22 @@ function AlarmTable({
             </TableCell>
             <TableCell>
               {alarm.status === "ACTIVE" && onAcknowledge ? (
-                <Button
-                  size="sm"
-                  disabled={acknowledgingId === alarm.id}
-                  onClick={() => void onAcknowledge(alarm.id)}
-                  data-testid="acknowledge-alarm-button"
-                >
-                  {acknowledgingId === alarm.id ? "Acknowledging" : "Acknowledge"}
-                </Button>
+                <div className="space-y-2">
+                  <Button
+                    size="sm"
+                    disabled={acknowledgingId === alarm.id || !canAcknowledge}
+                    onClick={() => void onAcknowledge(alarm.id)}
+                    data-testid="acknowledge-alarm-button"
+                    title={!canAcknowledge ? deniedReason : undefined}
+                  >
+                    {acknowledgingId === alarm.id ? "Acknowledging" : "Acknowledge"}
+                  </Button>
+                  {!canAcknowledge && deniedReason ? (
+                    <p className="max-w-[12rem] text-xs leading-5 text-warning" role="status">
+                      {deniedReason}
+                    </p>
+                  ) : null}
+                </div>
               ) : alarm.status === "ACKNOWLEDGED" ? (
                 <Badge variant="mock">seen</Badge>
               ) : (

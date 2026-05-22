@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/api/internal/assets"
+	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/api/internal/auth"
 	httpapi "github.com/dimbo1324/smr-digital-twin-platform-r/apps/api/internal/http"
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/api/internal/system"
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/api/internal/telemetry"
@@ -103,6 +104,10 @@ func (g *Gateway) ControlStatus(w http.ResponseWriter, r *http.Request) {
 }
 
 func (g *Gateway) SetControlMode(w http.ResponseWriter, r *http.Request) {
+	session, ok := requirePermission(w, r, auth.PermissionChangeControlMode)
+	if !ok {
+		return
+	}
 	var request ModeChangeRequest
 	r.Body = http.MaxBytesReader(w, r.Body, maxJSONBodyBytes)
 	decoder := json.NewDecoder(r.Body)
@@ -112,7 +117,7 @@ func (g *Gateway) SetControlMode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if request.RequestedBy == "" {
-		request.RequestedBy = "demo-operator"
+		request.RequestedBy = session.DisplayName
 	}
 	status, err := g.client.SetControlMode(r.Context(), request)
 	if err != nil {
@@ -167,6 +172,10 @@ func (g *Gateway) MQTTStatus(w http.ResponseWriter, r *http.Request) {
 }
 
 func (g *Gateway) UpdatePIDConfig(w http.ResponseWriter, r *http.Request) {
+	session, ok := requirePermission(w, r, auth.PermissionUpdatePIDConfig)
+	if !ok {
+		return
+	}
 	var request PIDConfigUpdateRequest
 	r.Body = http.MaxBytesReader(w, r.Body, maxJSONBodyBytes)
 	decoder := json.NewDecoder(r.Body)
@@ -176,7 +185,7 @@ func (g *Gateway) UpdatePIDConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if request.RequestedBy == "" {
-		request.RequestedBy = "demo-operator"
+		request.RequestedBy = session.DisplayName
 	}
 	status, err := g.client.UpdatePIDConfig(r.Context(), request)
 	if err != nil {
@@ -205,6 +214,10 @@ func (g *Gateway) AlarmHistory(w http.ResponseWriter, r *http.Request) {
 }
 
 func (g *Gateway) AcknowledgeAlarm(w http.ResponseWriter, r *http.Request) {
+	session, ok := requirePermission(w, r, auth.PermissionAcknowledgeAlarm)
+	if !ok {
+		return
+	}
 	var request AlarmAcknowledgeRequest
 	r.Body = http.MaxBytesReader(w, r.Body, maxJSONBodyBytes)
 	decoder := json.NewDecoder(r.Body)
@@ -214,7 +227,7 @@ func (g *Gateway) AcknowledgeAlarm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if request.AcknowledgedBy == "" {
-		request.AcknowledgedBy = "demo-operator"
+		request.AcknowledgedBy = session.DisplayName
 	}
 
 	alarm, err := g.client.AcknowledgeAlarm(r.Context(), r.PathValue("alarmID"), request)
@@ -236,6 +249,9 @@ func (g *Gateway) Scenarios(w http.ResponseWriter, r *http.Request) {
 }
 
 func (g *Gateway) StartScenario(w http.ResponseWriter, r *http.Request) {
+	if _, ok := requirePermission(w, r, auth.PermissionRunScenario); !ok {
+		return
+	}
 	status, err := g.client.StartScenario(r.Context(), r.PathValue("scenarioName"))
 	if err != nil {
 		httpapi.WriteError(w, r, http.StatusBadGateway, "SCENARIO_START_FAILED", "Failed to start simulation scenario")
@@ -245,6 +261,9 @@ func (g *Gateway) StartScenario(w http.ResponseWriter, r *http.Request) {
 }
 
 func (g *Gateway) StopScenario(w http.ResponseWriter, r *http.Request) {
+	if _, ok := requirePermission(w, r, auth.PermissionRunScenario); !ok {
+		return
+	}
 	status, err := g.client.StopScenario(r.Context())
 	if err != nil {
 		httpapi.WriteError(w, r, http.StatusBadGateway, "SCENARIO_STOP_FAILED", "Failed to stop simulation scenario")
@@ -254,6 +273,9 @@ func (g *Gateway) StopScenario(w http.ResponseWriter, r *http.Request) {
 }
 
 func (g *Gateway) Reset(w http.ResponseWriter, r *http.Request) {
+	if _, ok := requirePermission(w, r, auth.PermissionRunScenario); !ok {
+		return
+	}
 	status, err := g.client.Reset(r.Context())
 	if err != nil {
 		httpapi.WriteError(w, r, http.StatusBadGateway, "SIMULATION_RESET_FAILED", "Failed to reset simulation")
@@ -263,6 +285,10 @@ func (g *Gateway) Reset(w http.ResponseWriter, r *http.Request) {
 }
 
 func (g *Gateway) SubmitCommand(w http.ResponseWriter, r *http.Request) {
+	session, ok := requirePermission(w, r, auth.PermissionSendCommand)
+	if !ok {
+		return
+	}
 	var request CommandRequest
 	r.Body = http.MaxBytesReader(w, r.Body, maxJSONBodyBytes)
 	decoder := json.NewDecoder(r.Body)
@@ -276,7 +302,7 @@ func (g *Gateway) SubmitCommand(w http.ResponseWriter, r *http.Request) {
 		request.Source = "frontend"
 	}
 	if request.RequestedBy == "" {
-		request.RequestedBy = "demo-engineer"
+		request.RequestedBy = session.DisplayName
 	}
 	if request.CorrelationID == "" {
 		request.CorrelationID = httpapi.RequestIDFromContext(r.Context())
@@ -289,6 +315,21 @@ func (g *Gateway) SubmitCommand(w http.ResponseWriter, r *http.Request) {
 	}
 
 	httpapi.WriteData(w, r, http.StatusOK, command, httpapi.MetaOptions{Source: "simulation"})
+}
+
+func requirePermission(w http.ResponseWriter, r *http.Request, permission auth.Permission) (auth.Session, bool) {
+	session := auth.FromRequest(r)
+	if session.Has(permission) {
+		return session, true
+	}
+	httpapi.WriteErrorPayload(w, r, http.StatusForbidden, httpapi.ErrorPayload{
+		Code:               "RBAC_FORBIDDEN",
+		Message:            "Demo user does not have permission to perform this simulation-only action.",
+		RequiredPermission: string(permission),
+		Role:               string(session.Role),
+		SimulationOnly:     true,
+	})
+	return session, false
 }
 
 func (g *Gateway) RecentCommands(w http.ResponseWriter, r *http.Request) {

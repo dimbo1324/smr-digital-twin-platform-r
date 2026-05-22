@@ -38,6 +38,9 @@
     },
     {
       "name": "Scenarios"
+    },
+    {
+      "name": "Auth"
     }
   ],
   "paths": {
@@ -225,6 +228,9 @@
           "400": {
             "$ref": "#/components/responses/Error"
           },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
           "409": {
             "$ref": "#/components/responses/Error"
           },
@@ -395,6 +401,9 @@
           "400": {
             "$ref": "#/components/responses/Error"
           },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
           "404": {
             "$ref": "#/components/responses/Error"
           },
@@ -457,6 +466,9 @@
           "400": {
             "$ref": "#/components/responses/Error"
           },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
           "502": {
             "$ref": "#/components/responses/Error"
           }
@@ -480,6 +492,9 @@
               }
             }
           },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
           "502": {
             "$ref": "#/components/responses/Error"
           }
@@ -502,6 +517,9 @@
                 }
               }
             }
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
           },
           "502": {
             "$ref": "#/components/responses/Error"
@@ -539,7 +557,7 @@
           "Control"
         ],
         "summary": "Set simulation-only control mode",
-        "description": "Switches TIC-101 between MANUAL, AUTO, and DISABLED in memory. AUTO reserves V-101 for future simulated PID control; PID output is not implemented yet.",
+        "description": "Switches TIC-101 between MANUAL, AUTO, and DISABLED in memory. AUTO reserves V-101 for the simulation-only TIC-101 PID controller.",
         "requestBody": {
           "required": true,
           "content": {
@@ -552,7 +570,7 @@
                   "value": {
                     "mode": "AUTO",
                     "requestedBy": "demo-operator",
-                    "reason": "Prepare for future simulated PID demo"
+                    "reason": "Enable simulation-only PID demo"
                   }
                 }
               }
@@ -571,6 +589,9 @@
             }
           },
           "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
             "$ref": "#/components/responses/Error"
           },
           "503": {
@@ -646,6 +667,9 @@
               }
             }
           },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
           "503": {
             "description": "Simulation unavailable",
             "content": {
@@ -694,6 +718,48 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MQTTStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/session": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Read current demo RBAC session",
+        "description": "Resolves the current demo user from X-Demo-User or the default demo operator. Demo RBAC is not production authentication.",
+        "responses": {
+          "200": {
+            "description": "Current demo auth session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSessionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/users": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "List available demo RBAC users",
+        "description": "Returns static demo users for simulation-only role switching. No passwords or production identity provider are used.",
+        "responses": {
+          "200": {
+            "description": "Demo user registry",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoUsersResponse"
                 }
               }
             }
@@ -749,6 +815,15 @@
           },
           "message": {
             "type": "string"
+          },
+          "requiredPermission": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "simulationOnly": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -2350,6 +2425,147 @@
           "data",
           "meta"
         ]
+      },
+      "Role": {
+        "type": "string",
+        "enum": [
+          "VIEWER",
+          "ENGINEER",
+          "OPERATOR",
+          "SUPERVISOR",
+          "ADMIN"
+        ]
+      },
+      "Permission": {
+        "type": "string",
+        "enum": [
+          "VIEW_DASHBOARD",
+          "VIEW_PROCESS",
+          "VIEW_ALARMS",
+          "VIEW_EVENTS",
+          "VIEW_TRENDS",
+          "VIEW_SETTINGS",
+          "SEND_COMMAND",
+          "CHANGE_CONTROL_MODE",
+          "UPDATE_PID_CONFIG",
+          "ACKNOWLEDGE_ALARM",
+          "RUN_SCENARIO",
+          "VIEW_DIAGNOSTICS",
+          "VIEW_MQTT_STATUS",
+          "VIEW_HISTORIAN_STATUS",
+          "ADMIN_DEMO_SESSION"
+        ]
+      },
+      "DemoUser": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Permission"
+            }
+          },
+          "badgeLabel": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "displayName",
+          "role",
+          "permissions",
+          "badgeLabel",
+          "description"
+        ],
+        "additionalProperties": false
+      },
+      "AuthSession": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Permission"
+            }
+          },
+          "source": {
+            "type": "string",
+            "const": "demo"
+          },
+          "simulationOnly": {
+            "type": "boolean",
+            "const": true
+          },
+          "disclaimer": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "userId",
+          "displayName",
+          "role",
+          "permissions",
+          "source",
+          "simulationOnly",
+          "disclaimer"
+        ],
+        "additionalProperties": false
+      },
+      "AuthSessionResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AuthSession"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ApiMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ],
+        "additionalProperties": false
+      },
+      "DemoUsersResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DemoUser"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ApiMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ],
+        "additionalProperties": false
       }
     }
   }
