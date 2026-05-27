@@ -1,12 +1,17 @@
 package httpapi
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/metrics"
+)
 
 func (s *Server) routes() http.Handler {
 	mux := http.NewServeMux()
 	h := s.handler
 
 	mux.HandleFunc("GET /health", h.Health)
+	mux.Handle("GET /metrics", metrics.Handler())
 	mux.HandleFunc("GET /api/v1/simulation/status", h.Status)
 	mux.HandleFunc("GET /api/v1/simulation/assets", h.Assets)
 	mux.HandleFunc("GET /api/v1/simulation/telemetry/latest", h.LatestTelemetry)

@@ -25,6 +25,11 @@ export async function gotoTrends(page: Page) {
   await expect(page.getByTestId("trends-page")).toBeVisible();
 }
 
+export async function gotoReports(page: Page) {
+  await page.goto("/reports");
+  await expect(page.getByTestId("reports-page")).toBeVisible();
+}
+
 export async function gotoSettings(page: Page) {
   await page.goto("/settings");
   await expect(page.getByTestId("settings-page")).toBeVisible();

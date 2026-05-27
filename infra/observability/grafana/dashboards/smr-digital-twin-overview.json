@@ -1,0 +1,238 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": false,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "targets": [
+        {
+          "expr": "sum(rate(api_http_requests_total[5m])) by (status)",
+          "legendFormat": "{{status}}"
+        }
+      ],
+      "title": "API request rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 0
+      },
+      "id": 2,
+      "targets": [
+        {
+          "expr": "rate(simulation_ticks_total[5m])",
+          "legendFormat": "ticks/sec"
+        }
+      ],
+      "title": "Simulation tick rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 0
+      },
+      "id": 3,
+      "targets": [
+        {
+          "expr": "simulation_alarms_active",
+          "legendFormat": "active alarms"
+        }
+      ],
+      "title": "Active alarms",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 8
+      },
+      "id": 4,
+      "targets": [
+        {
+          "expr": "simulation_historian_queue_depth",
+          "legendFormat": "queue depth"
+        },
+        {
+          "expr": "simulation_historian_write_failures_total",
+          "legendFormat": "write failures"
+        }
+      ],
+      "title": "Historian queue and failures",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 8
+      },
+      "id": 5,
+      "targets": [
+        {
+          "expr": "simulation_mqtt_messages_published_total",
+          "legendFormat": "published"
+        },
+        {
+          "expr": "simulation_mqtt_publish_failures_total",
+          "legendFormat": "failed"
+        }
+      ],
+      "title": "MQTT publish counters",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 8
+      },
+      "id": 6,
+      "targets": [
+        {
+          "expr": "simulation_pid_output_pct",
+          "legendFormat": "PID output"
+        },
+        {
+          "expr": "simulation_pid_error",
+          "legendFormat": "PID error"
+        }
+      ],
+      "title": "TIC-101 PID",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 16
+      },
+      "id": 7,
+      "targets": [
+        {
+          "expr": "simulation_valve_position_pct",
+          "legendFormat": "V-101 position"
+        }
+      ],
+      "title": "Valve position",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 16
+      },
+      "id": 8,
+      "targets": [
+        {
+          "expr": "simulation_pump_running",
+          "legendFormat": "P-101 running"
+        }
+      ],
+      "title": "Pump running",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 16
+      },
+      "id": 9,
+      "targets": [
+        {
+          "expr": "sum by (status) (simulation_commands_total)",
+          "legendFormat": "{{status}}"
+        }
+      ],
+      "title": "Commands by status",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 40,
+  "tags": [
+    "simulation-only",
+    "local-demo"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "SMR Digital Twin Overview",
+  "uid": "smr-digital-twin-overview",
+  "version": 1,
+  "weekStart": ""
+}

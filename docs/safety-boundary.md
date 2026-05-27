@@ -23,6 +23,10 @@ Process controls for assets such as `V-101` and `P-101` use a simulation-only co
 
 The current command trail is not a compliance audit store. The optional PostgreSQL/TimescaleDB historian stores only synthetic demo data and does not provide immutability, regulatory retention, or production audit guarantees.
 
+Simulation report export is for portfolio/demo summaries of synthetic data only. JSON and CSV reports are not regulatory reports, not production audit exports, and not nuclear compliance artifacts.
+
+The local Prometheus/Grafana observability stack is a development diagnostic aid only. It does not provide production alerting, secure operations monitoring, or safety-critical plant observability.
+
 Demo RBAC restricts synthetic simulation actions inside the portfolio platform. It is header-based, uses static demo users, has no passwords, has no OAuth/JWT production identity flow, and does not provide real plant access control. It helps demonstrate role-aware HMI behavior; it must not be treated as certified or production-grade security.
 
 Alarm and event operations are also simulation-only. Acknowledging an alarm only changes a synthetic alarm instance created by `apps/simulation`; it does not confirm, silence, or clear a real plant condition. Cleared alarm history and recent events are demo workflow records, not a regulated operational archive, even when persisted by the historian.

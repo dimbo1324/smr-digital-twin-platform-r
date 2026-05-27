@@ -10,6 +10,7 @@ import eventSchema from "../../../../../../packages/schemas/schemas/event.schema
 import historianStatusSchema from "../../../../../../packages/schemas/schemas/historian-status.schema.json";
 import mqttStatusSchema from "../../../../../../packages/schemas/schemas/mqtt-status.schema.json";
 import scenarioSchema from "../../../../../../packages/schemas/schemas/scenario.schema.json";
+import reportSummarySchema from "../../../../../../packages/schemas/schemas/report-summary.schema.json";
 import simulationStatusSchema from "../../../../../../packages/schemas/schemas/simulation-status.schema.json";
 import systemStatusSchema from "../../../../../../packages/schemas/schemas/system-status.schema.json";
 import telemetrySchema from "../../../../../../packages/schemas/schemas/telemetry.schema.json";
@@ -37,6 +38,7 @@ export const apiSchemaNames = [
   "MQTTStatus",
   "Scenario",
   "ScenarioList",
+  "SimulationReport",
   "SimulationStatus",
   "SystemStatus",
   "TelemetryPoint",
@@ -76,6 +78,7 @@ export const apiSchemas: Record<ApiSchemaName, unknown> = {
   MQTTStatus: mqttStatusSchema,
   Scenario: scenarioSchema,
   ScenarioList: arrayOf("ScenarioList", scenarioSchema),
+  SimulationReport: reportSummarySchema,
   SimulationStatus: simulationStatusSchema,
   SystemStatus: systemStatusSchema,
   TelemetryPoint: telemetrySchema,

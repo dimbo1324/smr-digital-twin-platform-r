@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -554,6 +555,73 @@ func TestRecentEndpointsRejectInvalidLimit(t *testing.T) {
 	gateway.RecentEvents(eventRecorder, httptest.NewRequest(http.MethodGet, "/api/v1/events/recent?limit=500", nil))
 	if eventRecorder.Code != http.StatusBadRequest {
 		t.Fatalf("expected events status 400, got %d", eventRecorder.Code)
+	}
+}
+
+func TestSimulationReportJSONIncludesDisclaimerAndSummaries(t *testing.T) {
+	server := fakeSimulationServer()
+	defer server.Close()
+	gateway := newTestGateway(server.URL, true)
+
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/api/v1/reports/simulation-summary?window=1h", nil)
+	withDemoUser(request, "demo-supervisor")
+	gateway.SimulationReport(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", recorder.Code, recorder.Body.String())
+	}
+	payload := decodeMap(t, recorder.Body.Bytes())
+	data := payload["data"].(map[string]any)
+	if data["simulationOnly"] != true {
+		t.Fatalf("expected simulationOnly report, got %v", data["simulationOnly"])
+	}
+	if !strings.Contains(data["disclaimer"].(string), "Not a regulatory") {
+		t.Fatalf("expected regulatory disclaimer, got %q", data["disclaimer"])
+	}
+	generatedBy := data["generatedBy"].(map[string]any)
+	if generatedBy["role"] != "SUPERVISOR" {
+		t.Fatalf("expected supervisor report user, got %v", generatedBy["role"])
+	}
+	if len(data["telemetryStats"].([]any)) == 0 {
+		t.Fatal("expected telemetry stats in report")
+	}
+}
+
+func TestSimulationReportCSVReturnsDownload(t *testing.T) {
+	server := fakeSimulationServer()
+	defer server.Close()
+	gateway := newTestGateway(server.URL, true)
+
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/api/v1/reports/simulation-summary?window=15m&format=csv", nil)
+	gateway.SimulationReport(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", recorder.Code, recorder.Body.String())
+	}
+	if contentType := recorder.Header().Get("Content-Type"); !strings.Contains(contentType, "text/csv") {
+		t.Fatalf("expected CSV content type, got %s", contentType)
+	}
+	if !strings.Contains(recorder.Body.String(), "section,key,value,unit,source") {
+		t.Fatalf("expected CSV header, got %s", recorder.Body.String())
+	}
+	if !strings.Contains(recorder.Body.String(), "simulationOnly,true") {
+		t.Fatalf("expected simulationOnly CSV row, got %s", recorder.Body.String())
+	}
+}
+
+func TestSimulationReportRejectsInvalidFormat(t *testing.T) {
+	server := fakeSimulationServer()
+	defer server.Close()
+	gateway := newTestGateway(server.URL, true)
+
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/api/v1/reports/simulation-summary?format=pdf", nil)
+	gateway.SimulationReport(recorder, request)
+
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("expected status 400, got %d", recorder.Code)
 	}
 }
 

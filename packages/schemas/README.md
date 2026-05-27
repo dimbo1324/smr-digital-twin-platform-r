@@ -22,13 +22,13 @@ The generator is intentionally lightweight and dependency-free for this mileston
 ## Rules
 
 - The contract describes implemented REST endpoints only.
-- Do not document MQTT command ingestion, production auth/RBAC, WebSocket/SSE, report export, or production audit/compliance features as implemented.
-- Keep `Asset`, `TelemetryPoint`, `Command`, `AlarmInstance`, `Event`, `SystemStatus`, `ControlStatus`, `ModeChangeRequest`, PID schemas, `HistorianStatus`, `MQTTStatus`, `AuthSession`, and `DemoUser` aligned with the Go API and simulation service.
+- Do not document MQTT command ingestion, production auth/RBAC, WebSocket/SSE, regulatory report export, or production audit/compliance features as implemented.
+- Keep `Asset`, `TelemetryPoint`, `Command`, `AlarmInstance`, `Event`, `SystemStatus`, `ControlStatus`, `ModeChangeRequest`, PID schemas, `HistorianStatus`, `MQTTStatus`, `AuthSession`, `DemoUser`, and `SimulationReport` aligned with the Go API and simulation service.
 - Update generated frontend types whenever `openapi.yaml` changes.
 
 ## Runtime Validation
 
-The frontend HTTP client uses selected JSON Schema files for dev/test runtime validation. It validates `data` payloads from API envelopes and risky request bodies such as simulation commands, alarm acknowledgements, control mode changes, PID config updates, and demo auth/session payloads.
+The frontend HTTP client uses selected JSON Schema files for dev/test runtime validation. It validates `data` payloads from API envelopes and risky request bodies such as simulation commands, alarm acknowledgements, control mode changes, PID config updates, report summaries, and demo auth/session payloads.
 
 From `apps/web`:
 

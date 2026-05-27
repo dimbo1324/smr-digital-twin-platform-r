@@ -9,9 +9,13 @@ flowchart LR
     Simulation --> API
     Simulation --> MQTT["MQTT Publisher<br/>publish-only synthetic data"]
     MQTT --> Broker["Eclipse Mosquitto<br/>local demo broker"]
+    API --> Reports["Simulation Summary Reports<br/>JSON/CSV"]
+    Prometheus["Prometheus<br/>local demo profile"] --> API
+    Prometheus --> Simulation
+    Grafana["Grafana<br/>local demo dashboard"] --> Prometheus
 ```
 
-The frontend calls only `apps/api`. The simulation service remains an internal backend dependency so the API layer can normalize responses, expose fallback behavior, enforce demo RBAC for protected actions, and later add production auth hardening, rate limiting, and observability without changing the frontend contract.
+The frontend calls only `apps/api`. The simulation service remains an internal backend dependency so the API layer can normalize responses, expose fallback behavior, enforce demo RBAC for protected actions, aggregate simulation-only reports, and later add production auth hardening or rate limiting without changing the frontend contract.
 
 The simulation engine is synthetic and deterministic. It generates telemetry for portfolio/demo workflows only and is not a real plant model.
 
@@ -75,7 +79,18 @@ The historian DB smoke runs `docker compose up --build -d` in an isolated Compos
 
 The MQTT bridge smoke runs the full Docker Compose stack with the local Mosquitto broker, waits for `GET /api/v1/mqtt/status` to report `connected`, subscribes to synthetic telemetry and command/event topics, and verifies publish-only messages. It does not create MQTT command input topics and does not control the simulator through MQTT.
 
-Smoke and integration scripts write sanitized local diagnostic artifacts under `logs/`, including success summaries and failure details. These artifacts are local/CI troubleshooting output for synthetic simulation data only; they are not an observability stack or production audit archive.
+Smoke and integration scripts write sanitized local diagnostic artifacts under `logs/`, including success summaries and failure details. These artifacts are local/CI troubleshooting output for synthetic simulation data only; they are not a production audit archive.
+
+## Local Observability Baseline
+
+API and simulation expose Prometheus metrics at:
+
+- `GET /metrics` on `apps/api`
+- `GET /metrics` on `apps/simulation`
+
+The optional Docker Compose `observability` profile starts Prometheus and Grafana. Prometheus scrapes the API and simulation services, and Grafana provisions a local overview dashboard for API request rates/errors, simulation ticks, active alarms, historian queue health, MQTT publish counters, PID state, valve position, pump state, and command counts.
+
+This stack is for local demo diagnostics only. Grafana uses local demo credentials, no TLS, no production alerting, no log aggregation, and no SRE-grade retention policy.
 
 ## Domain Layers
 
@@ -210,6 +225,17 @@ The API exposes `GET /api/v1/auth/session` and `GET /api/v1/auth/users`. Write/a
 
 This is not production authentication. There are no passwords, OAuth/JWT flows, persistent users, or real plant access-control guarantees. The simulation service remains a local/internal demo dependency and is not hardened as a public security boundary.
 
+## Simulation Report Export
+
+The API gateway aggregates existing simulation APIs into a read-only simulation summary report:
+
+- `GET /api/v1/reports/simulation-summary?window=1h`
+- `GET /api/v1/reports/simulation-summary?window=1h&format=csv`
+
+JSON reports include a `simulationOnly: true` envelope, generation metadata, current demo user, system/historian/MQTT/control/PID status, latest telemetry, simple telemetry min/max/average summaries, and command/event/alarm counts. CSV uses a compact `section,key,value,unit,source` format for demo export workflows.
+
+Reports use existing synthetic data sources only. They are not regulatory reports, production audit exports, nuclear compliance artifacts, or evidence of real plant operation.
+
 ## Alarm And Event Operations Flow
 
 The current alarm workflow is also REST plus polling:
@@ -242,4 +268,5 @@ Alarm and event state is owned by `apps/simulation`. Recent records remain avail
 - Telemetry, command, event, and alarm history are persistent only when the optional PostgreSQL/TimescaleDB historian is enabled and connected; otherwise they fall back to in-memory storage.
 - Process commands are implemented only for simulated `V-101` and `P-101` assets.
 - Command/event history is not an immutable audit store.
-- MQTT command ingestion, report export, production auth/RBAC, and Kubernetes are not part of the current milestone.
+- MQTT command ingestion, production auth/RBAC, production observability, and Kubernetes are not part of the current milestone.
+- Report export is JSON/CSV only and remains simulation-only; PDF/Excel and regulatory reporting are not implemented.

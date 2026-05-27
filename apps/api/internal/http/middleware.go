@@ -9,6 +9,8 @@ import (
 	"strings"
 	"sync/atomic"
 	"time"
+
+	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/api/internal/metrics"
 )
 
 type contextKey string
@@ -94,6 +96,25 @@ func Recoverer(logger *slog.Logger) middleware {
 			next.ServeHTTP(w, r)
 		})
 	}
+}
+
+func Metrics(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		startedAt := time.Now()
+		metrics.HTTPRequestsInFlight.Inc()
+		defer metrics.HTTPRequestsInFlight.Dec()
+
+		recorder := &statusRecorder{
+			ResponseWriter: w,
+			status:         http.StatusOK,
+		}
+		next.ServeHTTP(recorder, r)
+		routePattern := r.Pattern
+		if routePattern == "" {
+			routePattern = r.URL.Path
+		}
+		metrics.ObserveHTTPRequest(r.Method, routePattern, recorder.status, startedAt)
+	})
 }
 
 func SecurityHeaders(next http.Handler) http.Handler {

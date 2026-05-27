@@ -6,6 +6,7 @@ import {
   gotoDashboard,
   gotoEvents,
   gotoProcess,
+  gotoReports,
   gotoSettings,
   gotoTrends,
 } from "./helpers/navigation";
@@ -16,6 +17,7 @@ const pages = [
   { name: "alarms", goto: gotoAlarms },
   { name: "events", goto: gotoEvents },
   { name: "trends", goto: gotoTrends, setup: prepareManualState },
+  { name: "reports", goto: gotoReports },
   { name: "settings", goto: gotoSettings },
 ] as const;
 

@@ -18,6 +18,9 @@ const EventsPage = lazy(() =>
 const TrendsPage = lazy(() =>
   import("@/pages/trends/TrendsPage").then((module) => ({ default: module.TrendsPage })),
 );
+const ReportsPage = lazy(() =>
+  import("@/pages/reports/ReportsPage").then((module) => ({ default: module.ReportsPage })),
+);
 const SettingsPage = lazy(() =>
   import("@/pages/settings/SettingsPage").then((module) => ({ default: module.SettingsPage })),
 );
@@ -33,6 +36,7 @@ export function AppRouter() {
           <Route path="/alarms" element={<LazyPage><AlarmsPage /></LazyPage>} />
           <Route path="/events" element={<LazyPage><EventsPage /></LazyPage>} />
           <Route path="/trends" element={<LazyPage><TrendsPage /></LazyPage>} />
+          <Route path="/reports" element={<LazyPage><ReportsPage /></LazyPage>} />
           <Route path="/settings" element={<LazyPage><SettingsPage /></LazyPage>} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Route>

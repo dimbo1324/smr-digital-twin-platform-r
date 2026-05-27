@@ -11,12 +11,13 @@ export function AuthRbacStatusCard() {
     "Simulation-only PID",
     "Publish-only MQTT bridge",
     "Demo RBAC",
+    "Simulation-only JSON/CSV report export",
   ];
   const notImplemented = [
     "MQTT command ingestion",
     "WebSocket/SSE",
     "Production auth/OAuth",
-    "Report export",
+    "Regulatory/compliance report export",
   ];
 
   return (

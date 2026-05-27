@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: SMR Digital Twin
+    orgId: 1
+    folder: SMR Digital Twin
+    type: file
+    disableDeletion: false
+    editable: false
+    options:
+      path: /var/lib/grafana/dashboards

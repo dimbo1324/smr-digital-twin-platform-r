@@ -20,6 +20,72 @@ type TelemetryHistoryResult struct {
 	Meta   ResponseMeta
 }
 
+type SimulationReport struct {
+	ReportID        string                 `json:"reportId"`
+	GeneratedAt     time.Time              `json:"generatedAt"`
+	TimeWindow      string                 `json:"timeWindow"`
+	SimulationOnly  bool                   `json:"simulationOnly"`
+	Disclaimer      string                 `json:"disclaimer"`
+	GeneratedBy     ReportUser             `json:"generatedBy"`
+	DataSources     ReportDataSources      `json:"dataSources"`
+	System          ReportSystemSummary    `json:"system"`
+	Historian       HistorianStatus        `json:"historian"`
+	MQTT            MQTTStatus             `json:"mqtt"`
+	Control         ControlStatus          `json:"control"`
+	PID             PIDStatus              `json:"pid"`
+	LatestTelemetry TelemetrySnapshot      `json:"latestTelemetry"`
+	TelemetryStats  []ReportTelemetryStats `json:"telemetryStats"`
+	Commands        ReportCountSummary     `json:"commands"`
+	Events          ReportCountSummary     `json:"events"`
+	Alarms          ReportAlarmSummary     `json:"alarms"`
+}
+
+type ReportUser struct {
+	UserID      string `json:"userId"`
+	DisplayName string `json:"displayName"`
+	Role        string `json:"role"`
+	Source      string `json:"source"`
+}
+
+type ReportDataSources struct {
+	LatestTelemetry string `json:"latestTelemetry"`
+	History         string `json:"history"`
+	Commands        string `json:"commands"`
+	Events          string `json:"events"`
+	Alarms          string `json:"alarms"`
+	Degraded        bool   `json:"degraded"`
+}
+
+type ReportSystemSummary struct {
+	Mode           string `json:"mode"`
+	Health         string `json:"health"`
+	ActiveScenario string `json:"activeScenario"`
+	Running        bool   `json:"running"`
+}
+
+type ReportTelemetryStats struct {
+	Tag    string  `json:"tag"`
+	Label  string  `json:"label"`
+	Unit   string  `json:"unit"`
+	Min    float64 `json:"min"`
+	Max    float64 `json:"max"`
+	Avg    float64 `json:"avg"`
+	Count  int     `json:"count"`
+	Source string  `json:"source"`
+}
+
+type ReportCountSummary struct {
+	Total  int            `json:"total"`
+	ByType map[string]int `json:"byType,omitempty"`
+}
+
+type ReportAlarmSummary struct {
+	Active       int            `json:"active"`
+	Acknowledged int            `json:"acknowledged"`
+	Cleared      int            `json:"cleared"`
+	BySeverity   map[string]int `json:"bySeverity,omitempty"`
+}
+
 type TelemetrySnapshot struct {
 	ReactorPowerPct        float64   `json:"reactorPowerPct"`
 	ThermalPowerMW         float64   `json:"thermalPowerMw"`

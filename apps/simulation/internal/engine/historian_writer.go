@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/historian"
+	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/metrics"
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/model"
 )
 
@@ -69,6 +70,10 @@ func (w *historianWriter) DroppedWrites() int64 {
 	return w.droppedWrites.Load()
 }
 
+func (w *historianWriter) QueueDepth() int64 {
+	return int64(len(w.jobs))
+}
+
 func (w *historianWriter) Close() {
 	w.closeOnce.Do(func() {
 		close(w.done)
@@ -79,8 +84,10 @@ func (w *historianWriter) Close() {
 func (w *historianWriter) enqueue(job historianWriteJob) {
 	select {
 	case w.jobs <- job:
+		metrics.SetHistorianQueue(w.QueueDepth(), w.DroppedWrites())
 	default:
 		dropped := w.droppedWrites.Add(1)
+		metrics.SetHistorianQueue(w.QueueDepth(), dropped)
 		if dropped == 1 || dropped%100 == 0 {
 			w.logger.Warn("historian_write_queue_full", slog.Int64("dropped_writes", dropped))
 		}
@@ -118,19 +125,32 @@ func (w *historianWriter) write(job historianWriteJob) {
 	switch {
 	case job.telemetry != nil:
 		if err := w.repo.AppendTelemetrySnapshot(ctx, *job.telemetry); err != nil {
+			metrics.ObserveHistorianWrite("telemetry", err)
 			w.logger.Warn("historian_telemetry_write_failed", slog.Any("error", err))
+		} else {
+			metrics.ObserveHistorianWrite("telemetry", nil)
 		}
 	case job.command != nil:
 		if err := w.repo.SaveCommand(ctx, *job.command); err != nil {
+			metrics.ObserveHistorianWrite("command", err)
 			w.logger.Warn("historian_command_write_failed", slog.String("command_id", job.command.ID), slog.Any("error", err))
+		} else {
+			metrics.ObserveHistorianWrite("command", nil)
 		}
 	case job.event != nil:
 		if err := w.repo.SaveEvent(ctx, *job.event); err != nil {
+			metrics.ObserveHistorianWrite("event", err)
 			w.logger.Warn("historian_event_write_failed", slog.String("event_id", job.event.ID), slog.Any("error", err))
+		} else {
+			metrics.ObserveHistorianWrite("event", nil)
 		}
 	case job.alarm != nil:
 		if err := w.repo.SaveAlarm(ctx, *job.alarm); err != nil {
+			metrics.ObserveHistorianWrite("alarm", err)
 			w.logger.Warn("historian_alarm_write_failed", slog.String("alarm_id", job.alarm.ID), slog.Any("error", err))
+		} else {
+			metrics.ObserveHistorianWrite("alarm", nil)
 		}
 	}
+	metrics.SetHistorianQueue(w.QueueDepth(), w.DroppedWrites())
 }

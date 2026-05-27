@@ -41,6 +41,9 @@
     },
     {
       "name": "Auth"
+    },
+    {
+      "name": "Reports"
     }
   ],
   "paths": {
@@ -308,6 +311,70 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EventsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/simulation-summary": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "summary": "Generate a simulation-only summary report",
+        "description": "Exports synthetic simulator data for demo and portfolio use only. This is not a regulatory, production audit, or nuclear compliance report.",
+        "parameters": [
+          {
+            "name": "window",
+            "in": "query",
+            "required": false,
+            "description": "Report time window for telemetry statistics.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "15m",
+                "1h",
+                "6h",
+                "24h"
+              ],
+              "default": "1h"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "description": "Response format. CSV returns text/csv instead of the JSON envelope.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "json",
+                "csv"
+              ],
+              "default": "json"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Simulation-only report in JSON envelope or CSV export.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimulationReportResponse"
+                }
+              },
+              "text/csv": {
+                "schema": {
+                  "type": "string"
                 }
               }
             }
@@ -2425,6 +2492,267 @@
           "data",
           "meta"
         ]
+      },
+      "ReportUser": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "userId",
+          "displayName",
+          "role",
+          "source"
+        ],
+        "additionalProperties": false
+      },
+      "ReportDataSources": {
+        "type": "object",
+        "properties": {
+          "latestTelemetry": {
+            "type": "string"
+          },
+          "history": {
+            "type": "string"
+          },
+          "commands": {
+            "type": "string"
+          },
+          "events": {
+            "type": "string"
+          },
+          "alarms": {
+            "type": "string"
+          },
+          "degraded": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "latestTelemetry",
+          "history",
+          "commands",
+          "events",
+          "alarms",
+          "degraded"
+        ],
+        "additionalProperties": false
+      },
+      "ReportSystemSummary": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": "string"
+          },
+          "health": {
+            "type": "string"
+          },
+          "activeScenario": {
+            "type": "string"
+          },
+          "running": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "mode",
+          "health",
+          "activeScenario",
+          "running"
+        ],
+        "additionalProperties": false
+      },
+      "ReportTelemetryStats": {
+        "type": "object",
+        "properties": {
+          "tag": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "min": {
+            "type": "number"
+          },
+          "max": {
+            "type": "number"
+          },
+          "avg": {
+            "type": "number"
+          },
+          "count": {
+            "type": "integer"
+          },
+          "source": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "tag",
+          "label",
+          "unit",
+          "min",
+          "max",
+          "avg",
+          "count",
+          "source"
+        ],
+        "additionalProperties": false
+      },
+      "ReportCountSummary": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer"
+          },
+          "byType": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer"
+            }
+          }
+        },
+        "required": [
+          "total"
+        ],
+        "additionalProperties": false
+      },
+      "ReportAlarmSummary": {
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "integer"
+          },
+          "acknowledged": {
+            "type": "integer"
+          },
+          "cleared": {
+            "type": "integer"
+          },
+          "bySeverity": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer"
+            }
+          }
+        },
+        "required": [
+          "active",
+          "acknowledged",
+          "cleared"
+        ],
+        "additionalProperties": false
+      },
+      "SimulationReport": {
+        "type": "object",
+        "properties": {
+          "reportId": {
+            "type": "string"
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "timeWindow": {
+            "type": "string"
+          },
+          "simulationOnly": {
+            "type": "boolean",
+            "const": true
+          },
+          "disclaimer": {
+            "type": "string"
+          },
+          "generatedBy": {
+            "$ref": "#/components/schemas/ReportUser"
+          },
+          "dataSources": {
+            "$ref": "#/components/schemas/ReportDataSources"
+          },
+          "system": {
+            "$ref": "#/components/schemas/ReportSystemSummary"
+          },
+          "historian": {
+            "$ref": "#/components/schemas/HistorianStatus"
+          },
+          "mqtt": {
+            "$ref": "#/components/schemas/MQTTStatus"
+          },
+          "control": {
+            "$ref": "#/components/schemas/ControlStatus"
+          },
+          "pid": {
+            "$ref": "#/components/schemas/PIDStatus"
+          },
+          "latestTelemetry": {
+            "$ref": "#/components/schemas/TelemetrySnapshot"
+          },
+          "telemetryStats": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReportTelemetryStats"
+            }
+          },
+          "commands": {
+            "$ref": "#/components/schemas/ReportCountSummary"
+          },
+          "events": {
+            "$ref": "#/components/schemas/ReportCountSummary"
+          },
+          "alarms": {
+            "$ref": "#/components/schemas/ReportAlarmSummary"
+          }
+        },
+        "required": [
+          "reportId",
+          "generatedAt",
+          "timeWindow",
+          "simulationOnly",
+          "disclaimer",
+          "generatedBy",
+          "dataSources",
+          "system",
+          "historian",
+          "mqtt",
+          "control",
+          "pid",
+          "latestTelemetry",
+          "telemetryStats",
+          "commands",
+          "events",
+          "alarms"
+        ],
+        "additionalProperties": false
+      },
+      "SimulationReportResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/SimulationReport"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ApiMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ],
+        "additionalProperties": false
       },
       "Role": {
         "type": "string",

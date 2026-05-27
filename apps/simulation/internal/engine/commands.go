@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/actuators"
+	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/metrics"
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/model"
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/process"
 )
@@ -344,6 +345,7 @@ func (e *Engine) appendCommandLocked(command model.Command) {
 	}
 	e.persistCommandAsync(command)
 	e.publishCommandMQTT(command)
+	metrics.ObserveCommand(command)
 }
 
 func (e *Engine) replaceCommandLocked(command model.Command) {
@@ -408,6 +410,7 @@ func (e *Engine) appendEventRecordLocked(event model.Event) {
 	}
 	e.persistEventAsync(event)
 	e.publishEventMQTT(event)
+	metrics.ObserveEvent(event)
 }
 
 func (e *Engine) appendEquipmentEventLocked(message, targetTag, commandID string, timestamp time.Time) {

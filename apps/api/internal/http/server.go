@@ -33,6 +33,7 @@ type Handlers struct {
 	SubmitCommand    http.Handler
 	RecentCommands   http.Handler
 	RecentEvents     http.Handler
+	SimulationReport http.Handler
 }
 
 type Server struct {
@@ -67,6 +68,7 @@ func (s *Server) Router() http.Handler {
 		s.routes(),
 		RequestID,
 		RequestLogger(s.logger),
+		Metrics,
 		Recoverer(s.logger),
 		SecurityHeaders,
 		CORS(s.cfg.AllowedOrigins),

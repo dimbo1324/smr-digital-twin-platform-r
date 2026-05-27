@@ -382,6 +382,69 @@ export interface components {
       "data": components["schemas"]["MQTTStatus"];
       "meta": components["schemas"]["ApiMeta"];
     };
+    "ReportUser": {
+      "userId": string;
+      "displayName": string;
+      "role": string;
+      "source": string;
+    };
+    "ReportDataSources": {
+      "latestTelemetry": string;
+      "history": string;
+      "commands": string;
+      "events": string;
+      "alarms": string;
+      "degraded": boolean;
+    };
+    "ReportSystemSummary": {
+      "mode": string;
+      "health": string;
+      "activeScenario": string;
+      "running": boolean;
+    };
+    "ReportTelemetryStats": {
+      "tag": string;
+      "label": string;
+      "unit": string;
+      "min": number;
+      "max": number;
+      "avg": number;
+      "count": number;
+      "source": string;
+    };
+    "ReportCountSummary": {
+      "total": number;
+      "byType"?: { [key: string]: number };
+    };
+    "ReportAlarmSummary": {
+      "active": number;
+      "acknowledged": number;
+      "cleared": number;
+      "bySeverity"?: { [key: string]: number };
+    };
+    "SimulationReport": {
+      "reportId": string;
+      "generatedAt": string;
+      "timeWindow": string;
+      "simulationOnly": boolean;
+      "disclaimer": string;
+      "generatedBy": components["schemas"]["ReportUser"];
+      "dataSources": components["schemas"]["ReportDataSources"];
+      "system": components["schemas"]["ReportSystemSummary"];
+      "historian": components["schemas"]["HistorianStatus"];
+      "mqtt": components["schemas"]["MQTTStatus"];
+      "control": components["schemas"]["ControlStatus"];
+      "pid": components["schemas"]["PIDStatus"];
+      "latestTelemetry": components["schemas"]["TelemetrySnapshot"];
+      "telemetryStats": components["schemas"]["ReportTelemetryStats"][];
+      "commands": components["schemas"]["ReportCountSummary"];
+      "events": components["schemas"]["ReportCountSummary"];
+      "alarms": components["schemas"]["ReportAlarmSummary"];
+    };
+    "SimulationReportResponse": {
+      "data": components["schemas"]["SimulationReport"];
+      "meta": components["schemas"]["ApiMeta"];
+    };
     "Role": "VIEWER" | "ENGINEER" | "OPERATOR" | "SUPERVISOR" | "ADMIN";
     "Permission": "VIEW_DASHBOARD" | "VIEW_PROCESS" | "VIEW_ALARMS" | "VIEW_EVENTS" | "VIEW_TRENDS" | "VIEW_SETTINGS" | "SEND_COMMAND" | "CHANGE_CONTROL_MODE" | "UPDATE_PID_CONFIG" | "ACKNOWLEDGE_ALARM" | "RUN_SCENARIO" | "VIEW_DIAGNOSTICS" | "VIEW_MQTT_STATUS" | "VIEW_HISTORIAN_STATUS" | "ADMIN_DEMO_SESSION";
     "DemoUser": {

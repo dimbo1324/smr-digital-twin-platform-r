@@ -59,6 +59,7 @@ func main() {
 		SubmitCommand:    http.HandlerFunc(gateway.SubmitCommand),
 		RecentCommands:   http.HandlerFunc(gateway.RecentCommands),
 		RecentEvents:     http.HandlerFunc(gateway.RecentEvents),
+		SimulationReport: http.HandlerFunc(gateway.SimulationReport),
 	})
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)

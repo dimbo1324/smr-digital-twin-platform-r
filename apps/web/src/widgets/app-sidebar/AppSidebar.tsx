@@ -57,7 +57,7 @@ export function AppSidebar() {
         </div>
 
         <nav
-          className="grid gap-1.5 sm:grid-cols-5 lg:grid-cols-1"
+          className="grid gap-1.5 sm:grid-cols-6 lg:grid-cols-1"
           aria-label="Primary navigation"
           data-testid="primary-navigation"
         >
