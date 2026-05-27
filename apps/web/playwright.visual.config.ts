@@ -19,6 +19,9 @@ export default defineConfig({
   },
   use: {
     baseURL,
+    deviceScaleFactor: 1,
+    locale: "en-US",
+    timezoneId: "UTC",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     video: "retain-on-failure",

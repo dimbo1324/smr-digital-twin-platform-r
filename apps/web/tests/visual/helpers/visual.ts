@@ -32,6 +32,7 @@ export async function prepareVisualPage(
       window.localStorage.setItem(userKey, selectedUserId);
       document.documentElement.classList.toggle("dark", selectedTheme === "dark");
       document.documentElement.style.colorScheme = selectedTheme;
+      document.documentElement.dataset.visualTest = "true";
     },
     {
       selectedTheme: theme,
@@ -40,7 +41,6 @@ export async function prepareVisualPage(
       userKey: demoUserStorageKey,
     },
   );
-
 }
 
 export async function gotoVisualPage(page: Page, route: string, pageTestId: string) {
