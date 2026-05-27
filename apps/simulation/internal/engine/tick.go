@@ -5,7 +5,9 @@ import (
 	"math"
 	"time"
 
+	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/actuators"
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/model"
+	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/process"
 )
 
 type targets struct {
@@ -28,61 +30,61 @@ func (e *Engine) tick(now time.Time) model.TelemetrySnapshot {
 	target := e.targetsForScenario(current)
 	phase := float64(e.state.tickCount) / 8
 
-	current.ReactorPowerPct = approach(current.ReactorPowerPct, target.power+e.noise(0.35)+math.Sin(phase)*0.3, 0.12)
-	current.PrimaryTemperatureC = approach(current.PrimaryTemperatureC, target.primaryTemp+e.noise(0.25), 0.10)
-	current.SecondaryTemperatureC = approach(current.SecondaryTemperatureC, target.secondaryTemp+e.noise(0.18), 0.10)
-	current.PrimaryPressureMPa = approach(current.PrimaryPressureMPa, target.primaryPressure+e.noise(0.03), 0.14)
-	current.SecondaryPressureMPa = approach(current.SecondaryPressureMPa, target.secondaryPressure+e.noise(0.02), 0.14)
-	current.CoolantFlowPct = approach(current.CoolantFlowPct, target.flow+e.noise(0.45), 0.14)
-	current.SteamGeneratorLevelPct = approach(current.SteamGeneratorLevelPct, target.level+math.Sin(phase/2)*0.6, 0.10)
-	current.TurbineRPM = approach(current.TurbineRPM, target.rpm+e.noise(6), 0.12)
-	current.GeneratorLoadPct = approach(current.GeneratorLoadPct, target.load+e.noise(0.35), 0.12)
-	current.CondenserVacuumKPa = approach(current.CondenserVacuumKPa, target.vacuum+e.noise(0.25), 0.10)
-	current.FeedwaterFlowPct = approach(current.FeedwaterFlowPct, target.feedwater+e.noise(0.35), 0.12)
-	current.VibrationMMS = approach(current.VibrationMMS, target.vibration+math.Abs(e.noise(0.08)), 0.10)
-	current.RadiationLevelUSvH = approach(current.RadiationLevelUSvH, target.radiation+math.Abs(e.noise(0.01)), 0.08)
+	current.ReactorPowerPct = process.Approach(current.ReactorPowerPct, target.power+e.noise(0.35)+math.Sin(phase)*0.3, 0.12)
+	current.PrimaryTemperatureC = process.Approach(current.PrimaryTemperatureC, target.primaryTemp+e.noise(0.25), 0.10)
+	current.SecondaryTemperatureC = process.Approach(current.SecondaryTemperatureC, target.secondaryTemp+e.noise(0.18), 0.10)
+	current.PrimaryPressureMPa = process.Approach(current.PrimaryPressureMPa, target.primaryPressure+e.noise(0.03), 0.14)
+	current.SecondaryPressureMPa = process.Approach(current.SecondaryPressureMPa, target.secondaryPressure+e.noise(0.02), 0.14)
+	current.CoolantFlowPct = process.Approach(current.CoolantFlowPct, target.flow+e.noise(0.45), 0.14)
+	current.SteamGeneratorLevelPct = process.Approach(current.SteamGeneratorLevelPct, target.level+math.Sin(phase/2)*0.6, 0.10)
+	current.TurbineRPM = process.Approach(current.TurbineRPM, target.rpm+e.noise(6), 0.12)
+	current.GeneratorLoadPct = process.Approach(current.GeneratorLoadPct, target.load+e.noise(0.35), 0.12)
+	current.CondenserVacuumKPa = process.Approach(current.CondenserVacuumKPa, target.vacuum+e.noise(0.25), 0.10)
+	current.FeedwaterFlowPct = process.Approach(current.FeedwaterFlowPct, target.feedwater+e.noise(0.35), 0.12)
+	current.VibrationMMS = process.Approach(current.VibrationMMS, target.vibration+math.Abs(e.noise(0.08)), 0.10)
+	current.RadiationLevelUSvH = process.Approach(current.RadiationLevelUSvH, target.radiation+math.Abs(e.noise(0.01)), 0.08)
 
-	current.ReactorPowerPct = clamp(current.ReactorPowerPct, 0, 100)
-	current.PrimaryTemperatureC = clamp(current.PrimaryTemperatureC, 20, 340)
-	current.SecondaryTemperatureC = clamp(current.SecondaryTemperatureC, 20, 270)
-	current.PrimaryPressureMPa = clamp(current.PrimaryPressureMPa, 0, 18)
-	current.SecondaryPressureMPa = clamp(current.SecondaryPressureMPa, 0, 9)
-	current.CoolantFlowPct = clamp(current.CoolantFlowPct, 0, 110)
-	current.SteamGeneratorLevelPct = clamp(current.SteamGeneratorLevelPct, 0, 100)
-	current.TurbineRPM = clamp(current.TurbineRPM, 0, 3800)
-	current.GeneratorLoadPct = clamp(current.GeneratorLoadPct, 0, 100)
-	current.CondenserVacuumKPa = clamp(current.CondenserVacuumKPa, 0, 100)
-	current.FeedwaterFlowPct = clamp(current.FeedwaterFlowPct, 0, 110)
-	current.VibrationMMS = clamp(current.VibrationMMS, 0, 8)
-	current.RadiationLevelUSvH = clamp(current.RadiationLevelUSvH, 0, 2)
+	current.ReactorPowerPct = process.Clamp(current.ReactorPowerPct, 0, 100)
+	current.PrimaryTemperatureC = process.Clamp(current.PrimaryTemperatureC, 20, 340)
+	current.SecondaryTemperatureC = process.Clamp(current.SecondaryTemperatureC, 20, 270)
+	current.PrimaryPressureMPa = process.Clamp(current.PrimaryPressureMPa, 0, 18)
+	current.SecondaryPressureMPa = process.Clamp(current.SecondaryPressureMPa, 0, 9)
+	current.CoolantFlowPct = process.Clamp(current.CoolantFlowPct, 0, 110)
+	current.SteamGeneratorLevelPct = process.Clamp(current.SteamGeneratorLevelPct, 0, 100)
+	current.TurbineRPM = process.Clamp(current.TurbineRPM, 0, 3800)
+	current.GeneratorLoadPct = process.Clamp(current.GeneratorLoadPct, 0, 100)
+	current.CondenserVacuumKPa = process.Clamp(current.CondenserVacuumKPa, 0, 100)
+	current.FeedwaterFlowPct = process.Clamp(current.FeedwaterFlowPct, 0, 110)
+	current.VibrationMMS = process.Clamp(current.VibrationMMS, 0, 8)
+	current.RadiationLevelUSvH = process.Clamp(current.RadiationLevelUSvH, 0, 2)
 
-	current.ThermalPowerMW = round(current.ReactorPowerPct * 3.0)
-	current.ElectricPowerMW = round(current.GeneratorLoadPct * 1.08)
-	current.AvailabilityPct = clamp(99.4-(current.VibrationMMS*1.6)-penalty(current.Health), 70, 100)
-	current.EfficiencyPct = clamp(31.5+(current.GeneratorLoadPct/100)*5.2-(100-current.CoolantFlowPct)*0.02, 25, 39)
+	current.ThermalPowerMW = process.Round(current.ReactorPowerPct * 3.0)
+	current.ElectricPowerMW = process.Round(current.GeneratorLoadPct * 1.08)
+	current.AvailabilityPct = process.Clamp(99.4-(current.VibrationMMS*1.6)-process.AvailabilityPenalty(current.Health), 70, 100)
+	current.EfficiencyPct = process.Clamp(31.5+(current.GeneratorLoadPct/100)*5.2-(100-current.CoolantFlowPct)*0.02, 25, 39)
 	current.Mode = target.mode
 	current.Health = deriveHealth(current)
 	if current.Mode == model.ModeTrip {
 		current.Health = model.HealthTrip
 	}
-	processFlow := e.processFlowTargetLocked()
-	current.LoopFlowKGS = round(approach(current.LoopFlowKGS, processFlow, 0.28))
-	current.LoopTemperatureC = round(approach(current.LoopTemperatureC, processTemperatureTarget(processFlow), 0.10))
-	current.LoopPressureMPa = round(approach(current.LoopPressureMPa, e.processPressureTargetLocked(), 0.18))
-	current.TankLevelPct = round(approach(current.TankLevelPct, clamp(54+current.SteamGeneratorLevelPct*0.28, 0, 100), 0.10))
-	current.ValvePositionPct = round(e.state.valve.positionPercent)
+	processFlow := process.FlowTarget(e.state.pump.state, e.state.valve.positionPercent)
+	current.LoopFlowKGS = process.Round(process.Approach(current.LoopFlowKGS, processFlow, 0.28))
+	current.LoopTemperatureC = process.Round(process.Approach(current.LoopTemperatureC, process.TemperatureTarget(processFlow), 0.10))
+	current.LoopPressureMPa = process.Round(process.Approach(current.LoopPressureMPa, process.PressureTarget(e.state.pump.state, e.state.valve.positionPercent), 0.18))
+	current.TankLevelPct = process.Round(process.Approach(current.TankLevelPct, process.Clamp(54+current.SteamGeneratorLevelPct*0.28, 0, 100), 0.10))
+	current.ValvePositionPct = process.Round(e.state.valve.positionPercent)
 	current.ValveState = string(e.state.valve.state)
 	current.PumpState = string(e.state.pump.state)
-	current.PumpRPM = round(e.state.pump.rpm)
+	current.PumpRPM = process.Round(e.state.pump.rpm)
 	current.HeatExchangerState = heatExchangerStateForSnapshot(current)
 	current.PIDControllerMode = string(e.state.control.mode)
-	current.PIDSetpointC = round(e.state.pid.config.Setpoint)
-	current.PIDProcessValueC = round(e.state.pid.state.ProcessValue)
-	current.PIDErrorC = round(e.state.pid.state.Error)
-	current.PIDOutputPct = round(e.state.pid.state.Output)
-	current.PIDPTermPct = round(e.state.pid.state.PTerm)
-	current.PIDITermPct = round(e.state.pid.state.ITerm)
-	current.PIDDTermPct = round(e.state.pid.state.DTerm)
+	current.PIDSetpointC = process.Round(e.state.pid.config.Setpoint)
+	current.PIDProcessValueC = process.Round(e.state.pid.state.ProcessValue)
+	current.PIDErrorC = process.Round(e.state.pid.state.Error)
+	current.PIDOutputPct = process.Round(e.state.pid.state.Output)
+	current.PIDPTermPct = process.Round(e.state.pid.state.PTerm)
+	current.PIDITermPct = process.Round(e.state.pid.state.ITerm)
+	current.PIDDTermPct = process.Round(e.state.pid.state.DTerm)
 	current.PIDStatus = e.state.pid.state.Status
 	current.PIDSaturated = e.state.pid.state.Saturated
 	current.Timestamp = now
@@ -95,7 +97,7 @@ func (e *Engine) tick(now time.Time) model.TelemetrySnapshot {
 func (e *Engine) targetsForScenario(current model.TelemetrySnapshot) targets {
 	switch e.state.activeScenario {
 	case model.ScenarioStartup:
-		targetPower := clamp(current.ReactorPowerPct+2.5, 25, 72)
+		targetPower := process.Clamp(current.ReactorPowerPct+2.5, 25, 72)
 		return nominalTargets(targetPower, model.ModeStartup)
 	case model.ScenarioLoadRamp:
 		targetPower := 58 + 18*math.Sin(float64(e.state.tickCount)/25)
@@ -170,26 +172,21 @@ func (e *Engine) updateActuatorsLocked(now time.Time, deltaSeconds float64) {
 }
 
 func (e *Engine) updateValveLocked(now time.Time, deltaSeconds float64) {
-	if !valveIsMoving(e.state.valve.state) {
+	if !actuators.ValveIsMoving(e.state.valve.state) {
 		return
 	}
 
 	previous := e.state.valve.positionPercent
-	step := valveSpeedPctPerSec * deltaSeconds
 	target := e.state.valve.targetPositionPercent
-	if previous < target {
-		e.state.valve.positionPercent = clamp(previous+step, previous, target)
-	} else {
-		e.state.valve.positionPercent = clamp(previous-step, target, previous)
-	}
+	e.state.valve.positionPercent = actuators.NextValvePosition(previous, target, valveSpeedPctPerSec, deltaSeconds)
 	e.state.valve.updatedAt = now
 
-	if !almostEqual(e.state.valve.positionPercent, target) {
+	if !process.AlmostEqual(e.state.valve.positionPercent, target) {
 		return
 	}
 
 	e.state.valve.positionPercent = target
-	e.state.valve.state = valveRestState(target)
+	e.state.valve.state = actuators.ValveRestState(target)
 	commandID := e.state.valve.activeCommandID
 	e.state.valve.activeCommandID = ""
 	if commandID == "" {
@@ -204,27 +201,28 @@ func (e *Engine) updateValveLocked(now time.Time, deltaSeconds float64) {
 }
 
 func (e *Engine) updatePumpLocked(now time.Time, deltaSeconds float64) {
+	transition := actuators.NextPumpTransition(e.state.pump.state, e.state.pump.rpm, pumpNominalRPM, deltaSeconds, now, e.state.pump.transitionUntil)
 	switch e.state.pump.state {
 	case model.PumpStateStarting:
-		e.state.pump.rpm = approach(e.state.pump.rpm, pumpNominalRPM, clamp(deltaSeconds/2, 0.1, 1))
-		if now.Before(e.state.pump.transitionUntil) {
+		e.state.pump.rpm = transition.RPM
+		if !transition.Done {
 			return
 		}
-		e.state.pump.state = model.PumpStateRunning
-		e.state.pump.rpm = pumpNominalRPM
+		e.state.pump.state = transition.State
+		e.state.pump.rpm = transition.RPM
 		e.completePumpActiveCommandLocked(now, "Pump P-101 reached RUNNING in simulation.")
 	case model.PumpStateStopping:
-		e.state.pump.rpm = approach(e.state.pump.rpm, 0, clamp(deltaSeconds/2, 0.1, 1))
-		if now.Before(e.state.pump.transitionUntil) {
+		e.state.pump.rpm = transition.RPM
+		if !transition.Done {
 			return
 		}
-		e.state.pump.state = model.PumpStateStopped
-		e.state.pump.rpm = 0
+		e.state.pump.state = transition.State
+		e.state.pump.rpm = transition.RPM
 		e.completePumpActiveCommandLocked(now, "Pump P-101 reached STOPPED in simulation.")
 	case model.PumpStateRunning:
-		e.state.pump.rpm = pumpNominalRPM
+		e.state.pump.rpm = transition.RPM
 	case model.PumpStateStopped:
-		e.state.pump.rpm = 0
+		e.state.pump.rpm = transition.RPM
 	}
 	e.state.pump.updatedAt = now
 }
@@ -240,62 +238,4 @@ func (e *Engine) completePumpActiveCommandLocked(now time.Time, message string) 
 	})
 	e.appendEventLocked(model.EventTypeCommandCompleted, model.EventSeverityInfo, "simulation", message, e.state.pump.tag, commandID, now, nil)
 	e.appendEquipmentEventLocked(fmt.Sprintf("Pump P-101 state changed to %s.", e.state.pump.state), e.state.pump.tag, commandID, now)
-}
-
-func (e *Engine) processFlowTargetLocked() float64 {
-	pumpFactor := 0.0
-	switch e.state.pump.state {
-	case model.PumpStateRunning:
-		pumpFactor = 1.0
-	case model.PumpStateStarting, model.PumpStateStopping:
-		pumpFactor = 0.2
-	}
-	return clamp(150*pumpFactor*(e.state.valve.positionPercent/100), 0, 150)
-}
-
-func (e *Engine) processPressureTargetLocked() float64 {
-	pumpFactor := 0.0
-	switch e.state.pump.state {
-	case model.PumpStateRunning:
-		pumpFactor = 1.0
-	case model.PumpStateStarting, model.PumpStateStopping:
-		pumpFactor = 0.35
-	}
-	valveRestriction := (100 - e.state.valve.positionPercent) / 100
-	return clamp(13.6+pumpFactor*1.4+valveRestriction*0.35, 0, 18)
-}
-
-func processTemperatureTarget(flow float64) float64 {
-	return clamp(292-flow*0.045, 270, 310)
-}
-
-func approach(current, target, alpha float64) float64 {
-	return current + (target-current)*alpha
-}
-
-func clamp(value, min, max float64) float64 {
-	if value < min {
-		return min
-	}
-	if value > max {
-		return max
-	}
-	return value
-}
-
-func round(value float64) float64 {
-	return math.Round(value*100) / 100
-}
-
-func penalty(health model.Health) float64 {
-	switch health {
-	case model.HealthAlarm:
-		return 9
-	case model.HealthWarning:
-		return 3
-	case model.HealthTrip:
-		return 20
-	default:
-		return 0
-	}
 }

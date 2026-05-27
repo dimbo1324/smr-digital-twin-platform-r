@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/model"
+	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/process"
 )
 
 func TestDefaultPIDStatusExistsInactiveInManual(t *testing.T) {
@@ -92,7 +93,7 @@ func TestPIDActiveOnlyInAutoAndAppliesValveTarget(t *testing.T) {
 	if autoStatus.Output < 0 || autoStatus.Output > 100 {
 		t.Fatalf("expected clamped output, got %.2f", autoStatus.Output)
 	}
-	if almostEqual(engine.state.valve.targetPositionPercent, manualTarget) {
+	if process.AlmostEqual(engine.state.valve.targetPositionPercent, manualTarget) {
 		t.Fatalf("expected PID to update valve target from %.2f", manualTarget)
 	}
 	if engine.Snapshot().PIDOutputPct != autoStatus.Output {
