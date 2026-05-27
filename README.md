@@ -45,6 +45,7 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 - Frontend valve and pump control panels with pending, success, and error states.
 - GitHub Actions CI quality gates for Go API, Go simulation, frontend, and Docker Compose config validation.
 - Expanded Playwright Chromium E2E suite for Dashboard, Process commands, PID/manual-auto arbitration, Alarms, Events, Trends, Settings, MQTT status, and historian status.
+- Playwright visual regression baseline for Dashboard, Process, Alarms, Events, Trends, and Settings across deterministic themes and responsive widths.
 - Local log artifact folder and smoke diagnostic reports under `logs/`.
 - OpenAPI 3.1 contract and JSON Schema reference files under `packages/schemas`.
 - Generated frontend API schema types committed under `apps/web/src/shared/api/generated`.
@@ -231,6 +232,7 @@ Automated CI jobs:
 - **Frontend component tests**: `npm run test` runs Vitest/React Testing Library rendering and interaction checks.
 - **Compose**: `docker compose config --quiet` from the repository root.
 - **E2E Browser**: starts the Go simulation and API services, launches the Vite frontend through Playwright, and runs the expanded Chromium browser regression suite.
+- **Visual Regression**: starts the Go simulation and API services, launches the Vite frontend through Playwright, and compares committed screenshot baselines for core HMI pages.
 - **Historian DB Smoke**: verifies Docker Compose persistence through PostgreSQL/TimescaleDB.
 - **MQTT Bridge Smoke**: verifies the Docker Compose MQTT broker receives publish-only synthetic telemetry and command/event status messages.
 
@@ -299,6 +301,26 @@ npm run test:e2e:ui
 For local runs, API and simulation should be reachable at `http://127.0.0.1:8080` and `http://127.0.0.1:8081`; the Playwright config starts only the Vite frontend dev server. CI starts the Go backend services before running the browser suite. Full PostgreSQL/TimescaleDB and MQTT broker behavior is covered by the separate historian and MQTT smoke scripts.
 
 The desktop layout keeps the primary sidebar sticky and keyboard-reachable while the page scrolls. On narrower screens the sidebar falls back to the responsive static layout so it does not cover HMI content. The skip link moves keyboard users directly to the main simulation-only workspace.
+
+## Visual Regression Tests
+
+Playwright visual tests live in `apps/web/tests/visual`. They compare fixed-viewport screenshot baselines for the simulation-only HMI pages and are meant to catch accidental layout regressions such as overlapping status cards, missing badges, broken responsive behavior, and sticky sidebar issues.
+
+Covered baseline states include:
+
+- Dashboard, Process, Alarms, Events, Trends, and Settings in desktop dark theme.
+- Dashboard, Process, and Settings in desktop light theme.
+- Dashboard, Process, and Settings across tablet/mobile dark layouts.
+
+Local commands:
+
+```bash
+cd apps/web
+npm run test:visual
+npm run test:visual:update
+```
+
+Visual tests set a deterministic demo user, theme, viewport, reduced motion preference, and disabled animation styles. Dynamic synthetic values, recent rows, and chart regions are masked where needed. A small screenshot tolerance is used for CI/desktop rasterization differences, with one slightly higher tablet Dashboard tolerance for cross-platform font wrapping. Baseline screenshots are committed intentionally; generated reports under `playwright-report/` and `test-results/` are ignored by Git.
 
 ## Frontend Component Tests
 

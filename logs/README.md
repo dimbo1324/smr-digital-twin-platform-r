@@ -22,4 +22,4 @@ node scripts/smoke/mqtt-bridge-smoke.mjs
 node scripts/logs/clean-logs.mjs
 ```
 
-Playwright browser regression artifacts are generated separately by the web app tooling under `apps/web/playwright-report/` and `apps/web/test-results/` when enabled. Those generated reports are also ignored by Git.
+Playwright browser, accessibility, and visual regression artifacts are generated separately by the web app tooling under `apps/web/playwright-report/` and `apps/web/test-results/` when enabled. Those generated reports are also ignored by Git. Visual baseline screenshots live with the web tests and are committed intentionally when updated.

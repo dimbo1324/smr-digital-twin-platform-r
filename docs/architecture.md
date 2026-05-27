@@ -53,7 +53,7 @@ Runtime API validation is available in the frontend HTTP client for selected req
 
 ## Browser Regression Quality Gate
 
-The CI pipeline includes fast frontend component tests, a Playwright Chromium browser regression job for key simulator workflows, a historian DB smoke job for the full Docker Compose persistence path, and an MQTT bridge smoke job for the publish-only IIoT path:
+The CI pipeline includes fast frontend component tests, a Playwright Chromium browser regression job for key simulator workflows, a separate Playwright visual regression job for core HMI page screenshots, a historian DB smoke job for the full Docker Compose persistence path, and an MQTT bridge smoke job for the publish-only IIoT path:
 
 ```mermaid
 flowchart LR
@@ -63,7 +63,9 @@ flowchart LR
     WEB --> FLOW["Dashboard -> Process -> PID -> Alarms -> Events -> Trends -> Settings"]
 ```
 
-The browser regression suite verifies synthetic simulation workflows only. It covers Dashboard status visibility, manual `V-101`/`P-101` command flows, manual-to-AUTO PID arbitration, alarm activate/acknowledge/clear, Events filtering/sorting, Trends source labels, Settings capability copy, demo RBAC role flows, basic degraded historian/MQTT UI states via route mocks, axe-powered accessibility baseline checks, and keyboard navigation through the skip link, primary sidebar, and core control inputs. It does not replace deeper component tests, visual regression, a full human WCAG audit, multi-browser certification, or production SCADA validation.
+The browser regression suite verifies synthetic simulation workflows only. It covers Dashboard status visibility, manual `V-101`/`P-101` command flows, manual-to-AUTO PID arbitration, alarm activate/acknowledge/clear, Events filtering/sorting, Trends source labels, Settings capability copy, demo RBAC role flows, basic degraded historian/MQTT UI states via route mocks, axe-powered accessibility baseline checks, and keyboard navigation through the skip link, primary sidebar, and core control inputs. It does not replace deeper component tests, a full human WCAG audit, multi-browser certification, or production SCADA validation.
+
+The visual regression suite captures deterministic fixed-viewport Playwright screenshots for Dashboard, Process, Alarms, Events, Trends, and Settings. It disables animations, fixes the demo user/theme/viewport, resets the simulation before each scenario, and masks dynamic synthetic telemetry, event rows, alarm rows, and chart regions that would otherwise create noise. These screenshots guard page composition, responsive layout, sticky sidebar behavior, status badges, and card/grid integrity; they are not evidence of real plant operation or production HMI certification.
 
 The desktop HMI layout keeps the primary sidebar as a sticky, semantic navigation region with its own overflow when needed. The main content remains separate from the sidebar, and smaller viewports fall back to the responsive static layout so navigation does not cover the simulation workspace.
 
