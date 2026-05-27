@@ -1,8 +1,10 @@
-# SMR Twin Platform
+# SMR Digital Twin Platform
 
-Simulation-only digital twin platform for SMR energy systems. No real plant control.
+![CI](https://github.com/dimbo1324/smr-digital-twin-platform-r/actions/workflows/ci.yml/badge.svg)
 
-SMR Twin Platform is a modular digital twin simulator for portfolio and educational industrial software work. The project demonstrates HMI-style frontend engineering, Go backend architecture, synthetic simulation, telemetry contracts, alarms, scenarios, optional PostgreSQL/TimescaleDB historian persistence, Docker-based local development, and safety-conscious system boundaries.
+Simulation-only industrial digital twin / IIoT demo platform for synthetic SMR-style thermal process monitoring, control workflow, historian persistence, MQTT publishing, JSON/CSV reporting, and local observability. No real plant control.
+
+SMR Digital Twin Platform is a portfolio-grade engineering project, not a nuclear operations product. It demonstrates a full-stack industrial software architecture: React HMI, Go API gateway, Go simulation service, PostgreSQL/TimescaleDB historian, publish-only MQTT bridge, demo Auth/RBAC, OpenAPI/JSON Schema contracts, report export, Prometheus/Grafana local observability, and a broad CI test suite.
 
 The current MVP has two explicit domain levels:
 
@@ -15,10 +17,97 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 
 > This project is a simulation and educational engineering platform. It is not a nuclear plant control system and must not be used for safety-critical automation, real facility integration, or real reactor operation.
 
+## What This Project Demonstrates
+
+| Area | Demonstrated implementation | Why it matters |
+| --- | --- | --- |
+| Industrial HMI | Dashboard, Process, Alarms, Events, Trends, Reports, Settings | Shows operator-style workflows rather than a generic CRUD app. |
+| API gateway | Go REST gateway, structured errors, demo RBAC enforcement, report aggregation | Keeps the frontend contract stable and protects write/action endpoints. |
+| Simulation engine | Synthetic process loop, scenarios, `V-101`/`P-101` state machines, `TIC-101` PID | Provides realistic demo dynamics without real plant connectivity. |
+| Command workflow | Manual/auto/disabled arbitration, command status, event records | Demonstrates control authority boundaries in a simulation-only setting. |
+| Historian | Optional PostgreSQL/TimescaleDB persistence for telemetry, commands, events, alarms | Demonstrates time-series storage and fallback behavior. |
+| MQTT | Publish-only synthetic telemetry/events/alarms/status bridge | Shows IIoT integration while explicitly avoiding MQTT command ingestion. |
+| Reports | JSON/CSV simulation summary export | Useful portfolio/demo artifact, clearly not regulatory reporting. |
+| Observability | API/simulation `/metrics`, Prometheus, Grafana dashboard provisioning | Gives local diagnostics for platform health and synthetic process metrics. |
+| Quality gates | Go test/vet/race/coverage, Vitest, Playwright E2E/a11y/visual, smokes, scans | Shows production-style engineering discipline without production claims. |
+
+## 5-Minute Demo Story
+
+1. Open the Dashboard and point out the simulation-only boundary, historian status, MQTT status, active alarms, recent events, and synthetic telemetry.
+2. Go to Process as the demo operator and send a `V-101` valve position command or `P-101` pump command.
+3. Switch to a supervisor or admin role and change `TIC-101` to `AUTO`; show that the simulation-only PID owns the valve output.
+4. Trigger a synthetic scenario, then open Alarms and Events to show alarm activation, acknowledgement, clearing, and the unified event trail.
+5. Open Trends to show live or historian-backed telemetry source labels.
+6. Open Reports and export a JSON or CSV simulation summary. Emphasize that it is not a regulatory or production audit report.
+7. Start the optional observability profile and show Prometheus/Grafana local metrics for API and simulation health.
+8. Mention that MQTT publishes synthetic data only and has no command ingestion topics.
+9. Close with the CI page: API, simulation, web, E2E, a11y, visual regression, Docker smokes, race/coverage, and dependency scans.
+
+## Architecture Overview
+
+```mermaid
+flowchart LR
+    Web["React HMI<br/>Dashboard / Process / Reports"] --> API["Go API Gateway<br/>RBAC + contracts + reports"]
+    API --> Sim["Go Simulation Service<br/>synthetic process loop"]
+    Sim --> Historian["PostgreSQL / TimescaleDB<br/>synthetic historian"]
+    Sim --> MQTT["Mosquitto MQTT<br/>publish-only bridge"]
+    API --> Reports["JSON / CSV<br/>simulation summaries"]
+    API --> MetricsAPI["/metrics"]
+    Sim --> MetricsSim["/metrics"]
+    Prom["Prometheus<br/>local demo"] --> MetricsAPI
+    Prom --> MetricsSim
+    Grafana["Grafana<br/>local dashboard"] --> Prom
+```
+
+The frontend talks only to `apps/api`. The API gateway enforces demo RBAC for protected actions, proxies read/write requests to the simulation service, and aggregates read-only reports. The simulation service owns synthetic process state, historian writes, MQTT publishing, scenarios, alarms, commands, PID/control state, and simulation metrics.
+
+## Demo-Only, Not Production
+
+| Capability | Demo status | Not production because |
+| --- | --- | --- |
+| Process commands | Mutate `V-101`/`P-101` simulation state only | No PLC, DCS, SCADA, actuator, or plant network connectivity. |
+| Demo RBAC | Static users via `X-Demo-User` and frontend role switcher | No passwords, OAuth/JWT, persistent users, or production identity controls. |
+| Historian | Stores synthetic telemetry/events/commands/alarms | No immutable audit policy, regulatory retention, or compliance guarantees. |
+| MQTT | Publishes synthetic data only | No MQTT command ingestion, broker ACL/TLS hardening, or real equipment topics. |
+| Reports | JSON/CSV synthetic simulation summaries | Not regulatory reporting, not a production audit export, not nuclear compliance evidence. |
+| Observability | Local Prometheus/Grafana demo profile | No production alerting, log aggregation, tracing, SLOs, or secure operations setup. |
+
+## Quickstart
+
+Full local stack:
+
+```bash
+docker compose up --build
+```
+
+Open:
+
+- HMI: `http://localhost:5173`
+- API: `http://localhost:8080`
+- Simulation: `http://localhost:8081`
+- MQTT broker: `tcp://localhost:1883`
+
+Optional local observability:
+
+```bash
+docker compose --profile observability up --build
+```
+
+- Prometheus: `http://localhost:9090`
+- Grafana: `http://localhost:3000` with local demo credentials `admin` / `admin`
+
+Local service development:
+
+```bash
+cd apps/simulation && go run ./cmd/simulation
+cd apps/api && go run ./cmd/api
+cd apps/web && npm ci && npm run dev
+```
+
 ## Implemented Now
 
 - Monorepo structure for `apps`, `services`, `packages`, `infra`, `docs`, and `scripts`.
-- React + TypeScript frontend shell with Dashboard, Process, Alarms, Events, Trends, and Settings pages.
+- React + TypeScript frontend shell with Dashboard, Process, Alarms, Events, Trends, Reports, and Settings pages.
 - Go API service with health, system status, assets, latest telemetry, history, alarm lifecycle, event, command, and scenario proxy endpoints.
 - Go simulation service with deterministic synthetic telemetry, scenarios, active alarm generation, in-memory fallback history, and optional PostgreSQL/TimescaleDB historian writes.
 - Docker Compose stack for `web`, `api`, `simulation`, local TimescaleDB/PostgreSQL, local Eclipse Mosquitto broker, and optional local Prometheus/Grafana observability.
@@ -47,7 +136,7 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 - Frontend valve and pump control panels with pending, success, and error states.
 - GitHub Actions CI quality gates for Go API, Go simulation, frontend, Docker Compose config validation, visual regression, smoke tests, race/coverage checks, and dependency/security scans.
 - Expanded Playwright Chromium E2E suite for Dashboard, Process commands, PID/manual-auto arbitration, Alarms, Events, Trends, Settings, MQTT status, and historian status.
-- Playwright visual regression baseline for Dashboard, Process, Alarms, Events, Trends, and Settings across deterministic themes and responsive widths.
+- Playwright visual regression baseline for Dashboard, Process, Alarms, Events, Trends, Reports, and Settings across deterministic themes and responsive widths.
 - Local log artifact folder and smoke diagnostic reports under `logs/`.
 - OpenAPI 3.1 contract and JSON Schema reference files under `packages/schemas`.
 - Generated frontend API schema types committed under `apps/web/src/shared/api/generated`.
@@ -314,8 +403,8 @@ Playwright visual tests live in `apps/web/tests/visual`. They compare fixed-view
 
 Covered baseline states include:
 
-- Dashboard, Process, Alarms, Events, Trends, and Settings in desktop dark theme.
-- Dashboard, Process, and Settings in desktop light theme.
+- Dashboard, Process, Alarms, Events, Trends, Reports, and Settings in desktop dark theme.
+- Dashboard, Process, Reports, and Settings in desktop light theme.
 - Dashboard, Process, and Settings across tablet/mobile dark layouts.
 
 Local commands:
@@ -650,3 +739,4 @@ curl "http://localhost:8081/api/v1/simulation/events/recent?limit=50"
 - [MVP Domain Model](docs/mvp-domain-model.md)
 - [Architecture Notes](docs/architecture.md)
 - [Safety Boundary](docs/safety-boundary.md)
+- [Portfolio Demo Guide](docs/portfolio-demo.md)
