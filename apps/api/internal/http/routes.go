@@ -3,6 +3,8 @@ package httpapi
 import (
 	"net/http"
 	"time"
+
+	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/api/internal/metrics"
 )
 
 type HealthResponse struct {
@@ -18,6 +20,7 @@ func (s *Server) routes() http.Handler {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /health", s.handleHealth)
+	mux.Handle("GET /metrics", metrics.Handler())
 	mux.Handle("GET /api/v1/auth/session", handlerOrNotImplemented(s.handlers.AuthSession))
 	mux.Handle("GET /api/v1/auth/users", handlerOrNotImplemented(s.handlers.AuthUsers))
 	mux.Handle("GET /api/v1/system/status", s.handlers.SystemStatus)
@@ -40,6 +43,7 @@ func (s *Server) routes() http.Handler {
 	mux.Handle("POST /api/v1/commands", s.handlers.SubmitCommand)
 	mux.Handle("GET /api/v1/commands/recent", s.handlers.RecentCommands)
 	mux.Handle("GET /api/v1/events/recent", s.handlers.RecentEvents)
+	mux.Handle("GET /api/v1/reports/simulation-summary", s.handlers.SimulationReport)
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		WriteError(w, r, http.StatusNotFound, "NOT_FOUND", "Route not found")
 	})

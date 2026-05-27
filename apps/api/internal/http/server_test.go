@@ -149,6 +149,27 @@ func TestCORSAllowsDemoUserHeader(t *testing.T) {
 	}
 }
 
+func TestMetricsEndpointReturnsPrometheusText(t *testing.T) {
+	router := newTestRouter()
+
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/metrics", nil)
+
+	router.ServeHTTP(response, request)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status %d, got %d", http.StatusOK, response.Code)
+	}
+
+	if contentType := response.Header().Get("Content-Type"); !strings.Contains(contentType, "text/plain") {
+		t.Fatalf("expected Prometheus text content type, got %q", contentType)
+	}
+
+	if !strings.Contains(response.Body.String(), "api_http_requests_total") {
+		t.Fatal("expected API HTTP request metric in response body")
+	}
+}
+
 func newTestRouter() http.Handler {
 	cfg := config.Config{
 		AppName:        "smr-twin-api",
@@ -189,6 +210,7 @@ func newTestRouter() http.Handler {
 		SubmitCommand:    emptyOKHandler(),
 		RecentCommands:   emptyOKHandler(),
 		RecentEvents:     emptyOKHandler(),
+		SimulationReport: emptyOKHandler(),
 	})
 
 	return server.Router()

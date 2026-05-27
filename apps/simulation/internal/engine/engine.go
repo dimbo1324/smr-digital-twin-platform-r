@@ -11,6 +11,7 @@ import (
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/alarms"
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/historian"
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/history"
+	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/metrics"
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/model"
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/scenarios"
 )
@@ -333,6 +334,7 @@ func (e *Engine) loop(ctx context.Context) {
 }
 
 func (e *Engine) tickLocked(now time.Time) {
+	startedAt := time.Now()
 	e.state.tickCount++
 	snapshot := e.tick(now)
 	e.state.snapshot = snapshot
@@ -346,6 +348,12 @@ func (e *Engine) tickLocked(now time.Time) {
 		e.lastMQTTPublish = now
 		e.publishPeriodicMQTTLocked(snapshot)
 	}
+	mqttStatus := e.mqttStatus
+	if e.mqttPublisher != nil {
+		mqttStatus = e.mqttPublisher.Status()
+	}
+	metrics.ObserveSnapshot(snapshot, len(e.evaluator.Active()), mqttStatus)
+	metrics.ObserveTick(startedAt)
 }
 
 func (e *Engine) noise(amplitude float64) float64 {

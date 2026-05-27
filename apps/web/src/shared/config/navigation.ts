@@ -1,6 +1,7 @@
 import {
   Activity,
   Bell,
+  FileText,
   Gauge,
   LayoutDashboard,
   ScrollText,
@@ -39,6 +40,11 @@ export const navigationItems: NavigationItem[] = [
     title: "Trends",
     path: "/trends",
     icon: Gauge,
+  },
+  {
+    title: "Reports",
+    path: "/reports",
+    icon: FileText,
   },
   {
     title: "Settings",

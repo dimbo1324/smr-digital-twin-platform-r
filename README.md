@@ -21,7 +21,7 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 - React + TypeScript frontend shell with Dashboard, Process, Alarms, Events, Trends, and Settings pages.
 - Go API service with health, system status, assets, latest telemetry, history, alarm lifecycle, event, command, and scenario proxy endpoints.
 - Go simulation service with deterministic synthetic telemetry, scenarios, active alarm generation, in-memory fallback history, and optional PostgreSQL/TimescaleDB historian writes.
-- Docker Compose stack for `web`, `api`, `simulation`, local TimescaleDB/PostgreSQL, and a local Eclipse Mosquitto broker.
+- Docker Compose stack for `web`, `api`, `simulation`, local TimescaleDB/PostgreSQL, local Eclipse Mosquitto broker, and optional local Prometheus/Grafana observability.
 - Polling-based live telemetry from frontend to API.
 - Dashboard overview backed by live API status, synthetic telemetry, active alarms, alarm history, command history, and recent events.
 - API proxy from backend to simulation service, with clearly labelled in-memory fallback data for selected endpoints.
@@ -42,8 +42,10 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 - Publish-only MQTT bridge for synthetic telemetry snapshots, events, alarms, command status, PID status, control mode, historian status, and system status.
 - MQTT bridge status endpoint and minimal Dashboard/Settings status labels.
 - Demo Auth/RBAC layer with static simulation-only users, a role switcher, `X-Demo-User` header, and backend enforcement for protected write/action endpoints.
+- Simulation-only JSON/CSV report export through the API gateway and Reports page. These reports are not regulatory, compliance, or production audit reports.
+- Local demo observability baseline with API/simulation `/metrics`, Prometheus scraping, and Grafana dashboard provisioning.
 - Frontend valve and pump control panels with pending, success, and error states.
-- GitHub Actions CI quality gates for Go API, Go simulation, frontend, and Docker Compose config validation.
+- GitHub Actions CI quality gates for Go API, Go simulation, frontend, Docker Compose config validation, visual regression, smoke tests, race/coverage checks, and dependency/security scans.
 - Expanded Playwright Chromium E2E suite for Dashboard, Process commands, PID/manual-auto arbitration, Alarms, Events, Trends, Settings, MQTT status, and historian status.
 - Playwright visual regression baseline for Dashboard, Process, Alarms, Events, Trends, and Settings across deterministic themes and responsive widths.
 - Local log artifact folder and smoke diagnostic reports under `logs/`.
@@ -63,15 +65,16 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 - **Scenario controls**: predefined synthetic scenarios can be started/stopped through the API. Declarative YAML/JSON scenario definitions are planned.
 - **Assets**: API exposes current simulation assets and fallback process-loop assets. Persistent asset registry is planned.
 - **API contract layer**: OpenAPI and generated TypeScript types exist for core DTOs. Frontend runtime validation exists for selected dev/test request and response payloads; Go server code generation is not implemented yet.
+- **Report export**: JSON and CSV simulation summaries are implemented for demo use. PDF/Excel export and regulatory reporting are not implemented.
+- **Observability**: local Prometheus/Grafana demo stack and service metrics are implemented. Production logging/tracing/alerting is not implemented.
 
 ## Planned Next
 
 - Alarm shelving and richer operator workflow.
 - MQTT command ingestion and broker production hardening.
 - WebSocket or SSE real-time transport.
-- Report export.
 - Production authentication and production RBAC.
-- Observability dashboards.
+- Production observability hardening and tracing.
 
 ## Not Implemented Yet
 
@@ -81,6 +84,7 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 - InfluxDB, Redis, or MinIO persistence.
 - Production auth/RBAC.
 - PDF/Excel report export.
+- Regulatory/compliance report export.
 - Kubernetes or Helm deployment.
 - Real nuclear plant interface.
 - Safety-critical automation.
@@ -226,6 +230,7 @@ Automated CI jobs:
 
 - **API**: `go test ./...` and `go vet ./...` in `apps/api`.
 - **Simulation**: `go test ./...` and `go vet ./...` in `apps/simulation`.
+- **Race/Coverage**: `go test -race ./...` and `go test -cover ./...` for API and simulation.
 - **Web**: `npm ci`, `npm run typecheck`, `npm run lint`, `npm run test`, and `npm run build` in `apps/web`.
 - **API types**: `npm run api:types` regenerates frontend contract types before frontend checks.
 - **API schemas**: `npm run api:validate-schemas` compiles JSON Schema contract files.
@@ -233,6 +238,7 @@ Automated CI jobs:
 - **Compose**: `docker compose config --quiet` from the repository root.
 - **E2E Browser**: starts the Go simulation and API services, launches the Vite frontend through Playwright, and runs the expanded Chromium browser regression suite.
 - **Visual Regression**: starts the Go simulation and API services, launches the Vite frontend through Playwright, and compares committed screenshot baselines for core HMI pages.
+- **Security / Dependencies**: runs `govulncheck` for Go services and `npm audit --audit-level=high` for the frontend dependency tree.
 - **Historian DB Smoke**: verifies Docker Compose persistence through PostgreSQL/TimescaleDB.
 - **MQTT Bridge Smoke**: verifies the Docker Compose MQTT broker receives publish-only synthetic telemetry and command/event status messages.
 
@@ -357,6 +363,34 @@ curl -H "X-Demo-User: demo-viewer" http://localhost:8080/api/v1/auth/session
 ```
 
 The role switcher in the HMI is explicitly labelled as demo RBAC. It only controls synthetic simulator actions and does not secure real equipment.
+
+## Simulation Report Export
+
+The Reports page and API gateway can export a synthetic simulation summary as JSON or CSV:
+
+```bash
+curl "http://localhost:8080/api/v1/reports/simulation-summary?window=1h"
+curl "http://localhost:8080/api/v1/reports/simulation-summary?window=1h&format=csv"
+```
+
+Supported windows are `15m`, `1h`, `6h`, and `24h`. The report includes the current demo user, system/historian/MQTT/control/PID status, latest telemetry, simple telemetry min/max/average summaries, and command/event/alarm counts from existing simulation APIs. It is explicitly simulation-only and is not a regulatory report, production audit export, or nuclear compliance artifact.
+
+## Local Observability
+
+API and simulation expose Prometheus text metrics:
+
+```bash
+curl http://localhost:8080/metrics
+curl http://localhost:8081/metrics
+```
+
+Start the optional local Prometheus/Grafana stack:
+
+```bash
+docker compose --profile observability up --build
+```
+
+Prometheus is available at `http://localhost:9090` and Grafana at `http://localhost:3000`. Grafana is provisioned with a local dashboard and demo credentials `admin` / `admin`; those defaults are for local portfolio/demo use only and are not production secrets or a secure deployment configuration.
 
 ## Historian DB Smoke Test
 
@@ -483,6 +517,8 @@ This is a dev/test contract-hardening layer, not a production security gateway. 
 | API | http://localhost:8080 |
 | Simulation service | http://localhost:8081 |
 | MQTT broker | tcp://localhost:1883 |
+| Prometheus | http://localhost:9090 |
+| Grafana | http://localhost:3000 |
 
 Current Docker Compose services:
 
@@ -491,8 +527,16 @@ Current Docker Compose services:
 - `simulation`
 - `postgres`
 - `mqtt`
+- `prometheus` with the `observability` profile
+- `grafana` with the `observability` profile
 
-No Redis, Grafana, or object storage service is included in this milestone. The MQTT broker is a local anonymous demo broker only and is not a production security configuration.
+No Redis, Loki, or object storage service is included in this milestone. The MQTT broker is a local anonymous demo broker only and is not a production security configuration. Grafana uses `admin` / `admin` for local demo use only.
+
+Run the optional local observability stack:
+
+```bash
+docker compose --profile observability up --build
+```
 
 ## Available API Endpoints
 
@@ -503,6 +547,7 @@ curl http://localhost:8080/health
 curl http://localhost:8080/api/v1/system/status
 curl http://localhost:8080/api/v1/auth/session
 curl http://localhost:8080/api/v1/auth/users
+curl http://localhost:8080/metrics
 curl http://localhost:8080/api/v1/assets
 curl http://localhost:8080/api/v1/telemetry/latest
 curl "http://localhost:8080/api/v1/telemetry/history?window=15m"
@@ -530,6 +575,8 @@ curl -X POST http://localhost:8080/api/v1/commands \
   -d '{"targetTag":"V-101","commandType":"SET_POSITION","payload":{"positionPercent":75}}'
 curl "http://localhost:8080/api/v1/commands/recent?limit=50"
 curl "http://localhost:8080/api/v1/events/recent?limit=50"
+curl "http://localhost:8080/api/v1/reports/simulation-summary?window=1h"
+curl "http://localhost:8080/api/v1/reports/simulation-summary?window=1h&format=csv"
 curl http://localhost:8080/api/v1/simulation/scenarios
 curl -X POST http://localhost:8080/api/v1/simulation/scenarios/high_temperature/start
 curl -X POST http://localhost:8080/api/v1/simulation/scenarios/stop
@@ -540,6 +587,7 @@ Simulation service, usually called through the API:
 
 ```bash
 curl http://localhost:8081/health
+curl http://localhost:8081/metrics
 curl http://localhost:8081/api/v1/simulation/status
 curl http://localhost:8081/api/v1/simulation/telemetry/latest
 curl http://localhost:8081/api/v1/simulation/control/status
@@ -575,6 +623,8 @@ curl "http://localhost:8081/api/v1/simulation/events/recent?limit=50"
 - Events are simulation records backed by the historian when available, with in-memory fallback if the DB is disabled or unavailable.
 - MQTT publishing is one-way and publish-only; MQTT command ingestion, broker auth/ACL, and TLS are not implemented.
 - Demo RBAC is header-based and local-demo only; passwords, OAuth/JWT production auth, persistent users, and real plant access control are not implemented.
+- Report export is JSON/CSV for synthetic simulation summaries only; PDF/Excel, production audit immutability, and regulatory reporting are not implemented.
+- Observability is a local Prometheus/Grafana demo baseline only; it is not a production logging, tracing, alerting, or SRE stack.
 - Data source switching in UI is not a real runtime integration switch yet.
 - Frontend uses route-level code splitting; deeper vendor/chart chunk tuning can be added later if needed.
 - Dashboard data is live for the local simulator, but it still uses REST polling and synthetic simulation sources.
@@ -591,8 +641,8 @@ curl "http://localhost:8081/api/v1/simulation/events/recent?limit=50"
 5. Add persistent historian storage for telemetry, events, commands, and alarm history.
 6. Add publish-only MQTT bridge for simulated telemetry and integration smoke coverage.
 7. Add retention/downsampling and richer trend query controls.
-8. Add report export.
-9. Add production-style auth hardening, observability, deployment hardening, and extended CI checks.
+8. Add production-style auth hardening, retention/downsampling, deployment hardening, and extended CI checks.
+9. Add PDF/Excel report export only if it remains clearly simulation-only and non-regulatory.
 
 ## Documentation
 

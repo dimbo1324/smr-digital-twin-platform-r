@@ -38,7 +38,7 @@ The MVP target should allow the user to:
 - see alarm lifecycle states;
 - inspect an event log;
 - run predefined scenarios such as normal operation, pump failure, valve stuck, and overheating;
-- export simulation results as PDF or Excel reports.
+- export simulation summaries as JSON/CSV reports, with richer PDF or Excel exports treated as later simulation-only extensions.
 
 Current implementation status is tracked in `README.md` and `docs/mvp-domain-model.md`. Some target capabilities above are intentionally planned next rather than implemented now.
 
@@ -56,10 +56,12 @@ The MVP includes:
 - Unified event stream for commands, alarms, PID/control, scenarios, and simulation events.
 - Scenario controls for predefined synthetic scenarios.
 - Publish-only MQTT bridge for synthetic telemetry, events, alarms, commands, PID/control, historian, and system status.
+- Simulation-only JSON/CSV report export for portfolio/demo summaries.
+- Local Prometheus/Grafana observability baseline for development diagnostics.
 - Docker Compose environment for local development.
 - Basic backend, simulation, and frontend checks.
 
-The following are planned extensions rather than current implementation: MQTT command ingestion/control, production-grade audit retention, alarm shelving, declarative scenario definitions, report export, production auth/RBAC beyond the demo layer, and WebSocket/SSE transport.
+The following are planned extensions rather than current implementation: MQTT command ingestion/control, production-grade audit retention, alarm shelving, declarative scenario definitions, PDF/Excel or regulatory report export, production auth/RBAC beyond the demo layer, production observability, and WebSocket/SSE transport.
 
 ## Out of Scope
 
@@ -131,7 +133,7 @@ structure -> frontend shell -> live synthetic HMI -> simulation commands -> alar
 
 ### Observable By Default
 
-Services should eventually expose logs, metrics, and traces. Grafana dashboards should distinguish process telemetry from platform health.
+Services expose a local metrics baseline for Prometheus/Grafana demo diagnostics. Future work should add production-grade logs, traces, alerting, retention, and clearer separation between process telemetry and platform health.
 
 ### Portable Local Development
 

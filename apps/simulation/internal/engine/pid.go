@@ -6,7 +6,10 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/actuators"
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/model"
+	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/pidcontrol"
+	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/process"
 )
 
 const (
@@ -44,7 +47,7 @@ func (e *Engine) UpdatePIDConfig(request model.PIDConfigUpdateRequest) (model.PI
 	previous := e.state.pid.config
 	next := previous
 	if request.Setpoint != nil {
-		if !finite(*request.Setpoint) || *request.Setpoint < minPIDSetpointC || *request.Setpoint > maxPIDSetpointC {
+		if !process.Finite(*request.Setpoint) || *request.Setpoint < minPIDSetpointC || *request.Setpoint > maxPIDSetpointC {
 			return model.PIDStatus{}, commandError("INVALID_PID_CONFIG", "setpoint must be between 270 and 310 C", http.StatusBadRequest)
 		}
 		next.Setpoint = *request.Setpoint
@@ -68,13 +71,13 @@ func (e *Engine) UpdatePIDConfig(request model.PIDConfigUpdateRequest) (model.PI
 		next.Kd = *request.Kd
 	}
 	if request.OutputMin != nil {
-		if !finite(*request.OutputMin) || *request.OutputMin < 0 || *request.OutputMin > 100 {
+		if !process.Finite(*request.OutputMin) || *request.OutputMin < 0 || *request.OutputMin > 100 {
 			return model.PIDStatus{}, commandError("INVALID_PID_CONFIG", "outputMin must be between 0 and 100", http.StatusBadRequest)
 		}
 		next.OutputMin = *request.OutputMin
 	}
 	if request.OutputMax != nil {
-		if !finite(*request.OutputMax) || *request.OutputMax < 0 || *request.OutputMax > 100 {
+		if !process.Finite(*request.OutputMax) || *request.OutputMax < 0 || *request.OutputMax > 100 {
 			return model.PIDStatus{}, commandError("INVALID_PID_CONFIG", "outputMax must be between 0 and 100", http.StatusBadRequest)
 		}
 		next.OutputMax = *request.OutputMax
@@ -137,7 +140,7 @@ func (e *Engine) handlePIDModeTransitionLocked(previousMode, nextMode model.Cont
 		pid := &e.state.pid
 		pid.state.Active = true
 		pid.state.OutputBias = e.state.valve.positionPercent
-		pid.state.Output = clamp(e.state.valve.positionPercent, pid.config.OutputMin, pid.config.OutputMax)
+		pid.state.Output = process.Clamp(e.state.valve.positionPercent, pid.config.OutputMin, pid.config.OutputMax)
 		pid.state.LastOutput = pid.state.Output
 		pid.state.PreviousError = pid.config.Setpoint - e.state.snapshot.LoopTemperatureC
 		pid.state.Integral = 0
@@ -221,61 +224,30 @@ func (e *Engine) updatePIDLocked(now time.Time, deltaSeconds float64) {
 	if deltaSeconds <= 0 {
 		deltaSeconds = 1
 	}
-	if !finite(pid.state.ProcessValue) {
-		pid.state.Active = false
-		pid.state.Status = "Invalid process value"
-		pid.state.LastUpdateAt = now
+	pid.state = pidcontrol.CalculateActiveState(cfg, pid.state, e.state.snapshot.LoopTemperatureC, deltaSeconds)
+	pid.state.LastUpdateAt = now
+	if !pid.state.Active {
 		return
 	}
-
-	pid.state.Active = true
-	pid.state.PTerm = cfg.Kp * pid.state.Error
-	derivative := (pid.state.Error - pid.state.PreviousError) / deltaSeconds
-	pid.state.Derivative = derivative
-	pid.state.DTerm = cfg.Kd * derivative
-
-	candidateIntegral := clamp(pid.state.Integral+pid.state.Error*deltaSeconds, cfg.IntegralMin, cfg.IntegralMax)
-	candidateITerm := cfg.Ki * candidateIntegral
-	raw := pid.state.OutputBias + pid.state.PTerm + candidateITerm + pid.state.DTerm
-	output := clamp(raw, cfg.OutputMin, cfg.OutputMax)
-	saturated := !almostEqual(output, raw)
-	if !saturated || !errorPushesFurtherIntoSaturation(pid.state.Error, raw, cfg.OutputMin, cfg.OutputMax) {
-		pid.state.Integral = candidateIntegral
-		pid.state.ITerm = candidateITerm
-	} else {
-		raw = pid.state.OutputBias + pid.state.PTerm + pid.state.ITerm + pid.state.DTerm
-		output = clamp(raw, cfg.OutputMin, cfg.OutputMax)
-		saturated = !almostEqual(output, raw)
-	}
-
-	pid.state.LastOutput = pid.state.Output
-	pid.state.Output = round(output)
-	pid.state.Saturated = saturated
-	pid.state.Status = "Active"
-	if saturated {
-		pid.state.Status = "Saturated"
-	}
-	pid.state.PreviousError = pid.state.Error
-	pid.state.LastUpdateAt = now
 
 	e.applyPIDOutputToValveLocked(pid.state.Output, now)
 	e.emitPIDOutputEventsLocked(now)
 }
 
 func (e *Engine) applyPIDOutputToValveLocked(output float64, now time.Time) {
-	target := clamp(output, e.state.pid.config.OutputMin, e.state.pid.config.OutputMax)
+	target := process.Clamp(output, e.state.pid.config.OutputMin, e.state.pid.config.OutputMax)
 	if e.state.valve.activeCommandID != "" {
 		e.failCommandLocked(e.state.valve.activeCommandID, now, "COMMAND_SUPERSEDED_BY_PID", "TIC-101 PID assumed V-101 control in AUTO mode.", e.state.valve.tag)
 		e.state.valve.activeCommandID = ""
 	}
-	if almostEqual(e.state.valve.targetPositionPercent, target) {
+	if process.AlmostEqual(e.state.valve.targetPositionPercent, target) {
 		return
 	}
 	e.state.valve.targetPositionPercent = target
 	e.state.valve.lastCommandID = ""
 	e.state.valve.updatedAt = now
-	if almostEqual(e.state.valve.positionPercent, target) {
-		e.state.valve.state = valveRestState(target)
+	if process.AlmostEqual(e.state.valve.positionPercent, target) {
+		e.state.valve.state = actuators.ValveRestState(target)
 		return
 	}
 	e.state.valve.state = model.ValveStateMovingToPosition
@@ -341,21 +313,21 @@ func (e *Engine) pidStatusLocked() model.PIDStatus {
 		Active:                 pid.state.Active,
 		PIDImplemented:         true,
 		ProcessVariableTag:     pid.config.ProcessVariableTag,
-		ProcessValue:           round(pid.state.ProcessValue),
-		Setpoint:               round(pid.config.Setpoint),
+		ProcessValue:           process.Round(pid.state.ProcessValue),
+		Setpoint:               process.Round(pid.config.Setpoint),
 		ManipulatedVariableTag: pid.config.ManipulatedVariableTag,
-		Output:                 round(pid.state.Output),
+		Output:                 process.Round(pid.state.Output),
 		OutputMin:              pid.config.OutputMin,
 		OutputMax:              pid.config.OutputMax,
 		Kp:                     pid.config.Kp,
 		Ki:                     pid.config.Ki,
 		Kd:                     pid.config.Kd,
-		Error:                  round(pid.state.Error),
-		PTerm:                  round(pid.state.PTerm),
-		ITerm:                  round(pid.state.ITerm),
-		DTerm:                  round(pid.state.DTerm),
-		Integral:               round(pid.state.Integral),
-		Derivative:             round(pid.state.Derivative),
+		Error:                  process.Round(pid.state.Error),
+		PTerm:                  process.Round(pid.state.PTerm),
+		ITerm:                  process.Round(pid.state.ITerm),
+		DTerm:                  process.Round(pid.state.DTerm),
+		Integral:               process.Round(pid.state.Integral),
+		Derivative:             process.Round(pid.state.Derivative),
 		Saturated:              pid.state.Saturated,
 		Status:                 pid.state.Status,
 		UpdatedAt:              pid.state.LastUpdateAt,
@@ -364,13 +336,5 @@ func (e *Engine) pidStatusLocked() model.PIDStatus {
 }
 
 func validPIDGain(value float64) bool {
-	return finite(value) && value >= 0 && value <= 100
-}
-
-func finite(value float64) bool {
-	return !math.IsNaN(value) && !math.IsInf(value, 0)
-}
-
-func errorPushesFurtherIntoSaturation(errorValue, raw, min, max float64) bool {
-	return (raw > max && errorValue > 0) || (raw < min && errorValue < 0)
+	return process.Finite(value) && value >= 0 && value <= 100
 }

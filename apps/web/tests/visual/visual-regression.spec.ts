@@ -24,12 +24,14 @@ const desktopDarkPages: VisualScenario[] = [
   { route: "/alarms", pageTestId: "alarms-page", name: "alarms", theme: "dark", viewport: "desktop" },
   { route: "/events", pageTestId: "events-page", name: "events", theme: "dark", viewport: "desktop" },
   { route: "/trends", pageTestId: "trends-page", name: "trends", theme: "dark", viewport: "desktop" },
+  { route: "/reports", pageTestId: "reports-page", name: "reports", theme: "dark", viewport: "desktop" },
   { route: "/settings", pageTestId: "settings-page", name: "settings", theme: "dark", viewport: "desktop" },
 ];
 
 const desktopLightPages: VisualScenario[] = [
   { route: "/dashboard", pageTestId: "dashboard-page", name: "dashboard", theme: "light", viewport: "desktop" },
   { route: "/process", pageTestId: "process-page", name: "process", theme: "light", viewport: "desktop" },
+  { route: "/reports", pageTestId: "reports-page", name: "reports", theme: "light", viewport: "desktop" },
   { route: "/settings", pageTestId: "settings-page", name: "settings", theme: "light", viewport: "desktop" },
 ];
 

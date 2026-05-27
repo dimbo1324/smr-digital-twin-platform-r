@@ -10,6 +10,7 @@ import (
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/api/internal/assets"
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/api/internal/auth"
 	httpapi "github.com/dimbo1324/smr-digital-twin-platform-r/apps/api/internal/http"
+	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/api/internal/metrics"
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/api/internal/system"
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/api/internal/telemetry"
 )
@@ -309,6 +310,7 @@ func requirePermission(w http.ResponseWriter, r *http.Request, permission auth.P
 	if session.Has(permission) {
 		return session, true
 	}
+	metrics.ObserveRBACForbidden(string(permission), string(session.Role))
 	httpapi.WriteErrorPayload(w, r, http.StatusForbidden, httpapi.ErrorPayload{
 		Code:               "RBAC_FORBIDDEN",
 		Message:            "Demo user does not have permission to perform this simulation-only action.",
@@ -360,6 +362,7 @@ func parseRecentLimit(w http.ResponseWriter, r *http.Request) (int, bool) {
 
 func (g *Gateway) writeSimulationCommandError(w http.ResponseWriter, r *http.Request, err error) {
 	if errors.Is(err, ErrDisabled) {
+		metrics.ObserveSimulationProxyError("SIMULATION_DISABLED")
 		httpapi.WriteError(w, r, http.StatusServiceUnavailable, "SIMULATION_UNAVAILABLE", "Simulation service is disabled")
 		return
 	}
@@ -368,9 +371,11 @@ func (g *Gateway) writeSimulationCommandError(w http.ResponseWriter, r *http.Req
 		if status == 0 {
 			status = http.StatusBadGateway
 		}
+		metrics.ObserveSimulationProxyError(responseErr.Code)
 		httpapi.WriteError(w, r, status, responseErr.Code, responseErr.Message)
 		return
 	}
+	metrics.ObserveSimulationProxyError("SIMULATION_UNAVAILABLE")
 	httpapi.WriteError(w, r, http.StatusBadGateway, "SIMULATION_UNAVAILABLE", "Simulation service is not reachable")
 }
 

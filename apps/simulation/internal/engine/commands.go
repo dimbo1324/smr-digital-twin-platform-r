@@ -6,7 +6,10 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/actuators"
+	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/metrics"
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/model"
+	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/process"
 )
 
 const (
@@ -254,7 +257,7 @@ func (e *Engine) applyValveCommandLocked(command model.Command, now time.Time) m
 		e.appendEventLocked(model.EventTypeCommandStarted, model.EventSeverityInfo, "simulation", command.ResultMessage, command.TargetTag, command.ID, now, nil)
 		e.appendEquipmentEventLocked("Valve V-101 state changed to CLOSING.", command.TargetTag, command.ID, now)
 	case model.CommandTypeStop:
-		if !valveIsMoving(e.state.valve.state) {
+		if !actuators.ValveIsMoving(e.state.valve.state) {
 			return e.rejectAcceptedCommandLocked(command, now, "INVALID_STATE", "Valve V-101 is not moving")
 		}
 		e.supersedeValveCommandLocked(command.ID, now, "Interrupted by STOP command")
@@ -272,8 +275,8 @@ func (e *Engine) applyValveCommandLocked(command model.Command, now time.Time) m
 		e.state.valve.targetPositionPercent = position
 		e.state.valve.lastCommandID = command.ID
 		e.state.valve.updatedAt = now
-		if almostEqual(e.state.valve.positionPercent, position) {
-			e.state.valve.state = valveRestState(position)
+		if process.AlmostEqual(e.state.valve.positionPercent, position) {
+			e.state.valve.state = actuators.ValveRestState(position)
 			e.state.valve.activeCommandID = ""
 			command = completeCommand(command, now, "Valve V-101 already at requested position")
 			e.appendEventLocked(model.EventTypeCommandCompleted, model.EventSeverityInfo, "simulation", command.ResultMessage, command.TargetTag, command.ID, now, nil)
@@ -342,6 +345,7 @@ func (e *Engine) appendCommandLocked(command model.Command) {
 	}
 	e.persistCommandAsync(command)
 	e.publishCommandMQTT(command)
+	metrics.ObserveCommand(command)
 }
 
 func (e *Engine) replaceCommandLocked(command model.Command) {
@@ -406,6 +410,7 @@ func (e *Engine) appendEventRecordLocked(event model.Event) {
 	}
 	e.persistEventAsync(event)
 	e.publishEventMQTT(event)
+	metrics.ObserveEvent(event)
 }
 
 func (e *Engine) appendEquipmentEventLocked(message, targetTag, commandID string, timestamp time.Time) {
@@ -446,26 +451,4 @@ func completeCommand(command model.Command, now time.Time, message string) model
 	command.CompletedAt = &now
 	command.ResultMessage = message
 	return command
-}
-
-func valveIsMoving(state model.ValveState) bool {
-	return state == model.ValveStateOpening || state == model.ValveStateClosing || state == model.ValveStateMovingToPosition
-}
-
-func valveRestState(position float64) model.ValveState {
-	switch {
-	case position <= 0:
-		return model.ValveStateClosed
-	case position >= 100:
-		return model.ValveStateOpen
-	default:
-		return model.ValveStateStopped
-	}
-}
-
-func almostEqual(left, right float64) bool {
-	if left > right {
-		return left-right < 0.01
-	}
-	return right-left < 0.01
 }

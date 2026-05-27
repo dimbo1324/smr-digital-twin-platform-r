@@ -1,6 +1,6 @@
 # SMR Twin Simulation Service
 
-Go simulation-only telemetry engine for the SMR Twin Platform MVP. It generates deterministic synthetic telemetry, in-memory fallback history, optional PostgreSQL/TimescaleDB historian records, alarm lifecycle state, recent events, control mode arbitration, a synthetic TIC-101 PID loop, publish-only MQTT messages, and scenario states for the backend API.
+Go simulation-only telemetry engine for the SMR Twin Platform MVP. It generates deterministic synthetic telemetry, in-memory fallback history, optional PostgreSQL/TimescaleDB historian records, alarm lifecycle state, recent events, control mode arbitration, a synthetic TIC-101 PID loop, publish-only MQTT messages, Prometheus metrics for local demo observability, and scenario states for the backend API.
 
 The service exposes two synthetic telemetry layers:
 
@@ -8,6 +8,16 @@ The service exposes two synthetic telemetry layers:
 - Thermal Process Loop MVP for `T-101`, `P-101`, `V-101`, `HX-101`, `TT-101`, `PT-101`, `FT-101`, `LT-101`, and `TIC-101` UI alignment.
 
 This service is not connected to real equipment. It does not implement real nuclear operating procedures, safety automation, or plant control.
+
+## Local Metrics
+
+The simulation service exposes Prometheus text metrics at:
+
+```bash
+curl http://localhost:8081/metrics
+```
+
+Metrics cover simulation ticks, command counts, active alarms, event counts, historian writes/queue health, MQTT publish counters, PID output/error, valve position, and pump state. They are intended for the optional local Prometheus/Grafana demo stack only and are not a production observability contract.
 
 The current command layer is simulation-only. Commands mutate only in-memory `V-101` and `P-101` state and are recorded in the recent command/event trail. Those records are persisted when the optional historian is enabled and connected.
 
@@ -57,6 +67,7 @@ Default port: `8081`.
 
 ```bash
 curl http://localhost:8081/health
+curl http://localhost:8081/metrics
 curl http://localhost:8081/api/v1/simulation/status
 curl http://localhost:8081/api/v1/simulation/assets
 curl http://localhost:8081/api/v1/simulation/telemetry/latest

@@ -19,6 +19,8 @@ Current milestone:
 - historian status proxy endpoint
 - publish-only MQTT bridge status proxy endpoint
 - demo Auth/RBAC endpoints and backend enforcement for protected simulation-only actions
+- simulation-only report export endpoint for JSON/CSV summaries
+- Prometheus `/metrics` endpoint for local demo observability
 - SMR Unit Overview and Thermal Process Loop telemetry through `/api/v1/telemetry/latest`
 - OpenAPI/JSON Schema contract documentation under `packages/schemas`
 - structured request logging
@@ -31,6 +33,8 @@ Out of scope for this step:
 - WebSocket/SSE streaming
 - production authentication, passwords, OAuth/JWT, or production RBAC
 - production audit/compliance storage
+- regulatory report export
+- production observability, tracing, or alerting stack
 - real plant integration
 
 ## Run Locally
@@ -87,6 +91,7 @@ The OpenAPI contract is currently used for documentation, generated frontend Typ
 
 ```bash
 curl http://localhost:8080/health
+curl http://localhost:8080/metrics
 curl http://localhost:8080/api/v1/system/status
 curl http://localhost:8080/api/v1/auth/session
 curl http://localhost:8080/api/v1/auth/users
@@ -117,6 +122,8 @@ curl -X POST http://localhost:8080/api/v1/commands \
   -d '{"targetTag":"V-101","commandType":"OPEN","payload":{"reason":"operator_demo"}}'
 curl "http://localhost:8080/api/v1/commands/recent?limit=50"
 curl "http://localhost:8080/api/v1/events/recent?limit=50"
+curl "http://localhost:8080/api/v1/reports/simulation-summary?window=1h"
+curl "http://localhost:8080/api/v1/reports/simulation-summary?window=1h&format=csv"
 curl http://localhost:8080/api/v1/simulation/scenarios
 curl -X POST http://localhost:8080/api/v1/simulation/scenarios/high_temperature/start
 curl -X POST http://localhost:8080/api/v1/simulation/scenarios/stop
@@ -163,6 +170,10 @@ Protected write/action endpoints are enforced in the API gateway:
 - scenario start/stop/reset endpoints require `RUN_SCENARIO`.
 
 Denied actions return HTTP `403` with `RBAC_FORBIDDEN`, the required permission, the current role, and `simulationOnly: true`.
+
+### `GET /metrics`
+
+Exposes Prometheus text metrics for local demo observability, including HTTP request counts/duration, requests in flight, RBAC forbidden counts, and simulation proxy errors. This endpoint is for local portfolio diagnostics and is not a production monitoring contract.
 
 ### `GET /api/v1/assets`
 
@@ -287,6 +298,15 @@ The frontend still calls only `apps/api`. The API proxies simulation state throu
 - `POST /api/v1/simulation/scenarios/{scenarioName}/start`
 - `POST /api/v1/simulation/scenarios/stop`
 - `POST /api/v1/simulation/reset`
+
+### `GET /api/v1/reports/simulation-summary`
+
+Aggregates existing synthetic simulator data into a read-only report. Supported query parameters:
+
+- `window=15m|1h|6h|24h`
+- `format=json|csv`
+
+The JSON response uses the normal API envelope. CSV responses use `text/csv` with `section,key,value,unit,source` rows. Reports include `simulationOnly: true` and a disclaimer because they are demo summaries only, not regulatory reports, production audit exports, or nuclear compliance artifacts.
 
 ## Future Integration Points
 
