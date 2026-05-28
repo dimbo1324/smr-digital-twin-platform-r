@@ -175,6 +175,8 @@ Denied actions return HTTP `403` with `RBAC_FORBIDDEN`, the required permission,
 
 Exposes Prometheus text metrics for local demo observability, including HTTP request counts/duration, requests in flight, RBAC forbidden counts, and simulation proxy errors. This endpoint is for local portfolio diagnostics and is not a production monitoring contract.
 
+The repository-level observability smoke (`node scripts/smoke/observability-smoke.mjs`) verifies this endpoint directly and through Prometheus scraping. It is local/demo validation only, not production monitoring.
+
 ### `GET /api/v1/assets`
 
 Returns the MVP process-loop assets:

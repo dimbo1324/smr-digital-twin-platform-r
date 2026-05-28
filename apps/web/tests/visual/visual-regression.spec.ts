@@ -3,6 +3,7 @@ import { prepareManualState } from "../e2e/helpers/api";
 import {
   commonVisualMasks,
   gotoVisualPage,
+  installStableEventsVisualData,
   prepareVisualPage,
   setVisualViewport,
   type VisualTheme,
@@ -69,6 +70,9 @@ async function openVisualScenario(
   await prepareManualState(request);
   await setVisualViewport(page, scenario.viewport);
   await prepareVisualPage(page, { theme: scenario.theme });
+  if (scenario.route === "/events") {
+    await installStableEventsVisualData(page);
+  }
   await gotoVisualPage(page, scenario.route, scenario.pageTestId);
 }
 

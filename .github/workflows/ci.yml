@@ -415,10 +415,44 @@ jobs:
         if: always()
         run: docker compose -p smr-twin-historian-smoke down -v --remove-orphans
 
+  observability-smoke:
+    name: Observability Smoke
+    runs-on: ubuntu-latest
+    needs: [api, simulation, web, compose]
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Show Docker versions
+        run: |
+          docker --version
+          docker compose version
+
+      - name: Run observability smoke
+        run: node scripts/smoke/observability-smoke.mjs --timeout-ms 300000
+
+      - name: Upload observability smoke logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: observability-smoke-logs
+          path: logs/smoke/
+          retention-days: 7
+
+      - name: Cleanup observability smoke stack
+        if: always()
+        run: docker compose -p smr-twin-observability-smoke --profile observability down -v --remove-orphans
+
   mqtt-smoke:
     name: MQTT Bridge Smoke
     runs-on: ubuntu-latest
-    needs: [api, simulation, web, compose, historian-db-smoke]
+    needs: [api, simulation, web, compose, historian-db-smoke, observability-smoke]
     timeout-minutes: 20
     steps:
       - name: Checkout
