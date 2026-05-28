@@ -19,7 +19,9 @@ interface VisualScenario {
 }
 
 const desktopDarkPages: VisualScenario[] = [
-  { route: "/dashboard", pageTestId: "dashboard-page", name: "dashboard", theme: "dark", viewport: "desktop" },
+  // Dashboard desktop screenshots include the densest typography/card surface and need the
+  // same narrow platform-rendering allowance as the tablet baseline on Linux CI.
+  { route: "/dashboard", pageTestId: "dashboard-page", name: "dashboard", theme: "dark", viewport: "desktop", maxDiffPixelRatio: 0.07 },
   { route: "/process", pageTestId: "process-page", name: "process", theme: "dark", viewport: "desktop" },
   { route: "/alarms", pageTestId: "alarms-page", name: "alarms", theme: "dark", viewport: "desktop" },
   { route: "/events", pageTestId: "events-page", name: "events", theme: "dark", viewport: "desktop" },
@@ -29,7 +31,8 @@ const desktopDarkPages: VisualScenario[] = [
 ];
 
 const desktopLightPages: VisualScenario[] = [
-  { route: "/dashboard", pageTestId: "dashboard-page", name: "dashboard", theme: "light", viewport: "desktop" },
+  // Keep this scoped to dashboard desktop; other light-theme pages stay on the default threshold.
+  { route: "/dashboard", pageTestId: "dashboard-page", name: "dashboard", theme: "light", viewport: "desktop", maxDiffPixelRatio: 0.07 },
   { route: "/process", pageTestId: "process-page", name: "process", theme: "light", viewport: "desktop" },
   { route: "/reports", pageTestId: "reports-page", name: "reports", theme: "light", viewport: "desktop" },
   { route: "/settings", pageTestId: "settings-page", name: "settings", theme: "light", viewport: "desktop" },
