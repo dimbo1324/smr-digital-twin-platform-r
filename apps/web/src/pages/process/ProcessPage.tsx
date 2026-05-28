@@ -16,7 +16,6 @@ import { hasPermission, permissions, roleDeniedReason } from "@/entities/auth/li
 import { CommandEventPanel } from "@/widgets/command-event-panel/CommandEventPanel";
 import { ProcessDiagram } from "@/widgets/process-diagram/ProcessDiagram";
 import { useLatestTelemetry } from "@/shared/api/useSimulationTelemetry";
-import { displayLabel } from "@/shared/lib/display-labels";
 import { Badge } from "@/shared/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { PageShell } from "@/shared/ui/page-shell";
@@ -42,12 +41,12 @@ export function ProcessPage() {
 
   return (
     <PageShell data-testid="process-page">
-      <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
-        <div className="rounded-3xl border border-border/70 bg-card/80 p-4 shadow-panel lg:p-5">
+      <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="rounded-3xl border border-border/70 bg-card/80 p-6 shadow-panel">
           <Badge variant={liveTelemetry.state === "connected" ? "success" : "mock"}>
             {liveTelemetry.state === "connected" ? "Live synthetic telemetry" : "Demo fallback process loop"}
           </Badge>
-          <h1 className="mt-3 text-2xl font-semibold leading-tight text-foreground">
+          <h1 className="mt-4 text-3xl font-semibold leading-tight text-foreground">
             Clean process overview for equipment, flow direction, and telemetry quality.
           </h1>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">
@@ -56,7 +55,7 @@ export function ProcessPage() {
           </p>
         </div>
 
-        <div className="grid gap-2 rounded-3xl border border-border/70 bg-surface-elevated/70 p-4">
+        <div className="grid gap-3 rounded-3xl border border-border/70 bg-surface-elevated/70 p-5">
           <ProcessFact label="Loop" value="SMR synthetic energy loop" />
           <ProcessFact label="Command state" value={control.controlStatus?.mode === "AUTO" ? "PID owns V-101 in AUTO" : control.controlStatus?.mode === "MANUAL" ? "Manual valve commands enabled" : "Valve commands gated by TIC-101"} />
           <ProcessFact label="Telemetry source" value={liveTelemetry.state === "connected" ? "Backend -> Simulation" : "Local fallback"} />
@@ -66,7 +65,7 @@ export function ProcessPage() {
 
       <ProcessDiagram telemetryPoints={telemetryPoints} dataState={liveTelemetry.state} />
 
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_400px]">
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
         <Card>
           <CardHeader>
             <CardTitle>Telemetry Snapshot</CardTitle>
@@ -75,7 +74,7 @@ export function ProcessPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {processTelemetryPoints.map((point) => (
                 <TelemetryValue key={point.tag} point={point} />
               ))}
@@ -83,7 +82,7 @@ export function ProcessPage() {
           </CardContent>
         </Card>
 
-        <div className="grid gap-4">
+        <div className="grid gap-6">
           <ControlModePanel
             controlStatus={control.controlStatus}
             state={control.state}
@@ -154,11 +153,9 @@ export function ProcessPage() {
 
 function ProcessFact({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex min-w-0 items-center justify-between gap-3 rounded-2xl border border-border/60 bg-background/40 px-3 py-2.5">
-      <span className="shrink-0 text-sm text-muted-foreground">{label}</span>
-      <span className="min-w-0 truncate text-right text-sm font-medium text-foreground" title={displayLabel(value)}>
-        {displayLabel(value)}
-      </span>
+    <div className="flex items-center justify-between rounded-2xl border border-border/60 bg-background/40 px-4 py-3">
+      <span className="text-sm text-muted-foreground">{label}</span>
+      <span className="text-sm font-medium text-foreground">{value}</span>
     </div>
   );
 }

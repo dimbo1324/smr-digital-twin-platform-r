@@ -136,6 +136,6 @@ describe("DashboardPage", () => {
     renderWithProviders(<DashboardPage />);
 
     expect(screen.getByTestId("dashboard-historian-status")).toHaveTextContent("In-memory fallback");
-    expect(screen.getByTestId("dashboard-mqtt-status")).toHaveTextContent("Degraded");
+    expect(screen.getByTestId("dashboard-mqtt-status")).toHaveTextContent("degraded");
   });
 });

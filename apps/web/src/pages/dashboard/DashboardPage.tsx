@@ -8,7 +8,6 @@ import { useMqttStatus } from "@/entities/mqtt/api/useMqttStatus";
 import { DashboardLiveOverview } from "@/widgets/dashboard-live-overview/DashboardLiveOverview";
 import { useSystemStatus } from "@/shared/api/useSystemStatus";
 import { useLatestTelemetry } from "@/shared/api/useSimulationTelemetry";
-import { displayLabel } from "@/shared/lib/display-labels";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { PageShell } from "@/shared/ui/page-shell";
@@ -52,21 +51,21 @@ export function DashboardPage() {
 
   return (
     <PageShell data-testid="dashboard-page">
-      <section className="overflow-hidden rounded-3xl border border-border/70 bg-gradient-to-br from-card via-surface-elevated to-primary/10 p-4 shadow-panel lg:p-5 xl:p-6">
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-end">
+      <section className="overflow-hidden rounded-3xl border border-border/70 bg-gradient-to-br from-card via-surface-elevated to-primary/10 p-6 shadow-panel lg:p-8">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-end">
           <div>
             <Badge variant={liveTelemetry.state === "connected" ? "success" : "warning"}>
               Simulation-only dashboard / synthetic telemetry
             </Badge>
-            <h1 className="mt-4 max-w-4xl text-2xl font-semibold leading-tight text-foreground sm:text-3xl">
+            <h1 className="mt-5 max-w-4xl text-3xl font-semibold leading-tight text-foreground sm:text-4xl">
               Live platform overview for the SMR digital twin simulator.
             </h1>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">
+            <p className="mt-4 max-w-3xl text-base leading-7 text-muted-foreground">
               Dashboard cards now read from the API, simulation service, in-memory alarm lifecycle,
               command history, and unified event stream. The view is live for the local simulator,
               not a real plant operations screen.
             </p>
-            <div className="mt-5 flex flex-wrap gap-3">
+            <div className="mt-6 flex flex-wrap gap-3">
               <Button asChild>
                 <Link to="/process">
                   View process <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -80,7 +79,7 @@ export function DashboardPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-border/70 bg-background/40 p-4" data-testid="dashboard-status-card">
+          <div className="rounded-3xl border border-border/70 bg-background/40 p-5" data-testid="dashboard-status-card">
             <div className="flex items-center gap-3">
               <div className="rounded-2xl bg-success/10 p-3 text-success">
                 <ShieldCheck className="h-6 w-6" aria-hidden="true" />
@@ -92,7 +91,7 @@ export function DashboardPage() {
                 </p>
               </div>
             </div>
-            <div className="mt-4 grid grid-cols-2 gap-2">
+            <div className="mt-5 grid grid-cols-2 gap-3">
               <Metric label="API status" value={apiStatus} testId="dashboard-system-status" />
               <Metric label="Environment" value={environment} />
               <Metric label="Mode" value={mode} />
@@ -119,11 +118,9 @@ export function DashboardPage() {
 
 function Metric({ label, value, testId }: { label: string; value: string; testId?: string }) {
   return (
-    <div className="min-w-0 rounded-2xl border border-border/60 bg-surface-elevated/70 p-3" data-testid={testId}>
+    <div className="min-w-0 rounded-2xl border border-border/60 bg-surface-elevated/70 p-4" data-testid={testId}>
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 truncate text-lg font-semibold text-foreground" title={displayLabel(value)}>
-        {displayLabel(value)}
-      </p>
+      <p className="mt-1 break-words text-xl font-semibold text-foreground">{value}</p>
     </div>
   );
 }

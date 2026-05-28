@@ -2,8 +2,6 @@ import type { LucideIcon } from "lucide-react";
 import { AlertTriangle, Clock3 } from "lucide-react";
 import type { DashboardBadgeVariant } from "../lib/statusLabels";
 import { Badge } from "@/shared/ui/badge";
-import { IconFrame } from "@/shared/ui/icon-frame";
-import { displayLabel } from "@/shared/lib/display-labels";
 
 export function SummaryRow({
   label,
@@ -17,9 +15,7 @@ export function SummaryRow({
   return (
     <div className="flex items-center justify-between gap-3 rounded-2xl border border-border/70 bg-surface-elevated/60 px-4 py-3">
       <span className="text-sm text-muted-foreground">{label}</span>
-      <Badge variant={badge} className="max-w-[14rem] overflow-hidden text-ellipsis whitespace-nowrap">
-        {displayLabel(value)}
-      </Badge>
+      <Badge variant={badge}>{value}</Badge>
     </div>
   );
 }
@@ -28,7 +24,7 @@ export function CompactMetric({ label, value }: { label: string; value: string }
   return (
     <div className="rounded-2xl border border-border/70 bg-surface-elevated/60 p-3">
       <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">{label}</p>
-      <p className="mt-1 truncate text-xl font-semibold text-foreground lg:text-2xl">{displayLabel(value)}</p>
+      <p className="mt-1 text-2xl font-semibold text-foreground">{value}</p>
     </div>
   );
 }
@@ -71,10 +67,12 @@ export function BoundaryItem({
 }) {
   return (
     <div className="flex gap-3 rounded-2xl border border-border/70 bg-surface-elevated/60 p-4">
-      <IconFrame icon={Icon} tone="primary" size="sm" />
-      <div className="min-w-0">
+      <div className="mt-0.5 rounded-xl bg-primary/10 p-2 text-primary">
+        <Icon className="h-4 w-4" aria-hidden="true" />
+      </div>
+      <div>
         <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="mt-1 truncate text-sm font-medium text-foreground">{displayLabel(value)}</p>
+        <p className="mt-1 text-sm font-medium text-foreground">{value}</p>
       </div>
     </div>
   );
@@ -94,9 +92,9 @@ export function CapabilityList({
       <Badge variant={variant}>{title}</Badge>
       <div className="mt-4 space-y-2">
         {items.map((item) => (
-          <div key={item} className="flex min-w-0 items-center gap-2 text-sm text-foreground/80">
+          <div key={item} className="flex items-center gap-2 text-sm text-foreground/80">
             <Clock3 className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
-            <span className="min-w-0 break-normal">{item}</span>
+            {item}
           </div>
         ))}
       </div>

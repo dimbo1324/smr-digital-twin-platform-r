@@ -1,12 +1,10 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 export type VisualTheme = "dark" | "light";
-export type VisualViewport = "desktop" | "workspace" | "laptop" | "tablet" | "mobile";
+export type VisualViewport = "desktop" | "tablet" | "mobile";
 
 export const visualViewports: Record<VisualViewport, { width: number; height: number }> = {
   desktop: { width: 1440, height: 1000 },
-  workspace: { width: 1440, height: 900 },
-  laptop: { width: 1366, height: 768 },
   tablet: { width: 1024, height: 900 },
   mobile: { width: 390, height: 844 },
 };
