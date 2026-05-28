@@ -3,7 +3,11 @@ import { cn } from "@/shared/lib/cn";
 
 export function Table({ className, ...props }: HTMLAttributes<HTMLTableElement>) {
   return (
-    <div className="w-full overflow-auto rounded-xl border border-border/60">
+    <div
+      className="w-full overflow-auto rounded-xl border border-border/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      tabIndex={0}
+      aria-label="Scrollable data table"
+    >
       <table className={cn("w-full caption-bottom text-sm", className)} {...props} />
     </div>
   );

@@ -90,6 +90,8 @@ API and simulation expose Prometheus metrics at:
 
 The optional Docker Compose `observability` profile starts Prometheus and Grafana. Prometheus scrapes the API and simulation services, and Grafana provisions a local overview dashboard for API request rates/errors, simulation ticks, active alarms, historian queue health, MQTT publish counters, PID state, valve position, pump state, and command counts.
 
+The observability smoke test (`scripts/smoke/observability-smoke.mjs`) validates that this profile actually starts, that API/simulation `/metrics` are reachable, that Prometheus is ready and scraping both targets, that key metrics can be queried, and that Grafana health is reachable.
+
 This stack is for local demo diagnostics only. Grafana uses local demo credentials, no TLS, no production alerting, no log aggregation, and no SRE-grade retention policy.
 
 ## Domain Layers

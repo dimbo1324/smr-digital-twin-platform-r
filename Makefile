@@ -1,4 +1,4 @@
-.PHONY: help dev dev-up dev-down down status compose-config logs-dir logs-clean historian-smoke historian-smoke-keep mqtt-smoke mqtt-smoke-keep test lint api-dev api-run api-build api-test api-vet simulation-run simulation-build simulation-test simulation-vet web-api-types web-api-types-check web-api-validate-schemas web-build web-lint web-typecheck
+.PHONY: help dev dev-up dev-down down status compose-config logs-dir logs-clean historian-smoke historian-smoke-keep mqtt-smoke mqtt-smoke-keep observability-up observability-down observability-smoke observability-smoke-keep test lint api-dev api-run api-build api-test api-vet simulation-run simulation-build simulation-test simulation-vet web-api-types web-api-types-check web-api-validate-schemas web-build web-lint web-typecheck
 
 WEB_RUN = docker compose run --rm --no-deps web sh -c
 WEB_INSTALL = npm ci
@@ -17,6 +17,10 @@ help:
 	@echo "  make historian-smoke-keep - run historian smoke and keep stack running"
 	@echo "  make mqtt-smoke       - run full Docker Compose MQTT bridge smoke"
 	@echo "  make mqtt-smoke-keep  - run MQTT smoke and keep stack running"
+	@echo "  make observability-up - start Prometheus/Grafana local demo profile"
+	@echo "  make observability-down - stop the observability profile stack"
+	@echo "  make observability-smoke - run Prometheus/Grafana observability smoke"
+	@echo "  make observability-smoke-keep - run observability smoke and keep stack running"
 	@echo "  make test             - run API, simulation, and frontend checks"
 	@echo "  make lint             - run go vet and frontend lint"
 	@echo "  make api-run          - run the Go API locally"
@@ -65,6 +69,18 @@ mqtt-smoke:
 
 mqtt-smoke-keep:
 	node scripts/smoke/mqtt-bridge-smoke.mjs --keep-running
+
+observability-up:
+	docker compose --profile observability up --build -d
+
+observability-down:
+	docker compose --profile observability down -v --remove-orphans
+
+observability-smoke:
+	node scripts/smoke/observability-smoke.mjs
+
+observability-smoke-keep:
+	node scripts/smoke/observability-smoke.mjs --keep-running
 
 test: api-test simulation-test web-api-types-check web-api-validate-schemas web-typecheck web-lint web-build compose-config
 

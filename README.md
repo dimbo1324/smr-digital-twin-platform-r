@@ -481,6 +481,15 @@ docker compose --profile observability up --build
 
 Prometheus is available at `http://localhost:9090` and Grafana at `http://localhost:3000`. Grafana is provisioned with a local dashboard and demo credentials `admin` / `admin`; those defaults are for local portfolio/demo use only and are not production secrets or a secure deployment configuration.
 
+Validate the local/demo observability stack with the smoke test:
+
+```bash
+node scripts/smoke/observability-smoke.mjs
+make observability-smoke
+```
+
+The smoke starts Docker Compose with the `observability` profile, checks API and simulation `/metrics`, waits for Prometheus `/-/ready`, verifies Prometheus sees the API and simulation targets as `up`, queries key API/simulation/domain metrics, and checks Grafana `/api/health`. It writes sanitized artifacts under `logs/smoke/<timestamp>_observability-smoke/`. This validates local/demo monitoring of synthetic telemetry only; it is not production monitoring, nuclear safety monitoring, or production alerting.
+
 ## Historian DB Smoke Test
 
 The historian DB smoke verifies persistence of synthetic simulation data in the demo TimescaleDB historian through the full Docker Compose stack.
@@ -523,6 +532,8 @@ node scripts/smoke/historian-db-smoke.mjs
 make historian-smoke
 make logs-clean
 node scripts/smoke/mqtt-bridge-smoke.mjs
+node scripts/smoke/observability-smoke.mjs
+make observability-smoke
 ```
 
 The scripts use Node.js standard library APIs compatible with Node 22+ in CI and the local system Node v24.15.0. Generated logs contain synthetic simulation diagnostics only, can be safely deleted, and are not a production observability stack or certified audit trail.

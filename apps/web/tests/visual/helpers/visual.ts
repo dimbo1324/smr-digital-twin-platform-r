@@ -55,6 +55,38 @@ export async function setVisualViewport(page: Page, viewport: VisualViewport) {
   await page.setViewportSize(visualViewports[viewport]);
 }
 
+export async function installStableEventsVisualData(page: Page) {
+  await page.route("**/api/v1/events/recent?**", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        data: [
+          {
+            id: "visual-event-command",
+            timestamp: "2026-05-28T10:00:00.000Z",
+            type: "COMMAND_COMPLETED",
+            source: "simulation",
+            severity: "INFO",
+            targetTag: "V-101",
+            commandId: "visual-command-001",
+            message: "Visual baseline command completed for synthetic simulation.",
+            metadata: {
+              role: "ADMIN",
+              simulationOnly: true,
+            },
+          },
+        ],
+        meta: {
+          requestId: "visual-regression",
+          simulationOnly: true,
+          timestamp: "2026-05-28T10:00:00.000Z",
+        },
+      }),
+    });
+  });
+}
+
 export function commonVisualMasks(page: Page): Locator[] {
   return [
     page.getByTestId("dashboard-recent-events-feed"),
