@@ -7,6 +7,8 @@ import { isRbacDenied } from "@/entities/auth/lib/permissions";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
+import { InlineInfo, PermissionDeniedHint } from "@/shared/ui/industrial-states";
+import { KpiCard } from "@/shared/ui/kpi-card";
 
 interface ControlModePanelProps {
   controlStatus?: ControlStatus;
@@ -118,14 +120,14 @@ export function ControlModePanel({
           />
         </div>
 
-        <div className="rounded-2xl border border-border/70 bg-background/50 p-3 text-xs leading-5 text-muted-foreground">
+        <InlineInfo>
           {controlStatus?.safetyDisclaimer ?? "Simulation-only interface. No real plant control."}
-        </div>
+        </InlineInfo>
 
         {!canChangeMode && roleDeniedReason ? (
-          <p className="rounded-2xl border border-warning/30 bg-warning/10 p-3 text-xs leading-5 text-warning" role="status">
+          <PermissionDeniedHint className="text-xs">
             {roleDeniedReason}
-          </p>
+          </PermissionDeniedHint>
         ) : null}
 
         {state === "degraded" ? (
@@ -165,10 +167,5 @@ function ModeButton({
 }
 
 function StatusTile({ label, value, testId }: { label: string; value: string; testId?: string }) {
-  return (
-    <div className="min-w-0 rounded-2xl border border-border/70 bg-card/50 p-3" data-testid={testId}>
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 break-words font-mono text-sm font-medium text-foreground">{value}</p>
-    </div>
-  );
+  return <KpiCard label={label} value={value} className="bg-card/50 p-3" testId={testId} />;
 }

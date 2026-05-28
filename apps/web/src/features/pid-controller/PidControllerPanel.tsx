@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Activity, Gauge, RotateCcw, SlidersHorizontal } from "lucide-react";
+import { Gauge, RotateCcw, SlidersHorizontal } from "lucide-react";
 import type { PIDStatus } from "@/entities/pid/model/types";
 import { useUpdatePidConfig } from "@/entities/pid/api/useUpdatePidConfig";
 import { ApiError } from "@/shared/api/client";
@@ -7,6 +7,8 @@ import { isRbacDenied } from "@/entities/auth/lib/permissions";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
+import { InlineInfo, PermissionDeniedHint } from "@/shared/ui/industrial-states";
+import { KpiCard } from "@/shared/ui/kpi-card";
 
 interface PidControllerPanelProps {
   pidStatus?: PIDStatus;
@@ -205,15 +207,15 @@ export function PidControllerPanel({
           </Button>
         </div>
 
-        <div className="rounded-2xl border border-border/70 bg-background/50 p-3 text-xs leading-5 text-muted-foreground">
+        <InlineInfo>
           {pidStatus?.safetyDisclaimer ??
             "TIC-101 is a simulation-only PID controller for a synthetic thermal loop. It does not control real equipment."}
-        </div>
+        </InlineInfo>
 
         {!canUpdateConfig && roleDeniedReason ? (
-          <p className="rounded-2xl border border-warning/30 bg-warning/10 p-3 text-xs leading-5 text-warning" role="status">
+          <PermissionDeniedHint className="text-xs">
             {roleDeniedReason}
-          </p>
+          </PermissionDeniedHint>
         ) : null}
 
         {feedback ? <p className="text-sm text-muted-foreground" role="status">{feedback}</p> : null}
@@ -223,17 +225,7 @@ export function PidControllerPanel({
 }
 
 function Metric({ label, value, unit, testId }: { label: string; value: string; unit: string; testId?: string }) {
-  return (
-    <div className="min-w-0 rounded-2xl border border-border/70 bg-card/50 p-3" data-testid={testId}>
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Activity className="h-3.5 w-3.5" aria-hidden="true" />
-        <span className="min-w-0 break-words">{label}</span>
-      </div>
-      <p className="mt-2 font-mono text-lg font-semibold text-foreground">
-        {value} <span className="text-xs font-normal text-muted-foreground">{unit}</span>
-      </p>
-    </div>
-  );
+  return <KpiCard label={label} value={value} unit={unit} testId={testId} className="bg-card/50 p-3" />;
 }
 
 function NumberField({

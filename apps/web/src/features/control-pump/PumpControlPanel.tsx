@@ -14,8 +14,11 @@ import {
 import { ApiError } from "@/shared/api/client";
 import { isRbacDenied } from "@/entities/auth/lib/permissions";
 import { Badge } from "@/shared/ui/badge";
-import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
+import { CommandButton } from "@/shared/ui/command-button";
+import { IconFrame } from "@/shared/ui/icon-frame";
+import { InlineInfo, PermissionDeniedHint } from "@/shared/ui/industrial-states";
+import { StatusBadge } from "@/shared/ui/status-badge";
 
 type DataState = "loading" | "connected" | "degraded";
 
@@ -98,9 +101,7 @@ export function PumpControlPanel({
                 {pumpState}
               </p>
             </div>
-            <div className="rounded-2xl border border-border/70 bg-card/80 p-3 text-foreground shadow-[0_14px_34px_hsl(var(--foreground)/0.08)]">
-              <Gauge className="h-6 w-6" aria-hidden="true" />
-            </div>
+            <IconFrame icon={Gauge} tone="primary" className="h-12 w-12" />
           </div>
 
           <div className="mt-4 grid grid-cols-[repeat(auto-fit,minmax(8.75rem,1fr))] gap-2 text-xs text-muted-foreground">
@@ -109,34 +110,31 @@ export function PumpControlPanel({
             <StatusItem label="Updated" value={formatTelemetryAge(getTelemetryAge(telemetryPoints, "P-101.STATE"))} />
           </div>
 
-          <div className="mt-4 rounded-2xl border border-border/70 bg-background/50 p-3 text-xs leading-5 text-muted-foreground">
+          <InlineInfo className="mt-4">
             Commands mutate only the local simulation state. They are not real plant control commands.
-          </div>
+          </InlineInfo>
           {!canSendCommand && roleDeniedReason ? (
-            <div
-              className="mt-3 rounded-2xl border border-warning/30 bg-warning/10 p-3 text-xs leading-5 text-warning"
-              data-testid="pump-rbac-disabled-reason"
-              role="status"
-            >
+            <PermissionDeniedHint className="mt-3 text-xs" testId="pump-rbac-disabled-reason">
               {roleDeniedReason}
-            </div>
+            </PermissionDeniedHint>
           ) : null}
         </div>
 
         <div className="mt-4 grid gap-2 sm:grid-cols-2">
-          <Button disabled={!canSend} onClick={() => submitPumpCommand("START")} data-testid="pump-start-button">
+          <CommandButton loading={commandMutation.isPending} disabled={!canSend} onClick={() => submitPumpCommand("START")} data-testid="pump-start-button">
             <Play className="h-4 w-4" aria-hidden="true" />
             Start
-          </Button>
-          <Button
+          </CommandButton>
+          <CommandButton
             variant="outline"
+            loading={commandMutation.isPending}
             disabled={!canSend}
             onClick={() => submitPumpCommand("STOP")}
             data-testid="pump-stop-button"
           >
             <Square className="h-4 w-4" aria-hidden="true" />
             Stop
-          </Button>
+          </CommandButton>
         </div>
 
         <CommandFeedbackView feedback={feedback} />
@@ -184,10 +182,8 @@ function StatusItem({
 }) {
   return (
     <div className="min-w-0 rounded-xl border border-border/70 bg-card/50 px-3 py-2" data-testid={testId}>
-      <span className="break-words">{label}</span>
-      <Badge variant={variant} className="mt-2 whitespace-normal break-words">
-        {value}
-      </Badge>
+      <span className="truncate">{label}</span>
+      <StatusBadge value={value} tone={variant === "success" ? "connected" : variant === "mock" ? "simulation" : "neutral"} className="mt-2 max-w-full truncate" />
     </div>
   );
 }

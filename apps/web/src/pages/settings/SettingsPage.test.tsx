@@ -72,7 +72,7 @@ describe("SettingsPage", () => {
     renderWithProviders(<SettingsPage />);
 
     expect(screen.getByTestId("settings-page")).toBeInTheDocument();
-    expect(screen.getByTestId("settings-historian-status")).toHaveTextContent("connected");
+    expect(screen.getByTestId("settings-historian-status")).toHaveTextContent("Connected");
     expect(screen.getByTestId("settings-mqtt-status")).toHaveTextContent("Publish-only");
     expect(screen.getByTestId("settings-mqtt-status")).toHaveTextContent("Not implemented");
     expect(screen.getByTestId("settings-capability-matrix")).toHaveTextContent("Theme");

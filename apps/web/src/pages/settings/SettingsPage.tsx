@@ -4,10 +4,14 @@ import { hasPermission, permissions, roleDeniedReason } from "@/entities/auth/li
 import { useHistorianStatus } from "@/entities/historian/api/useHistorianStatus";
 import { useMqttStatus } from "@/entities/mqtt/api/useMqttStatus";
 import { useSimulationScenarios } from "@/shared/api/useSimulationTelemetry";
+import { displayLabel } from "@/shared/lib/display-labels";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
+import { IntegrationStatusCard } from "@/shared/ui/integration-status-card";
+import { PermissionDeniedHint, SimulationOnlyNotice } from "@/shared/ui/industrial-states";
 import { PageShell } from "@/shared/ui/page-shell";
+import { StatusBadge } from "@/shared/ui/status-badge";
 import { ThemeToggle } from "@/shared/ui/theme-toggle";
 
 export function SettingsPage() {
@@ -44,29 +48,46 @@ export function SettingsPage() {
           ]}
         />
 
-        <SettingsPanel
-          title="Historian Settings"
-          description="Persistence status for synthetic simulation telemetry, commands, events, and alarms."
-          testId="settings-historian-status"
-          rows={[
-            ["Status", historian.status?.status ?? "checking"],
-            ["Mode", historian.status?.mode ?? "in_memory"],
-            ["Storage", historian.status?.database ?? "in-memory"],
-            ["Fallback", historian.status?.fallbackActive ? "Active" : "Not active"],
-          ]}
-        />
-
-        <SettingsPanel
-          title="MQTT Bridge Settings"
-          description="Publish-only MQTT status for synthetic simulation payloads."
-          testId="settings-mqtt-status"
-          rows={[
-            ["Status", mqtt.status?.status ?? "checking"],
-            ["Mode", "Publish-only"],
-            ["Topic prefix", mqtt.status?.topicPrefix ?? "smr/site-001/unit-001"],
-            ["Command ingestion", "Not implemented"],
-          ]}
-        />
+        <Card>
+          <CardHeader>
+            <CardTitle>Integrations</CardTitle>
+            <CardDescription>
+              Local demo connectivity for historian persistence, MQTT publish-only transport, reports, and observability.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-3 md:grid-cols-2">
+            <IntegrationStatusCard
+              title="Historian"
+              description="Status, mode, and storage for synthetic telemetry, commands, events, and alarms persistence."
+              status={historian.status?.status ?? "checking"}
+              source={historian.status?.fallbackActive ? "in_memory_fallback" : historian.status?.mode ?? "persistent_historian"}
+              tone={historian.status?.status === "connected" ? "connected" : historian.status?.fallbackActive ? "fallback" : "degraded"}
+              testId="settings-historian-status"
+            />
+            <IntegrationStatusCard
+              title="MQTT bridge"
+              description="Publish-only synthetic payload bridge. Command ingestion: Not implemented."
+              status={mqtt.status?.status ?? "checking"}
+              source="MQTT publish-only"
+              tone={mqtt.status?.status === "connected" ? "connected" : mqtt.status?.status === "disabled" ? "disabled" : "degraded"}
+              testId="settings-mqtt-status"
+            />
+            <IntegrationStatusCard
+              title="Reports"
+              description="JSON/CSV simulation summaries. Not regulatory reporting."
+              status="Implemented"
+              source="simulation_only"
+              tone="simulation"
+            />
+            <IntegrationStatusCard
+              title="Observability"
+              description="Local/demo Prometheus and Grafana baseline."
+              status="Local demo"
+              source="local observability"
+              tone="neutral"
+            />
+          </CardContent>
+        </Card>
 
         <Card data-testid="settings-capability-matrix">
           <CardHeader>
@@ -123,9 +144,10 @@ export function SettingsPage() {
                 />
               </label>
             ))}
-            <Badge variant={historian.status?.status === "connected" ? "success" : "warning"}>
-              Historian: {historian.status?.status ?? "checking"} / MQTT: {mqtt.status?.status ?? "checking"}
-            </Badge>
+            <StatusBadge
+              tone={historian.status?.status === "connected" && mqtt.status?.status === "connected" ? "connected" : "degraded"}
+              value={`Historian: ${historian.status?.status ?? "checking"} / MQTT: ${mqtt.status?.status ?? "checking"}`}
+            />
           </CardContent>
         </Card>
       </section>
@@ -139,6 +161,7 @@ export function SettingsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <SimulationOnlyNotice className="mb-4" />
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {simulation.scenarios.map((scenario) => (
               <Button
@@ -162,9 +185,9 @@ export function SettingsPage() {
             <Badge variant="warning">Simulation-only controls</Badge>
           </div>
           {!canRunScenario ? (
-            <p className="mt-3 rounded-2xl border border-warning/40 bg-warning/10 p-3 text-sm text-warning-foreground">
+            <PermissionDeniedHint className="mt-3">
               {scenarioDeniedReason}
-            </p>
+            </PermissionDeniedHint>
           ) : null}
         </CardContent>
       </Card>
@@ -202,7 +225,7 @@ function SettingRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex min-w-0 flex-col gap-2 rounded-2xl border border-border/70 bg-surface-elevated/60 p-4 sm:flex-row sm:items-center sm:justify-between">
       <span className="text-sm text-muted-foreground">{label}</span>
-      <span className="min-w-0 break-words text-sm font-medium text-foreground sm:text-right">{value}</span>
+      <span className="min-w-0 truncate text-sm font-medium text-foreground sm:text-right">{displayLabel(value)}</span>
     </div>
   );
 }
