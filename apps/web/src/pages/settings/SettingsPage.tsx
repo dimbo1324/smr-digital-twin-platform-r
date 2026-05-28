@@ -4,6 +4,7 @@ import { hasPermission, permissions, roleDeniedReason } from "@/entities/auth/li
 import { useHistorianStatus } from "@/entities/historian/api/useHistorianStatus";
 import { useMqttStatus } from "@/entities/mqtt/api/useMqttStatus";
 import { useSimulationScenarios } from "@/shared/api/useSimulationTelemetry";
+import { displayLabel } from "@/shared/lib/display-labels";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
@@ -21,7 +22,7 @@ export function SettingsPage() {
 
   return (
     <PageShell data-testid="settings-page">
-      <section className="grid gap-6 xl:grid-cols-2">
+      <section className="grid gap-4 xl:grid-cols-3">
         <SettingsPanel
           title="Project Settings"
           description="Portfolio project metadata for the MVP shell."
@@ -86,8 +87,8 @@ export function SettingsPage() {
                 </div>
                 <ThemeToggle />
               </div>
-              <Badge variant="mock" className="mt-4">
-                Current: {theme}
+              <Badge variant="mock" className="mt-4 max-w-full truncate whitespace-nowrap">
+                Current: {displayLabel(theme)}
               </Badge>
             </div>
             <SettingRow label="Unit system" value="SI" />
@@ -123,8 +124,11 @@ export function SettingsPage() {
                 />
               </label>
             ))}
-            <Badge variant={historian.status?.status === "connected" ? "success" : "warning"}>
-              Historian: {historian.status?.status ?? "checking"} / MQTT: {mqtt.status?.status ?? "checking"}
+            <Badge
+              variant={historian.status?.status === "connected" ? "success" : "warning"}
+              className="max-w-full truncate whitespace-nowrap"
+            >
+              Historian: {displayLabel(historian.status?.status ?? "checking")} / MQTT: {displayLabel(mqtt.status?.status ?? "checking")}
             </Badge>
           </CardContent>
         </Card>
@@ -139,14 +143,14 @@ export function SettingsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
             {simulation.scenarios.map((scenario) => (
               <Button
                 key={scenario.name}
                 variant="outline"
                 onClick={() => void simulation.actions.start(scenario.name)}
                 disabled={!canRunScenario}
-                className="justify-start"
+                className="min-w-0 justify-start truncate"
               >
                 {scenario.title}
               </Button>
@@ -200,9 +204,11 @@ function SettingsPanel({
 
 function SettingRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex min-w-0 flex-col gap-2 rounded-2xl border border-border/70 bg-surface-elevated/60 p-4 sm:flex-row sm:items-center sm:justify-between">
-      <span className="text-sm text-muted-foreground">{label}</span>
-      <span className="min-w-0 break-words text-sm font-medium text-foreground sm:text-right">{value}</span>
+    <div className="flex min-w-0 flex-col gap-2 rounded-2xl border border-border/70 bg-surface-elevated/60 p-3 sm:flex-row sm:items-center sm:justify-between">
+      <span className="shrink-0 text-sm text-muted-foreground">{label}</span>
+      <span className="min-w-0 max-w-full truncate text-sm font-medium text-foreground sm:text-right">
+        {displayLabel(value)}
+      </span>
     </div>
   );
 }

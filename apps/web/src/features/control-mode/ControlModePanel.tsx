@@ -4,6 +4,7 @@ import type { ControlMode, ControlStatus } from "@/entities/control/model/types"
 import { useSetControlMode } from "@/entities/control/api/useSetControlMode";
 import { ApiError } from "@/shared/api/client";
 import { isRbacDenied } from "@/entities/auth/lib/permissions";
+import { displayLabel } from "@/shared/lib/display-labels";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
@@ -168,7 +169,9 @@ function StatusTile({ label, value, testId }: { label: string; value: string; te
   return (
     <div className="min-w-0 rounded-2xl border border-border/70 bg-card/50 p-3" data-testid={testId}>
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 break-words font-mono text-sm font-medium text-foreground">{value}</p>
+      <p className="mt-1 truncate font-mono text-sm font-medium text-foreground" title={displayLabel(value)}>
+        {displayLabel(value)}
+      </p>
     </div>
   );
 }

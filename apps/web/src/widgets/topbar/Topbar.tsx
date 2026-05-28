@@ -51,15 +51,15 @@ export function Topbar() {
     systemStatus.state === "connected" ? "Last sync: backend API" : "Last sync: API unavailable";
 
   return (
-    <header className="sticky top-0 z-20 border-b border-border/70 bg-background/70 backdrop-blur-2xl">
-      <div className="mx-auto flex w-full max-w-[1520px] flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8 xl:px-10">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+    <header className="sticky top-0 z-20 shrink-0 border-b border-border/70 bg-background/70 backdrop-blur-2xl">
+      <div className="mx-auto flex w-full max-w-[1520px] flex-col gap-3 px-4 py-3 sm:px-6 lg:px-8 xl:px-10">
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <div className="min-w-0">
             <p className="text-xs font-medium uppercase text-muted-foreground">
               {meta.eyebrow}
             </p>
             <div className="mt-1 flex flex-wrap items-end gap-x-3 gap-y-1">
-              <h2 className="text-2xl font-semibold leading-tight text-foreground">
+              <h2 className="text-xl font-semibold leading-tight text-foreground lg:text-2xl">
                 {meta.title}
               </h2>
               <p className="pb-1 text-sm text-muted-foreground">{meta.description}</p>
@@ -67,20 +67,20 @@ export function Topbar() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="mock">
+            <Badge variant="mock" className="max-w-[14rem] truncate whitespace-nowrap">
               <DatabaseZap className="h-3.5 w-3.5" aria-hidden="true" />
               {environmentLabel}
             </Badge>
-            <Badge variant={apiBadge.variant}>
+            <Badge variant={apiBadge.variant} className="whitespace-nowrap">
               <apiBadge.icon className="h-3.5 w-3.5" aria-hidden="true" />
               {apiBadge.label}
             </Badge>
-            <Badge variant="warning">
+            <Badge variant="warning" className="whitespace-nowrap">
               <ShieldAlert className="h-3.5 w-3.5" aria-hidden="true" />
               No Live Control
             </Badge>
             <DemoRoleSwitcher />
-            <Badge variant="outline">
+            <Badge variant="outline" className="max-w-[14rem] truncate whitespace-nowrap">
               <Clock3 className="h-3.5 w-3.5" aria-hidden="true" />
               {lastSyncLabel}
             </Badge>
@@ -88,7 +88,7 @@ export function Topbar() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 rounded-2xl border border-warning/20 bg-warning/10 px-4 py-3 text-sm text-foreground sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-2 rounded-2xl border border-warning/20 bg-warning/10 px-3 py-2 text-sm text-foreground sm:flex-row sm:items-center sm:justify-between">
           <span className="font-medium">Simulation-only interface. No real plant control.</span>
           <span className="text-muted-foreground">
             Valve and pump commands mutate only synthetic simulation state.

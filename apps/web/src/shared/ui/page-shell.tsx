@@ -5,7 +5,7 @@ type PageShellProps = HTMLAttributes<HTMLDivElement>;
 
 export function PageShell({ children, className, ...props }: PageShellProps) {
   return (
-    <div className={cn("flex flex-col gap-7 animate-enter", className)} {...props}>
+    <div className={cn("flex min-h-0 flex-none flex-col gap-4 animate-enter lg:gap-5", className)} {...props}>
       {children}
     </div>
   );
