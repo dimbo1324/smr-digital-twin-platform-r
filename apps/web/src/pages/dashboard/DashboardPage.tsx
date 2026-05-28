@@ -8,8 +8,10 @@ import { useMqttStatus } from "@/entities/mqtt/api/useMqttStatus";
 import { DashboardLiveOverview } from "@/widgets/dashboard-live-overview/DashboardLiveOverview";
 import { useSystemStatus } from "@/shared/api/useSystemStatus";
 import { useLatestTelemetry } from "@/shared/api/useSimulationTelemetry";
+import { displayLabel } from "@/shared/lib/display-labels";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
+import { KpiCard } from "@/shared/ui/kpi-card";
 import { PageShell } from "@/shared/ui/page-shell";
 
 export function DashboardPage() {
@@ -79,7 +81,7 @@ export function DashboardPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-border/70 bg-background/40 p-5" data-testid="dashboard-status-card">
+          <div className="rounded-3xl border border-border/70 bg-background/40 p-5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.05)]" data-testid="dashboard-status-card">
             <div className="flex items-center gap-3">
               <div className="rounded-2xl bg-success/10 p-3 text-success">
                 <ShieldCheck className="h-6 w-6" aria-hidden="true" />
@@ -117,10 +119,5 @@ export function DashboardPage() {
 }
 
 function Metric({ label, value, testId }: { label: string; value: string; testId?: string }) {
-  return (
-    <div className="min-w-0 rounded-2xl border border-border/60 bg-surface-elevated/70 p-4" data-testid={testId}>
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 break-words text-xl font-semibold text-foreground">{value}</p>
-    </div>
-  );
+  return <KpiCard label={label} value={displayLabel(value)} testId={testId} className="p-3" />;
 }

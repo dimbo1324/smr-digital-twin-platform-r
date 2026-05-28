@@ -16,6 +16,13 @@ const badgeVariants = cva(
         info: "border-info/25 bg-info/10 text-info",
         mock: "border-mock/25 bg-mock/10 text-mock",
         offline: "border-offline/25 bg-offline/10 text-offline",
+        healthy: "border-success/25 bg-success/10 text-success",
+        degraded: "border-warning/30 bg-warning/10 text-warning",
+        disabled: "border-offline/25 bg-offline/10 text-offline",
+        simulation: "border-mock/25 bg-mock/10 text-mock",
+        fallback: "border-warning/30 bg-warning/10 text-warning",
+        connected: "border-success/25 bg-success/10 text-success",
+        disconnected: "border-offline/25 bg-offline/10 text-offline",
       },
     },
     defaultVariants: {

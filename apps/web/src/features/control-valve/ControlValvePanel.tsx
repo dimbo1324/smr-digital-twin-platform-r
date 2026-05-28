@@ -18,6 +18,11 @@ import { isRbacDenied } from "@/entities/auth/lib/permissions";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
+import { CommandButton } from "@/shared/ui/command-button";
+import { IconFrame } from "@/shared/ui/icon-frame";
+import { InlineInfo, PermissionDeniedHint } from "@/shared/ui/industrial-states";
+import { StatusBadge } from "@/shared/ui/status-badge";
+import { displayLabel } from "@/shared/lib/display-labels";
 
 type DataState = "loading" | "connected" | "degraded";
 
@@ -117,9 +122,7 @@ export function ControlValvePanel({
                 {Math.round(valvePosition * 10) / 10}%
               </p>
             </div>
-            <div className="rounded-2xl border border-border/70 bg-card/80 p-3 text-foreground shadow-[0_14px_34px_hsl(var(--foreground)/0.08)]">
-              <SlidersHorizontal className="h-6 w-6" aria-hidden="true" />
-            </div>
+            <IconFrame icon={SlidersHorizontal} tone="warning" className="h-12 w-12" />
           </div>
 
           <div className="mt-5 space-y-2">
@@ -151,9 +154,9 @@ export function ControlValvePanel({
             <StatusItem label="Updated" value={ageLabel} />
           </div>
 
-          <div className="mt-4 rounded-2xl border border-border/70 bg-background/50 p-3 text-xs leading-5 text-muted-foreground">
+          <InlineInfo className="mt-4">
             Commands affect only the in-memory simulation. No real equipment, plant network, or safety-critical automation is connected.
-          </div>
+          </InlineInfo>
           {disabledReason ? (
             <div
               className="mt-3 rounded-2xl border border-warning/30 bg-warning/10 p-3 text-xs leading-5 text-warning"
@@ -164,42 +167,41 @@ export function ControlValvePanel({
             </div>
           ) : null}
           {!disabledReason && !canSendCommand && roleDeniedReason ? (
-            <div
-              className="mt-3 rounded-2xl border border-warning/30 bg-warning/10 p-3 text-xs leading-5 text-warning"
-              data-testid="valve-rbac-disabled-reason"
-              role="status"
-            >
+            <PermissionDeniedHint className="mt-3 text-xs" testId="valve-rbac-disabled-reason">
               {roleDeniedReason}
-            </div>
+            </PermissionDeniedHint>
           ) : null}
         </div>
 
         <div className="mt-4 grid gap-2 sm:grid-cols-3">
-          <Button
+          <CommandButton
             variant="outline"
             disabled={!canSend}
+            loading={isPending}
             onClick={() => submitValveCommand("OPEN")}
             data-testid="valve-open-button"
           >
             <Power className="h-4 w-4" aria-hidden="true" />
             Open
-          </Button>
-          <Button
+          </CommandButton>
+          <CommandButton
             variant="outline"
             disabled={!canSend}
+            loading={isPending}
             onClick={() => submitValveCommand("STOP")}
             data-testid="valve-stop-button"
           >
             Stop
-          </Button>
-          <Button
+          </CommandButton>
+          <CommandButton
             variant="outline"
             disabled={!canSend}
+            loading={isPending}
             onClick={() => submitValveCommand("CLOSE")}
             data-testid="valve-close-button"
           >
             Close
-          </Button>
+          </CommandButton>
         </div>
 
         <div className="mt-4 rounded-2xl border border-border/70 bg-surface-elevated/60 p-4">
@@ -304,11 +306,9 @@ function StatusItem({
     <div className="min-w-0 rounded-xl border border-border/70 bg-card/50 px-3 py-2" data-testid={testId}>
       <div className="flex min-w-0 items-center gap-1.5">
         <Clock3 className="h-3 w-3 shrink-0" aria-hidden="true" />
-        <span className="min-w-0 break-words">{label}</span>
+        <span className="min-w-0 truncate">{label}</span>
       </div>
-      <Badge variant={variant} className="mt-2 whitespace-normal break-words">
-        {value}
-      </Badge>
+      <StatusBadge value={displayLabel(value)} tone={variant === "success" ? "connected" : variant === "warning" ? "degraded" : variant === "mock" ? "simulation" : "neutral"} className="mt-2 max-w-full truncate" />
     </div>
   );
 }

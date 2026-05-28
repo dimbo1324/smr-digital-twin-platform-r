@@ -17,9 +17,11 @@ import {
 } from "@/entities/telemetry/lib/selectors";
 import { Badge } from "@/shared/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
+import { IconFrame } from "@/shared/ui/icon-frame";
+import { SourceBadge } from "@/shared/ui/source-badge";
+import { StatusBadge } from "@/shared/ui/status-badge";
 import { cn } from "@/shared/lib/cn";
 
-type SourceVariant = "success" | "mock" | "warning" | "offline";
 type DataState = "loading" | "connected" | "degraded";
 
 interface ProcessNode {
@@ -29,7 +31,6 @@ interface ProcessNode {
   value: string;
   icon: LucideIcon;
   source: string;
-  sourceVariant: SourceVariant;
 }
 
 export interface ProcessDiagramProps {
@@ -44,30 +45,8 @@ const statusClasses: Record<TelemetryStatus, string> = {
   normal: "border-success/25 bg-success/10 text-success",
 };
 
-const statusBadgeVariant: Record<
-  TelemetryStatus,
-  "offline" | "mock" | "warning" | "success"
-> = {
-  offline: "offline",
-  mock: "mock",
-  warning: "warning",
-  normal: "success",
-};
-
 function pointStatus(point: TelemetryDisplayPoint | undefined, fallback: TelemetryStatus): TelemetryStatus {
   return point?.status ?? fallback;
-}
-
-function pointSourceVariant(point: TelemetryDisplayPoint | undefined): SourceVariant {
-  if (!point) {
-    return "offline";
-  }
-
-  if (point.source === "simulation") {
-    return "success";
-  }
-
-  return point.source?.includes("demo-fallback") || point.source?.includes("mock") ? "mock" : "warning";
 }
 
 function buildNodes(telemetryPoints: TelemetryDisplayPoint[]): ProcessNode[] {
@@ -90,7 +69,6 @@ function buildNodes(telemetryPoints: TelemetryDisplayPoint[]): ProcessNode[] {
       value: `Level ${formatTelemetryValue(tankLevel)}`,
       icon: Box,
       source: telemetrySourceLabel(tankLevel),
-      sourceVariant: pointSourceVariant(tankLevel),
     },
     {
       tag: "P-101",
@@ -99,7 +77,6 @@ function buildNodes(telemetryPoints: TelemetryDisplayPoint[]): ProcessNode[] {
       value: `${formatTelemetryValue(pumpState)} / ${formatTelemetryValue(pumpRpm)}`,
       icon: Gauge,
       source: telemetrySourceLabel(pumpState),
-      sourceVariant: pointSourceVariant(pumpState),
     },
     {
       tag: "V-101",
@@ -108,7 +85,6 @@ function buildNodes(telemetryPoints: TelemetryDisplayPoint[]): ProcessNode[] {
       value: `${formatTelemetryValue(valvePosition)} / ${formatTelemetryValue(valveState)}`,
       icon: SlidersHorizontal,
       source: telemetrySourceLabel(valvePosition),
-      sourceVariant: pointSourceVariant(valvePosition),
     },
     {
       tag: "HX-101",
@@ -117,7 +93,6 @@ function buildNodes(telemetryPoints: TelemetryDisplayPoint[]): ProcessNode[] {
       value: formatTelemetryValue(heatExchangerState),
       icon: Factory,
       source: telemetrySourceLabel(heatExchangerState),
-      sourceVariant: pointSourceVariant(heatExchangerState),
     },
     {
       tag: "Sensors",
@@ -126,7 +101,6 @@ function buildNodes(telemetryPoints: TelemetryDisplayPoint[]): ProcessNode[] {
       value: `${formatTelemetryValue(temperature)} / ${formatTelemetryValue(pressure)} / ${formatTelemetryValue(flow)}`,
       icon: Thermometer,
       source: telemetrySourceLabel(temperature ?? pressure ?? flow),
-      sourceVariant: pointSourceVariant(temperature ?? pressure ?? flow),
     },
     {
       tag: "TIC-101",
@@ -135,7 +109,6 @@ function buildNodes(telemetryPoints: TelemetryDisplayPoint[]): ProcessNode[] {
       value: formatTelemetryValue(controllerMode),
       icon: Cpu,
       source: telemetrySourceLabel(controllerMode),
-      sourceVariant: pointSourceVariant(controllerMode),
     },
   ];
 }
@@ -149,12 +122,10 @@ function EquipmentNode({ node }: { node: ProcessNode }) {
       )}
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="rounded-2xl border border-current/20 bg-background/40 p-2.5">
-          <node.icon className="h-5 w-5" aria-hidden="true" />
-        </div>
+        <IconFrame icon={node.icon} tone={node.status === "normal" ? "success" : node.status === "warning" ? "warning" : node.status === "mock" ? "simulation" : "neutral"} />
         <div className="flex flex-col items-end gap-2">
-          <Badge variant={statusBadgeVariant[node.status]}>{node.status}</Badge>
-          <Badge variant={node.sourceVariant}>{node.source}</Badge>
+          <StatusBadge tone={node.status === "normal" ? "healthy" : node.status === "offline" ? "disabled" : node.status === "mock" ? "simulation" : "warning"} value={node.status} />
+          <SourceBadge source={node.source} />
         </div>
       </div>
       <p className="mt-5 font-mono text-xs text-muted-foreground">{node.tag}</p>
@@ -209,7 +180,7 @@ export function ProcessDiagram({ telemetryPoints, dataState }: ProcessDiagramPro
           </CardDescription>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Badge variant={dataState === "connected" ? "success" : "warning"}>{sourceLabel}</Badge>
+          <StatusBadge tone={dataState === "connected" ? "connected" : "degraded"} value={sourceLabel} />
           <Badge variant="mock">{"Tank -> Pump -> Valve -> HX -> Sensors -> PID"}</Badge>
         </div>
       </CardHeader>
@@ -278,9 +249,7 @@ function SensorBadge({
         />
       </div>
       <p className="mt-3 text-xl font-semibold text-foreground">{formatTelemetryValue(point)}</p>
-      <Badge variant={pointSourceVariant(point)} className="mt-3">
-        {telemetrySourceLabel(point)}
-      </Badge>
+      <SourceBadge source={telemetrySourceLabel(point)} className="mt-3" />
     </div>
   );
 }
