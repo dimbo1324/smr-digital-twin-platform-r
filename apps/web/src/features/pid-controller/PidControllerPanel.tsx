@@ -227,7 +227,7 @@ function Metric({ label, value, unit, testId }: { label: string; value: string; 
     <div className="min-w-0 rounded-2xl border border-border/70 bg-card/50 p-3" data-testid={testId}>
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <Activity className="h-3.5 w-3.5" aria-hidden="true" />
-        <span className="min-w-0 break-words">{label}</span>
+        <span className="min-w-0 truncate">{label}</span>
       </div>
       <p className="mt-2 font-mono text-lg font-semibold text-foreground">
         {value} <span className="text-xs font-normal text-muted-foreground">{unit}</span>

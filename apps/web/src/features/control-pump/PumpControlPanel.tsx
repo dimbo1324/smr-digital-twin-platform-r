@@ -13,6 +13,7 @@ import {
 } from "@/entities/telemetry/lib/selectors";
 import { ApiError } from "@/shared/api/client";
 import { isRbacDenied } from "@/entities/auth/lib/permissions";
+import { displayLabel } from "@/shared/lib/display-labels";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
@@ -184,9 +185,9 @@ function StatusItem({
 }) {
   return (
     <div className="min-w-0 rounded-xl border border-border/70 bg-card/50 px-3 py-2" data-testid={testId}>
-      <span className="break-words">{label}</span>
-      <Badge variant={variant} className="mt-2 whitespace-normal break-words">
-        {value}
+      <span className="truncate">{label}</span>
+      <Badge variant={variant} className="mt-2 max-w-full truncate whitespace-nowrap" title={displayLabel(value)}>
+        {displayLabel(value)}
       </Badge>
     </div>
   );

@@ -15,6 +15,7 @@ import {
 } from "@/entities/telemetry/lib/selectors";
 import { ApiError } from "@/shared/api/client";
 import { isRbacDenied } from "@/entities/auth/lib/permissions";
+import { displayLabel } from "@/shared/lib/display-labels";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
@@ -304,10 +305,10 @@ function StatusItem({
     <div className="min-w-0 rounded-xl border border-border/70 bg-card/50 px-3 py-2" data-testid={testId}>
       <div className="flex min-w-0 items-center gap-1.5">
         <Clock3 className="h-3 w-3 shrink-0" aria-hidden="true" />
-        <span className="min-w-0 break-words">{label}</span>
+        <span className="min-w-0 truncate">{label}</span>
       </div>
-      <Badge variant={variant} className="mt-2 whitespace-normal break-words">
-        {value}
+      <Badge variant={variant} className="mt-2 max-w-full truncate whitespace-nowrap" title={displayLabel(value)}>
+        {displayLabel(value)}
       </Badge>
     </div>
   );

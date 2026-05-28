@@ -44,6 +44,16 @@ const responsiveDarkPages: VisualScenario[] = [
 ];
 
 const visualScenarios = [...desktopDarkPages, ...desktopLightPages, ...responsiveDarkPages];
+const noBodyScrollPages: VisualScenario[] = [
+  { route: "/dashboard", pageTestId: "dashboard-page", name: "dashboard", theme: "dark", viewport: "workspace" },
+  { route: "/process", pageTestId: "process-page", name: "process", theme: "dark", viewport: "workspace" },
+  { route: "/reports", pageTestId: "reports-page", name: "reports", theme: "dark", viewport: "workspace" },
+  { route: "/settings", pageTestId: "settings-page", name: "settings", theme: "dark", viewport: "workspace" },
+  { route: "/dashboard", pageTestId: "dashboard-page", name: "dashboard", theme: "dark", viewport: "laptop" },
+  { route: "/process", pageTestId: "process-page", name: "process", theme: "dark", viewport: "laptop" },
+  { route: "/reports", pageTestId: "reports-page", name: "reports", theme: "dark", viewport: "laptop" },
+  { route: "/settings", pageTestId: "settings-page", name: "settings", theme: "dark", viewport: "laptop" },
+];
 
 test.describe("visual regression baseline", () => {
   for (const scenario of visualScenarios) {
@@ -55,6 +65,23 @@ test.describe("visual regression baseline", () => {
         ...(scenario.maxDiffPixelRatio === undefined ? {} : { maxDiffPixelRatio: scenario.maxDiffPixelRatio }),
         mask: commonVisualMasks(page),
       });
+    });
+  }
+});
+
+test.describe("desktop body scroll guard", () => {
+  for (const scenario of noBodyScrollPages) {
+    test(`${scenario.name} ${scenario.viewport} keeps document scroll locked`, async ({ page, request }) => {
+      await openVisualScenario(page, request, scenario);
+
+      const scrollState = await page.evaluate(() => ({
+        htmlScrollHeight: document.documentElement.scrollHeight,
+        bodyScrollHeight: document.body.scrollHeight,
+        viewportHeight: window.innerHeight,
+      }));
+
+      expect(scrollState.htmlScrollHeight).toBeLessThanOrEqual(scrollState.viewportHeight + 2);
+      expect(scrollState.bodyScrollHeight).toBeLessThanOrEqual(scrollState.viewportHeight + 2);
     });
   }
 });
