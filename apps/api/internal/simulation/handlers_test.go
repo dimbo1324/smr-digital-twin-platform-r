@@ -630,13 +630,36 @@ func TestSimulationReportCSVReturnsDownload(t *testing.T) {
 	}
 }
 
+func TestSimulationReportPDFReturnsDownload(t *testing.T) {
+	server := fakeSimulationServer()
+	defer server.Close()
+	gateway := newTestGateway(server.URL, true)
+
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/api/v1/reports/simulation-summary?window=15m&format=pdf", nil)
+	gateway.SimulationReport(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", recorder.Code, recorder.Body.String())
+	}
+	if contentType := recorder.Header().Get("Content-Type"); !strings.Contains(contentType, "application/pdf") {
+		t.Fatalf("expected PDF content type, got %s", contentType)
+	}
+	if !bytes.HasPrefix(recorder.Body.Bytes(), []byte("%PDF")) {
+		t.Fatalf("expected PDF header, got %q", recorder.Body.String()[:min(20, recorder.Body.Len())])
+	}
+	if !strings.Contains(recorder.Body.String(), "Simulation-only engineering report") {
+		t.Fatalf("expected simulation-only disclaimer in PDF payload")
+	}
+}
+
 func TestSimulationReportRejectsInvalidFormat(t *testing.T) {
 	server := fakeSimulationServer()
 	defer server.Close()
 	gateway := newTestGateway(server.URL, true)
 
 	recorder := httptest.NewRecorder()
-	request := httptest.NewRequest(http.MethodGet, "/api/v1/reports/simulation-summary?format=pdf", nil)
+	request := httptest.NewRequest(http.MethodGet, "/api/v1/reports/simulation-summary?format=xlsx", nil)
 	gateway.SimulationReport(recorder, request)
 
 	if recorder.Code != http.StatusBadRequest {

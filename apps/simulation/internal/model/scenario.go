@@ -17,6 +17,15 @@ type ScenarioInfo struct {
 	Name           ScenarioName `json:"name"`
 	Title          string       `json:"title"`
 	Description    string       `json:"description"`
+	Category       string       `json:"category,omitempty"`
+	Severity       string       `json:"severity,omitempty"`
+	Duration       string       `json:"duration,omitempty"`
+	Tags           []string     `json:"tags,omitempty"`
+	ExpectedAlarms []string     `json:"expectedAlarms,omitempty"`
+	ReportTags     []string     `json:"reportTags,omitempty"`
+	SafetyNote     string       `json:"safetyNote,omitempty"`
+	Enabled        bool         `json:"enabled"`
+	Version        int          `json:"version,omitempty"`
 	SimulationOnly bool         `json:"simulationOnly"`
 }
 

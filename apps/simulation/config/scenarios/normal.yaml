@@ -1,0 +1,21 @@
+id: normal
+name: Normal
+description: Stable synthetic operation around nominal demo values.
+category: baseline
+severity: info
+duration: 0s
+tags:
+  - demo
+  - baseline
+expectedAlarms: []
+reportTags:
+  - TT-101
+  - PT-101
+  - FT-101
+safetyNote: Simulation-only synthetic scenario. No real plant control.
+enabled: true
+version: 1
+effects:
+  behavior: nominal
+  targetPowerPct: 72
+  mode: NORMAL

@@ -454,7 +454,7 @@ The pump uses a simple transition delay for start/stop behavior. `P-101.STATE` a
 
 ## Scenario Model
 
-Current scenarios are predefined in code and synthetic:
+Current scenarios are predefined as embedded YAML configuration and synthetic:
 
 - `normal`
 - `startup`
@@ -465,7 +465,7 @@ Current scenarios are predefined in code and synthetic:
 - `pressure_deviation`
 - `trip`
 
-Declarative YAML/JSON scenario definitions are planned.
+The YAML registry lives under `apps/simulation/config/scenarios/` and validates IDs, metadata, duration strings, severity, expected alarms, report tags, safety notes, enabled state, version, duplicate IDs, and constrained synthetic effects. It is not a scripting language or real operating procedure system.
 
 ## Tag Naming Convention
 
@@ -507,7 +507,7 @@ Implemented now:
 - Simulation-only `TIC-101` PID controller.
 - Publish-only MQTT bridge and `MQTTStatus` endpoint.
 - Demo Auth/RBAC users, permissions, role switcher, session endpoint, and protected action enforcement.
-- Simulation-only JSON/CSV report summaries through the API gateway and Reports page.
+- Simulation-only JSON/CSV/PDF report summaries through the API gateway and Reports page.
 - Local demo observability metrics for API and simulation services.
 
 Partial:
@@ -515,7 +515,7 @@ Partial:
 - Alarm shelving.
 - Events, because persistence exists but compliance-grade audit retention, pagination, and policy are not implemented.
 - Assets.
-- Trends, because only raw and 1-minute aggregate resolutions are implemented; richer query UX and additional aggregate windows remain future work.
+- Trends, because only raw and 1-minute aggregate resolutions are implemented; additional aggregate windows remain future work.
 - Process UI controls, because only `V-101` and `P-101` simulation commands are implemented.
 
 Not implemented:
@@ -523,11 +523,11 @@ Not implemented:
 - MQTT command ingestion or MQTT-based control.
 - Production-grade command/audit storage.
 - Production authentication or production RBAC.
-- PDF/Excel report export and regulatory/compliance reporting.
+- Excel report export and regulatory/compliance reporting.
 
 ## Planned Extensions
 
 - Event/audit pagination and retention policy.
 - Alarm shelving and richer operator workflow.
 - Production MQTT broker hardening, auth/ACL/TLS, and optional command-ingestion design.
-- PDF/Excel report export if it stays explicitly simulation-only and non-regulatory.
+- Excel report export if it stays explicitly simulation-only and non-regulatory.

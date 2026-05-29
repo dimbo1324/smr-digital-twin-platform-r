@@ -10,18 +10,30 @@ import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { PageShell } from "@/shared/ui/page-shell";
+import { StatusBadge } from "@/shared/ui/status-badge";
+
+type HistoryResolutionMode = "auto" | "raw" | "1m";
+
+const historyWindows = ["15m", "1h", "6h", "24h"];
+const resolutionModes: Array<{ value: HistoryResolutionMode; label: string }> = [
+  { value: "auto", label: "Auto" },
+  { value: "raw", label: "Raw samples" },
+  { value: "1m", label: "1m aggregate" },
+];
 
 export function TrendsPage() {
   const [windowValue, setWindowValue] = useState("15m");
+  const [resolutionMode, setResolutionMode] = useState<HistoryResolutionMode>("auto");
   const latestTelemetry = useLatestTelemetry(2000);
   const historian = useHistorianStatus();
   const supportedResolutions = historian.status?.supportedResolutions?.length
     ? historian.status.supportedResolutions
     : ["raw"];
   const defaultResolution = ["6h", "24h"].includes(windowValue) && supportedResolutions.includes("1m") ? "1m" : "raw";
-  const [resolution, setResolution] = useState("raw");
-  const effectiveResolution = supportedResolutions.includes(resolution) ? resolution : defaultResolution;
-  const { history, state, source } = useTelemetryHistory(windowValue, effectiveResolution);
+  const selectedResolution = resolutionMode === "auto" ? defaultResolution : resolutionMode;
+  const effectiveResolution = supportedResolutions.includes(selectedResolution) ? selectedResolution : "raw";
+  const historyQuery = useTelemetryHistory(windowValue, effectiveResolution);
+  const { history, state, source } = historyQuery;
   const trendPoints = TREND_TELEMETRY_TAGS
     .map(({ tag }) => findTelemetryByTag(latestTelemetry.points, tag) ?? getDemoFallbackTelemetryPoint(tag))
     .filter((point) => point !== undefined);
@@ -62,35 +74,32 @@ export function TrendsPage() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
-            {["5m", "15m", "30m", "1h", "6h", "24h"].map((windowOption) => (
+            {historyWindows.map((windowOption) => (
               <Button
                 key={windowOption}
                 size="sm"
                 variant={windowOption === windowValue ? "default" : "outline"}
-                onClick={() => {
-                  setWindowValue(windowOption);
-                  if (["6h", "24h"].includes(windowOption) && supportedResolutions.includes("1m")) {
-                    setResolution("1m");
-                  }
-                }}
+                onClick={() => setWindowValue(windowOption)}
+                data-testid={`trends-window-${windowOption}`}
               >
                 {windowOption}
               </Button>
             ))}
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-2" aria-label="Telemetry history resolution">
-            {["raw", "1m"].map((resolutionOption) => {
-              const disabled = !supportedResolutions.includes(resolutionOption);
+            {resolutionModes.map((option) => {
+              const disabled = option.value !== "auto" && !supportedResolutions.includes(option.value);
+              const active = option.value === resolutionMode;
               return (
                 <Button
-                  key={resolutionOption}
+                  key={option.value}
                   size="sm"
-                  variant={resolutionOption === effectiveResolution ? "default" : "outline"}
+                  variant={active ? "default" : "outline"}
                   disabled={disabled}
-                  onClick={() => setResolution(resolutionOption)}
-                  data-testid={`trends-resolution-${resolutionOption}`}
+                  onClick={() => setResolutionMode(option.value)}
+                  data-testid={`trends-resolution-${option.value}`}
                 >
-                  {resolutionOption === "raw" ? "Raw samples" : "1 minute aggregate"}
+                  {option.label}
                 </Button>
               );
             })}
@@ -98,10 +107,30 @@ export function TrendsPage() {
               <Badge variant="mock">Downsampled synthetic historian data</Badge>
             ) : null}
           </div>
+          <div className="mt-5 grid gap-3 md:grid-cols-4" data-testid="trends-query-status">
+            <QueryStatus label="Window" value={windowValue} />
+            <QueryStatus label="Resolution" value={resolutionLabel(resolutionMode, effectiveResolution)} />
+            <QueryStatus label="Samples" value={String(historyQuery.sampleCount)} mask />
+            <QueryStatus label="Source" value={sourceLabel(source, state, historian.status?.status)} />
+            <QueryStatus label="Updated" value={historyQuery.updatedAt ? new Date(historyQuery.updatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "pending"} mask />
+            <QueryStatus label="Retention" value={historian.status?.rawRetention ?? "demo window"} />
+            <QueryStatus label="Downsampling" value={historian.status?.aggregateStatus ?? (supportedResolutions.includes("1m") ? "available" : "unavailable")} />
+            <div className="rounded-2xl border border-border/70 bg-background/50 p-3">
+              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Query state</p>
+              <StatusBadge className="mt-2" tone={state === "connected" ? "connected" : state === "loading" ? "degraded" : "fallback"} value={historyQuery.isRefreshing ? "refreshing" : state}>
+                {historyQuery.isRefreshing ? "refreshing" : state}
+              </StatusBadge>
+            </div>
+          </div>
+          {state === "degraded" ? (
+            <p className="mt-4 rounded-2xl border border-warning/30 bg-warning/10 p-3 text-sm text-warning" role="status">
+              Historian data is degraded or unavailable. The chart remains simulation-only and may show in-memory or explicit demo fallback data.
+            </p>
+          ) : null}
         </CardContent>
       </Card>
 
-      <ProcessTrendsPanel history={history} dataState={state} />
+      <ProcessTrendsPanel history={history} dataState={state} sourceLabel={sourceLabel(source, state, historian.status?.status)} />
 
       <Card>
         <CardHeader className="flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
@@ -111,7 +140,7 @@ export function TrendsPage() {
               Current process-loop trend tags. Resolution controls request raw or downsampled synthetic historian data.
             </CardDescription>
           </div>
-          <Badge variant="outline">{effectiveResolution === "raw" ? "raw samples" : "1m aggregate"}</Badge>
+          <Badge variant="outline">{resolutionLabel(resolutionMode, effectiveResolution)}</Badge>
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-3">
@@ -134,6 +163,24 @@ export function TrendsPage() {
       </Card>
     </PageShell>
   );
+}
+
+function QueryStatus({ label, value, mask = false }: { label: string; value: string; mask?: boolean }) {
+  return (
+    <div className="min-w-0 rounded-2xl border border-border/70 bg-background/50 p-3">
+      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
+      <p className="mt-1 truncate text-sm font-semibold text-foreground" data-visual-mask={mask || undefined}>
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function resolutionLabel(mode: HistoryResolutionMode, effectiveResolution: string) {
+  if (mode === "auto") {
+    return effectiveResolution === "1m" ? "Auto (1m aggregate)" : "Auto (raw)";
+  }
+  return effectiveResolution === "1m" ? "1m aggregate" : "Raw samples";
 }
 
 function sourceLabel(source: string, state: string, historianStatus?: string) {

@@ -1,0 +1,21 @@
+id: startup
+name: Startup
+description: Gradual synthetic power, temperature, and generator load increase.
+category: operating-state
+severity: info
+duration: 5m
+tags:
+  - demo
+  - startup
+expectedAlarms: []
+reportTags:
+  - SMR-POWER
+  - TT-101
+  - FT-101
+safetyNote: Simulation-only synthetic scenario. Not an operating procedure.
+enabled: true
+version: 1
+effects:
+  behavior: startup_ramp
+  targetPowerPct: 72
+  mode: STARTUP

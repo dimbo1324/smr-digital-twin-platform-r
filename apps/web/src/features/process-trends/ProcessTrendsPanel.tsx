@@ -49,9 +49,10 @@ const tags: Array<{
 export interface ProcessTrendsPanelProps {
   history?: SimulationTelemetrySnapshot[];
   dataState?: "loading" | "connected" | "degraded";
+  sourceLabel?: string;
 }
 
-export function ProcessTrendsPanel({ history, dataState = "loading" }: ProcessTrendsPanelProps) {
+export function ProcessTrendsPanel({ history, dataState = "loading", sourceLabel }: ProcessTrendsPanelProps) {
   const [activeTag, setActiveTag] = useState<TrendTag>("temperature");
   const selectedTag = useMemo(
     () => tags.find((tag) => tag.id === activeTag) ?? tags[0],
@@ -86,7 +87,7 @@ export function ProcessTrendsPanel({ history, dataState = "loading" }: ProcessTr
         </div>
         <div className="flex flex-wrap gap-2">
           <span className="rounded-full border border-border/80 bg-background/40 px-3 py-1 text-xs text-muted-foreground" data-testid="historian-source-badge">
-            {dataState === "connected" ? "Simulation history" : dataState}
+            {sourceLabel ?? (dataState === "connected" ? "Simulation history" : dataState)}
           </span>
           {usingFallback ? (
             <span className="rounded-full border border-warning/30 bg-warning/10 px-3 py-1 text-xs text-warning">

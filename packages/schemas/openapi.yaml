@@ -392,12 +392,13 @@
             "name": "format",
             "in": "query",
             "required": false,
-            "description": "Response format. CSV returns text/csv instead of the JSON envelope.",
+            "description": "Response format. CSV returns text/csv and PDF returns application/pdf instead of the JSON envelope.",
             "schema": {
               "type": "string",
               "enum": [
                 "json",
-                "csv"
+                "csv",
+                "pdf"
               ],
               "default": "json"
             }
@@ -415,6 +416,12 @@
               "text/csv": {
                 "schema": {
                   "type": "string"
+                }
+              },
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
                 }
               }
             }
@@ -1763,6 +1770,47 @@
           },
           "description": {
             "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "info",
+              "warning",
+              "critical"
+            ]
+          },
+          "duration": {
+            "type": "string"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "expectedAlarms": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "reportTags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "safetyNote": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "integer"
           },
           "simulationOnly": {
             "type": "boolean"

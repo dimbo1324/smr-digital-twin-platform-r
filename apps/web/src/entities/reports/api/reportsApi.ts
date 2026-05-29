@@ -4,6 +4,7 @@ import { getSelectedDemoUserId } from "@/entities/auth/model/storage";
 
 export type SimulationReport = components["schemas"]["SimulationReport"];
 export type ReportWindow = "15m" | "1h" | "6h" | "24h";
+export type ReportFormat = "json" | "csv" | "pdf";
 
 export async function getSimulationReport(windowValue: ReportWindow, signal?: AbortSignal) {
   const response = await apiGet<SimulationReport>(
@@ -13,17 +14,17 @@ export async function getSimulationReport(windowValue: ReportWindow, signal?: Ab
   return response.data;
 }
 
-export function simulationReportDownloadUrl(windowValue: ReportWindow, format: "json" | "csv") {
+export function simulationReportDownloadUrl(windowValue: ReportWindow, format: ReportFormat) {
   const url = new URL(`${getApiBaseUrl()}/api/v1/reports/simulation-summary`);
   url.searchParams.set("window", windowValue);
   url.searchParams.set("format", format);
   return url.toString();
 }
 
-export async function downloadSimulationReport(windowValue: ReportWindow, format: "json" | "csv") {
+export async function downloadSimulationReport(windowValue: ReportWindow, format: ReportFormat) {
   const response = await fetch(simulationReportDownloadUrl(windowValue, format), {
     headers: {
-      Accept: format === "csv" ? "text/csv" : "application/json",
+      Accept: format === "csv" ? "text/csv" : format === "pdf" ? "application/pdf" : "application/json",
       "X-Demo-User": getSelectedDemoUserId(),
     },
   });

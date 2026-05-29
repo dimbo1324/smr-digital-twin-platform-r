@@ -207,6 +207,15 @@ export interface components {
       "name": string;
       "title": string;
       "description": string;
+      "category"?: string;
+      "severity"?: "info" | "warning" | "critical";
+      "duration"?: string;
+      "tags"?: string[];
+      "expectedAlarms"?: string[];
+      "reportTags"?: string[];
+      "safetyNote"?: string;
+      "enabled"?: boolean;
+      "version"?: number;
       "simulationOnly": boolean;
     };
     "SimulationStatus": {

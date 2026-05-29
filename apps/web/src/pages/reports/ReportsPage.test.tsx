@@ -74,6 +74,7 @@ describe("ReportsPage", () => {
     expect(screen.getByTestId("reports-window-select")).toHaveValue("1h");
     expect(screen.getByTestId("reports-download-json")).toBeInTheDocument();
     expect(screen.getByTestId("reports-download-csv")).toBeInTheDocument();
+    expect(screen.getByTestId("reports-download-pdf")).toBeInTheDocument();
     expect(screen.getByTestId("reports-preview-card")).toHaveTextContent("sim-report-test");
     expect(screen.getByText(/TT-101/)).toBeInTheDocument();
   });

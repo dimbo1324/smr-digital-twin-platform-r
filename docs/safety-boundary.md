@@ -23,7 +23,7 @@ Process controls for assets such as `V-101` and `P-101` use a simulation-only co
 
 The current command trail is not a compliance audit store. The optional PostgreSQL/TimescaleDB historian stores only synthetic demo data. Its raw retention metadata and 1-minute telemetry downsampling path are demo time-series features only and do not provide immutability, regulatory retention, or production audit guarantees.
 
-Simulation report export is for portfolio/demo summaries of synthetic data only. JSON and CSV reports are not regulatory reports, not production audit exports, and not nuclear compliance artifacts.
+Simulation report export is for portfolio/demo summaries of synthetic data only. JSON, CSV, and PDF reports are not regulatory reports, not production audit exports, and not nuclear compliance artifacts.
 
 The local Prometheus/Grafana observability stack is a development diagnostic aid only. It does not provide production alerting, secure operations monitoring, or safety-critical plant observability.
 

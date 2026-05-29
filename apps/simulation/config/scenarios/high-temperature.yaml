@@ -1,0 +1,23 @@
+id: high_temperature
+name: High Temperature
+description: Synthetic primary temperature excursion for alarm evaluation.
+category: thermal
+severity: warning
+duration: 5m
+tags:
+  - demo
+  - alarm
+  - thermal
+expectedAlarms:
+  - HIGH_TEMPERATURE
+reportTags:
+  - TT-101
+  - TIC-101.ERROR
+safetyNote: Simulation-only synthetic scenario. Not a real thermal transient.
+enabled: true
+version: 1
+effects:
+  behavior: nominal
+  targetPowerPct: 76
+  mode: WARNING
+  primaryTemperatureC: 322

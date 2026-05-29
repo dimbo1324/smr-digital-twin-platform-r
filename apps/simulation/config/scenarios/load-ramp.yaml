@@ -1,0 +1,24 @@
+id: load_ramp
+name: Load Ramp
+description: Smooth synthetic generator load ramp for HMI trend validation.
+category: operations
+severity: info
+duration: 5m
+tags:
+  - demo
+  - load
+  - trends
+expectedAlarms: []
+reportTags:
+  - SMR-POWER
+  - GEN-LOAD
+  - TT-101
+safetyNote: Simulation-only synthetic scenario. No real plant control.
+enabled: true
+version: 1
+effects:
+  behavior: load_sine
+  targetPowerPct: 58
+  amplitudePct: 18
+  periodTicks: 25
+  mode: LOAD_CHANGE
