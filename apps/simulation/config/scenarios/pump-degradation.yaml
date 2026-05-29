@@ -1,0 +1,26 @@
+id: pump_degradation
+name: Pump Degradation
+description: Synthetic coolant flow degradation with warning/alarm behavior.
+category: equipment
+severity: warning
+duration: 5m
+tags:
+  - demo
+  - pump
+  - alarm
+expectedAlarms:
+  - LOW_FLOW
+reportTags:
+  - FT-101
+  - P-101.RPM
+  - TT-101
+safetyNote: Simulation-only synthetic scenario. No real pump is affected.
+enabled: true
+version: 1
+effects:
+  behavior: nominal
+  targetPowerPct: 70
+  mode: DEGRADED
+  flowPct: 62
+  primaryTemperatureC: 306
+  vibrationMmS: 4.9

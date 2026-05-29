@@ -38,7 +38,7 @@ The MVP target should allow the user to:
 - see alarm lifecycle states;
 - inspect an event log;
 - run predefined scenarios such as normal operation, pump failure, valve stuck, and overheating;
-- export simulation summaries as JSON/CSV reports, with richer PDF or Excel exports treated as later simulation-only extensions.
+- export simulation summaries as JSON/CSV/PDF reports, with Excel exports treated as later simulation-only extensions.
 
 Current implementation status is tracked in `README.md` and `docs/mvp-domain-model.md`. Some target capabilities above are intentionally planned next rather than implemented now.
 
@@ -54,14 +54,14 @@ The MVP includes:
 - In-memory fallback telemetry history for local trend views, with optional PostgreSQL/TimescaleDB historian persistence and 1-minute synthetic telemetry aggregates.
 - Synthetic alarm lifecycle for `ACTIVE`, `ACKNOWLEDGED`, and `CLEARED` instances.
 - Unified event stream for commands, alarms, PID/control, scenarios, and simulation events.
-- Scenario controls for predefined synthetic scenarios.
+- Scenario controls for predefined synthetic scenarios loaded from validated YAML configuration.
 - Publish-only MQTT bridge for synthetic telemetry, events, alarms, commands, PID/control, historian, and system status.
-- Simulation-only JSON/CSV report export for portfolio/demo summaries.
+- Simulation-only JSON/CSV/PDF report export for portfolio/demo summaries.
 - Local Prometheus/Grafana observability baseline for development diagnostics.
 - Docker Compose environment for local development.
 - Basic backend, simulation, and frontend checks.
 
-The following are planned extensions rather than current implementation: MQTT command ingestion/control, production-grade audit retention, alarm shelving, declarative scenario definitions, richer historian query UX beyond raw/1-minute synthetic aggregates, PDF/Excel or regulatory report export, production auth/RBAC beyond the demo layer, production observability, and WebSocket/SSE transport.
+The following are planned extensions rather than current implementation: MQTT command ingestion/control, production-grade audit retention, alarm shelving, additional historian aggregate windows beyond raw/1-minute synthetic aggregates, Excel or regulatory report export, production auth/RBAC beyond the demo layer, production observability, and WebSocket/SSE transport.
 
 ## Out of Scope
 

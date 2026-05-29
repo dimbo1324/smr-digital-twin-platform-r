@@ -19,7 +19,7 @@ This guide helps present SMR Digital Twin Platform as a simulation-only industri
 3. Switch to `Demo Supervisor` or `Demo Admin` and change `TIC-101` to `AUTO`. Explain that PID now owns `V-101.POS`, so direct valve commands are rejected by arbitration.
 4. Trigger a synthetic scenario and show Alarms plus Events. Acknowledge an alarm and watch lifecycle/event records update.
 5. Open Trends and explain persistent historian vs in-memory fallback source labels.
-6. Open Reports and export JSON/CSV. State clearly that these are simulation summaries, not regulatory reports.
+6. Open Reports and export JSON/CSV/PDF. State clearly that these are simulation summaries, not regulatory reports.
 7. Show Prometheus/Grafana if the observability profile is running.
 8. Mention MQTT topics are publish-only synthetic data and do not accept commands.
 9. Finish with GitHub Actions: API, simulation, web, E2E, accessibility, keyboard, visual regression, historian smoke, MQTT smoke, race/coverage, and dependency scans.
@@ -30,11 +30,12 @@ This guide helps present SMR Digital Twin Platform as a simulation-only industri
 2. **Contracts:** Show `packages/schemas/openapi.yaml`, generated frontend types, and runtime validation.
 3. **RBAC:** Show `apps/api/internal/auth` and frontend role-aware disabled states. Explain it is demo RBAC only.
 4. **Simulation:** Show domain helpers in `apps/simulation/internal/process`, `actuators`, and `pidcontrol`, then the engine coordinator.
-5. **Historian:** Show migrations and smoke test. Explain synthetic persistence and non-audit limitations.
-6. **MQTT:** Show publish-only bridge and smoke script. No MQTT command ingestion exists.
-7. **Reports:** Show API aggregation in `apps/api/internal/simulation/reports.go` and the Reports page.
-8. **Observability:** Show `/metrics`, Prometheus config, and Grafana dashboard provisioning.
-9. **Quality:** Show CI workflow, component tests, Playwright E2E/a11y/visual tests, and smoke tests.
+5. **Scenarios:** Show `apps/simulation/config/scenarios/*.yaml` and explain declarative synthetic scenario metadata/effects.
+6. **Historian:** Show migrations and smoke test. Explain raw synthetic telemetry, 1-minute aggregate history, and non-audit limitations.
+7. **MQTT:** Show publish-only bridge and smoke script. No MQTT command ingestion exists.
+8. **Reports:** Show API aggregation in `apps/api/internal/simulation/reports.go` and the Reports page.
+9. **Observability:** Show `/metrics`, Prometheus config, and Grafana dashboard provisioning.
+10. **Quality:** Show CI workflow, component tests, Playwright Chromium regression, Chromium/Firefox smoke, a11y, keyboard, visual regression, and smoke tests.
 
 ## UI Talking Points
 
@@ -43,7 +44,7 @@ This guide helps present SMR Digital Twin Platform as a simulation-only industri
 - `TIC-101` PID is educational simulation logic.
 - Alarm acknowledgement only changes synthetic alarm instances.
 - Trends show historian data when available and clearly labelled fallback when not.
-- Reports are JSON/CSV summaries for demo and portfolio review only.
+- Reports are JSON/CSV/PDF summaries for demo and portfolio review only.
 - Settings communicates implemented capabilities and non-production boundaries.
 
 ## Code Talking Points
@@ -52,7 +53,8 @@ This guide helps present SMR Digital Twin Platform as a simulation-only industri
 - `apps/simulation` owns process state, command arbitration, alarms, events, historian writes, MQTT publishing, and metrics.
 - `apps/web` uses generated TypeScript contract types, runtime validation, TanStack Query hooks, and tested UI components.
 - `packages/schemas` keeps OpenAPI and JSON Schema references aligned with frontend generated types.
-- `scripts/smoke` verifies full-stack persistence and MQTT publishing using Docker Compose.
+- `apps/simulation/config/scenarios` keeps synthetic scenario definitions declarative and validated.
+- `scripts/smoke` verifies full-stack persistence, MQTT publishing, and local/demo observability using Docker Compose.
 - `infra/observability` provisions local Prometheus and Grafana for demo diagnostics.
 
 ## Safety Boundary Script
@@ -66,7 +68,7 @@ Use this wording in demos:
 - Demo RBAC only: no passwords, OAuth/JWT, persistent users, or production identity.
 - No real plant control, PLC/SCADA connectivity, or safety-critical automation.
 - MQTT is publish-only and has no command ingestion topics.
-- Reports are JSON/CSV simulation summaries, not regulatory reports.
+- Reports are JSON/CSV/PDF simulation summaries, not regulatory reports.
 - Historian storage is not immutable or compliance-grade.
 - Observability is local/demo Prometheus/Grafana only.
 - Live UI transport is REST polling, not WebSocket/SSE.
@@ -80,6 +82,7 @@ docker compose --profile observability up --build
 
 cd apps/web
 npm run test:e2e
+npm run test:e2e:multi
 npm run test:visual
 
 node scripts/smoke/historian-db-smoke.mjs --timeout-ms 300000 --history-wait-ms 90000
@@ -94,4 +97,3 @@ node scripts/smoke/mqtt-bridge-smoke.mjs --timeout-ms 300000
 - `apps/api/internal/simulation/reports.go` for API aggregation.
 - `apps/simulation/internal/engine` plus extracted domain helpers.
 - `infra/observability/` for local metrics stack.
-

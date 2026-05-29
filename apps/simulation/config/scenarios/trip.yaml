@@ -1,0 +1,35 @@
+id: trip
+name: Trip
+description: Simulation-only trip state with critical alarm. Not a real operating procedure.
+category: protection-demo
+severity: critical
+duration: 5m
+tags:
+  - demo
+  - trip
+  - critical
+expectedAlarms:
+  - SYSTEM_TRIP
+reportTags:
+  - SMR-POWER
+  - TT-101
+  - FT-101
+safetyNote: Simulation-only synthetic trip demonstration. Not a real trip procedure.
+enabled: true
+version: 1
+effects:
+  behavior: fixed
+  mode: TRIP
+  targetPowerPct: 2
+  primaryTemperatureC: 245
+  secondaryTemperatureC: 150
+  primaryPressureMPa: 12.8
+  secondaryPressureMPa: 2.5
+  flowPct: 35
+  levelPct: 52
+  turbineRPM: 200
+  generatorLoadPct: 0
+  condenserVacuumKPa: 55
+  feedwaterFlowPct: 30
+  vibrationMmS: 3.2
+  radiationUSvH: 0.2

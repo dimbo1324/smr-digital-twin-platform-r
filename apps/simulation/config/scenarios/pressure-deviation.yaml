@@ -1,0 +1,23 @@
+id: pressure_deviation
+name: Pressure Deviation
+description: Synthetic primary pressure deviation for warning behavior.
+category: pressure
+severity: warning
+duration: 5m
+tags:
+  - demo
+  - pressure
+  - warning
+expectedAlarms:
+  - HIGH_PRESSURE
+reportTags:
+  - PT-101
+  - TT-101
+safetyNote: Simulation-only synthetic scenario. No real pressure boundary is affected.
+enabled: true
+version: 1
+effects:
+  behavior: nominal
+  targetPowerPct: 70
+  mode: WARNING
+  primaryPressureMPa: 16.5

@@ -8,6 +8,7 @@ import (
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/actuators"
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/model"
 	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/process"
+	"github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation/internal/scenarios"
 )
 
 type targets struct {
@@ -95,54 +96,22 @@ func (e *Engine) tick(now time.Time) model.TelemetrySnapshot {
 }
 
 func (e *Engine) targetsForScenario(current model.TelemetrySnapshot) targets {
-	switch e.state.activeScenario {
-	case model.ScenarioStartup:
-		targetPower := process.Clamp(current.ReactorPowerPct+2.5, 25, 72)
-		return nominalTargets(targetPower, model.ModeStartup)
-	case model.ScenarioLoadRamp:
-		targetPower := 58 + 18*math.Sin(float64(e.state.tickCount)/25)
-		return nominalTargets(targetPower, model.ModeLoadChange)
-	case model.ScenarioSensorDrift:
-		t := nominalTargets(72, model.ModeWarning)
-		t.primaryTemp = 308 + math.Min(float64(e.state.tickCount)*0.12, 12)
-		return t
-	case model.ScenarioPumpDegradation:
-		t := nominalTargets(70, model.ModeDegraded)
-		t.flow = 62
-		t.primaryTemp = 306
-		t.vibration = 4.9
-		return t
-	case model.ScenarioHighTemperature:
-		t := nominalTargets(76, model.ModeWarning)
-		t.primaryTemp = 322
-		return t
-	case model.ScenarioPressureDeviation:
-		t := nominalTargets(70, model.ModeWarning)
-		t.primaryPressure = 16.5
-		return t
-	case model.ScenarioTrip:
-		return targets{power: 2, primaryTemp: 245, secondaryTemp: 150, primaryPressure: 12.8, secondaryPressure: 2.5, flow: 35, level: 52, rpm: 200, load: 0, vacuum: 55, feedwater: 30, vibration: 3.2, radiation: 0.2, mode: model.ModeTrip}
-	default:
-		return nominalTargets(72, model.ModeNormal)
-	}
-}
-
-func nominalTargets(power float64, mode model.Mode) targets {
+	target := scenarios.TargetsForScenario(e.state.activeScenario, current, e.state.tickCount)
 	return targets{
-		power:             power,
-		primaryTemp:       270 + power*0.22,
-		secondaryTemp:     205 + power*0.23,
-		primaryPressure:   14.2 + power*0.012,
-		secondaryPressure: 5.4 + power*0.011,
-		flow:              78 + power*0.14,
-		level:             62,
-		rpm:               power * 50,
-		load:              power * 0.98,
-		vacuum:            86,
-		feedwater:         66 + power*0.14,
-		vibration:         1.4 + power*0.01,
-		radiation:         0.14 + power*0.0006,
-		mode:              mode,
+		power:             target.Power,
+		primaryTemp:       target.PrimaryTemp,
+		secondaryTemp:     target.SecondaryTemp,
+		primaryPressure:   target.PrimaryPressure,
+		secondaryPressure: target.SecondaryPressure,
+		flow:              target.Flow,
+		level:             target.Level,
+		rpm:               target.RPM,
+		load:              target.Load,
+		vacuum:            target.Vacuum,
+		feedwater:         target.Feedwater,
+		vibration:         target.Vibration,
+		radiation:         target.Radiation,
+		mode:              target.Mode,
 	}
 }
 

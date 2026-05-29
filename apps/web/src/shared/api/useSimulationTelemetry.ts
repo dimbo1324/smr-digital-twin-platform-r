@@ -64,6 +64,10 @@ export function useTelemetryHistory(windowValue: string, resolution = "raw", ref
     history: query.data?.data ?? [],
     source: query.data?.meta.source ?? "unknown",
     degraded: query.data?.meta.degraded ?? false,
+    sampleCount: query.data?.data.length ?? 0,
+    updatedAt: query.data?.meta.timestamp,
+    isRefreshing: query.isFetching && !query.isLoading,
+    error: query.error,
     state,
     refresh: () => void query.refetch(),
   };

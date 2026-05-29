@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
   downloadSimulationReport,
+  type ReportFormat,
   type ReportWindow,
 } from "@/entities/reports/api/reportsApi";
 import { useSimulationReport } from "@/entities/reports/api/useSimulationReport";
@@ -20,7 +21,7 @@ export function ReportsPage() {
   const reportQuery = useSimulationReport(windowValue);
   const report = reportQuery.report;
 
-  const handleDownload = async (format: "json" | "csv") => {
+  const handleDownload = async (format: ReportFormat) => {
     setDownloadError(null);
     try {
       await downloadSimulationReport(windowValue, format);
@@ -65,6 +66,9 @@ export function ReportsPage() {
               </Button>
               <Button type="button" variant="outline" onClick={() => handleDownload("csv")} data-testid="reports-download-csv">
                 Download CSV
+              </Button>
+              <Button type="button" variant="outline" onClick={() => handleDownload("pdf")} data-testid="reports-download-pdf">
+                Download PDF
               </Button>
             </div>
 

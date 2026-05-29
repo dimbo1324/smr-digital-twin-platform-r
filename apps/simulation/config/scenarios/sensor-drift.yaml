@@ -1,0 +1,25 @@
+id: sensor_drift
+name: Sensor Drift
+description: Synthetic temperature sensor drift that can create warning alarms.
+category: instrumentation
+severity: warning
+duration: 5m
+tags:
+  - demo
+  - sensor
+  - warning
+expectedAlarms:
+  - HIGH_TEMPERATURE
+reportTags:
+  - TT-101
+  - TIC-101.PV
+safetyNote: Simulation-only synthetic scenario. No real sensor is affected.
+enabled: true
+version: 1
+effects:
+  behavior: sensor_drift
+  targetPowerPct: 72
+  primaryTemperatureBaseC: 308
+  primaryTemperatureDriftPerTickC: 0.12
+  primaryTemperatureMaxDriftC: 12
+  mode: WARNING

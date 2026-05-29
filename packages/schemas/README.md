@@ -60,3 +60,7 @@ CI runs the same contract checks and fails if committed generated TypeScript typ
 Telemetry history supports `resolution=raw` and `resolution=1m` for the current demo historian. `HistorianStatus` exposes retention/downsampling metadata such as `retentionEnabled`, `rawRetention`, `downsamplingEnabled`, `supportedResolutions`, and `aggregateStatus`. These fields describe synthetic simulation historian behavior only; they are not production audit or regulatory retention guarantees.
 
 Go server code generation and Go runtime validation from JSON Schema are not implemented yet.
+
+## Report Contract Notes
+
+`GET /api/v1/reports/simulation-summary` supports `format=json|csv|pdf`. JSON responses use the normal API envelope and runtime validation. CSV and PDF responses are documented as non-JSON media types and intentionally bypass frontend JSON runtime validation during download. All report formats are simulation-only demo summaries and are not regulatory, safety, compliance, or production audit reports.

@@ -9,7 +9,7 @@ flowchart LR
     Simulation --> API
     Simulation --> MQTT["MQTT Publisher<br/>publish-only synthetic data"]
     MQTT --> Broker["Eclipse Mosquitto<br/>local demo broker"]
-    API --> Reports["Simulation Summary Reports<br/>JSON/CSV"]
+    API --> Reports["Simulation Summary Reports<br/>JSON/CSV/PDF"]
     Prometheus["Prometheus<br/>local demo profile"] --> API
     Prometheus --> Simulation
     Grafana["Grafana<br/>local demo dashboard"] --> Prometheus
@@ -35,6 +35,18 @@ flowchart LR
 `packages/schemas/openapi.yaml` documents implemented REST endpoints only. The frontend generated types reduce drift for core DTOs such as `Asset`, `TelemetryPoint`, `Command`, `AlarmInstance`, `Event`, `SystemStatus`, `Scenario`, and API envelopes.
 
 CI now checks contract health in four layers: generated TypeScript output must be clean after `npm run api:types`, the OpenAPI document must parse, JSON Schema reference files must compile, and an explicit runtime-validation coverage script must still include the core API payloads. This is not an OpenAPI-first backend rewrite. Go server stubs, generated Go clients, and Go runtime validation from JSON Schema are not implemented yet. Frontend dev/test runtime validation is implemented in the typed HTTP client for selected request and response payloads. The API gateway remains the runtime contract boundary for the frontend.
+
+The practical edit/check loop is:
+
+```mermaid
+flowchart LR
+    Contract["OpenAPI and JSON Schema edits"] --> Types["Generate TypeScript types"]
+    Types --> Runtime["Runtime validation mappings"]
+    Runtime --> Tests["Component and Playwright tests"]
+    Tests --> CI["CI drift checks"]
+    GoDTOs["Go DTOs"] -. manually aligned .-> Contract
+    CI -. blocks stale output .-> Types
+```
 
 ## Frontend Data Layer
 
@@ -64,10 +76,11 @@ flowchart LR
     CI["GitHub Actions e2e job"] --> SIM["Go simulation service"]
     CI --> API["Go API gateway"]
     CI --> WEB["Vite frontend via Playwright webServer"]
-    WEB --> FLOW["Dashboard -> Process -> PID -> Alarms -> Events -> Trends -> Settings"]
+    WEB --> FLOW["Dashboard -> Process -> PID -> Alarms -> Events -> Trends -> Reports -> Settings"]
+    WEB --> MB["Multi-browser smoke<br/>Chromium / Firefox"]
 ```
 
-The browser regression suite verifies synthetic simulation workflows only. It covers Dashboard status visibility, manual `V-101`/`P-101` command flows, manual-to-AUTO PID arbitration, alarm activate/acknowledge/clear, Events filtering/sorting, Trends source labels, Settings capability copy, demo RBAC role flows, basic degraded historian/MQTT UI states via route mocks, axe-powered accessibility baseline checks, and keyboard navigation through the skip link, primary sidebar, and core control inputs. It does not replace deeper component tests, a full human WCAG audit, multi-browser certification, or production SCADA validation.
+The browser regression suite verifies synthetic simulation workflows only. It covers Dashboard status visibility, manual `V-101`/`P-101` command flows, manual-to-AUTO PID arbitration, alarm activate/acknowledge/clear, Events filtering/sorting, Trends source labels, Reports export UI, Settings capability copy, demo RBAC role flows, basic degraded historian/MQTT UI states via route mocks, axe-powered accessibility baseline checks, keyboard navigation through the skip link, primary sidebar, and a lightweight multi-browser smoke across Chromium and Firefox. WebKit is deferred until the CI smoke is stable. This does not replace deeper component tests, a full human WCAG audit, browser certification, or production SCADA validation.
 
 The visual regression suite captures deterministic fixed-viewport Playwright screenshots for Dashboard, Process, Alarms, Events, Trends, Reports, and Settings. It disables animations, fixes the demo user/theme/viewport/locale/timezone, resets the simulation before each scenario, and masks dynamic synthetic telemetry, event rows, alarm rows, report counters, and chart regions that would otherwise create noise. These screenshots guard page composition, responsive layout, sticky sidebar behavior, status badges, and card/grid integrity; they are not evidence of real plant operation or production HMI certification.
 
@@ -134,6 +147,26 @@ Command history and events are stored first in the simulation service and can al
 
 This is intentionally not a real control path. Commands mutate only in-memory simulated assets and exist to validate the digital twin interaction loop.
 
+## Scenario Registry Flow
+
+Scenarios are declared as embedded YAML configuration under `apps/simulation/config/scenarios/`. The Go registry validates IDs, duration strings, severities, enabled state, duplicate IDs, effects, expected alarms, report tags, and safety notes before exposing compatible scenario metadata through the existing API.
+
+```mermaid
+flowchart LR
+    YAML["YAML scenario configs"] --> Registry["Scenario registry loader"]
+    Registry --> Validation["Validation and duplicate checks"]
+    Validation --> APIList["Scenario list API"]
+    Validation --> Engine["Engine target/effect interpreter"]
+    UI["Settings scenario controls"] --> API["API demo RBAC"]
+    API --> Engine
+    Engine --> Alarms["Synthetic alarms/events"]
+    Engine --> Historian["Historian records"]
+    Engine --> MQTT["MQTT publish-only status/events"]
+    Historian --> Reports["Simulation report summaries"]
+```
+
+The scenario registry is declarative metadata plus a small set of supported effect behaviors. It is not a scripting runtime, not an operating procedure engine, and not a real plant scenario system.
+
 ## Manual / Auto Command Arbitration
 
 `TIC-101` currently owns the simulation-only control mode for the `TT-101 -> V-101.POS` loop:
@@ -193,6 +226,21 @@ When `HISTORIAN_ENABLED=true` and `DATABASE_URL` is reachable, migrations run on
 
 The historian is not a compliance audit system. The 30-day raw retention metadata and 1-minute aggregate path apply only to synthetic simulation telemetry; they do not provide immutability, production auth/RBAC, regulatory retention, or audit guarantees.
 
+Synthetic telemetry downsampling follows this read path:
+
+```mermaid
+flowchart LR
+    Tick["Simulation tick"] --> Snapshot["Telemetry snapshot"]
+    Snapshot --> Raw["telemetry_history raw samples"]
+    Raw --> Agg["telemetry_history_1m aggregate"]
+    API["API history endpoint"] --> Raw
+    API --> Agg
+    Trends["Trends UI"] --> API
+    Reports["Simulation reports"] --> API
+```
+
+The frontend can request raw or 1-minute aggregate history. If the historian is unavailable, it uses the existing in-memory/demo fallback labels rather than implying persistent data exists.
+
 ## MQTT Bridge
 
 The MQTT bridge is owned by `apps/simulation`, close to the synthetic telemetry, event, alarm, command, PID, control, historian, and system status sources:
@@ -233,8 +281,9 @@ The API gateway aggregates existing simulation APIs into a read-only simulation 
 
 - `GET /api/v1/reports/simulation-summary?window=1h`
 - `GET /api/v1/reports/simulation-summary?window=1h&format=csv`
+- `GET /api/v1/reports/simulation-summary?window=1h&format=pdf`
 
-JSON reports include a `simulationOnly: true` envelope, generation metadata, current demo user, system/historian/MQTT/control/PID status, latest telemetry, simple telemetry min/max/average summaries, and command/event/alarm counts. CSV uses a compact `section,key,value,unit,source` format for demo export workflows.
+JSON reports include a `simulationOnly: true` envelope, generation metadata, current demo user, system/historian/MQTT/control/PID status, latest telemetry, simple telemetry min/max/average summaries, and command/event/alarm counts. CSV uses a compact `section,key,value,unit,source` format for demo export workflows. PDF uses a simple API-generated human-readable summary for portfolio/demo review.
 
 Reports use existing synthetic data sources only. They are not regulatory reports, production audit exports, nuclear compliance artifacts, or evidence of real plant operation.
 
@@ -271,4 +320,4 @@ Alarm and event state is owned by `apps/simulation`. Recent records remain avail
 - Process commands are implemented only for simulated `V-101` and `P-101` assets.
 - Command/event history is not an immutable audit store.
 - MQTT command ingestion, production auth/RBAC, production observability, and Kubernetes are not part of the current milestone.
-- Report export is JSON/CSV only and remains simulation-only; PDF/Excel and regulatory reporting are not implemented.
+- Report export is JSON/CSV/PDF and remains simulation-only; Excel and regulatory reporting are not implemented.

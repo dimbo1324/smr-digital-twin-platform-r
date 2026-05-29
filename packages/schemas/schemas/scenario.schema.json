@@ -7,6 +7,24 @@
     "name": { "type": "string" },
     "title": { "type": "string" },
     "description": { "type": "string" },
+    "category": { "type": "string" },
+    "severity": { "type": "string", "enum": ["info", "warning", "critical"] },
+    "duration": { "type": "string" },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "expectedAlarms": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "reportTags": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "safetyNote": { "type": "string" },
+    "enabled": { "type": "boolean" },
+    "version": { "type": "integer" },
     "simulationOnly": { "type": "boolean" }
   },
   "required": ["name", "title", "description", "simulationOnly"],

@@ -17,6 +17,7 @@ test("reports simulation summary flow", async ({ page, request }) => {
     await expect(page.getByTestId("reports-preview-card")).toContainText(/15m|connected|loading/i);
     await expect(page.getByTestId("reports-download-json")).toBeVisible();
     await expect(page.getByTestId("reports-download-csv")).toBeVisible();
+    await expect(page.getByTestId("reports-download-pdf")).toBeVisible();
   });
 
   await test.step("verify backend report endpoints", async () => {
@@ -33,5 +34,11 @@ test("reports simulation summary flow", async ({ page, request }) => {
     expect(csvResponse.headers()["content-type"]).toContain("text/csv");
     const csvText = await csvResponse.text();
     expect(csvText).toContain("section,key,value,unit,source");
+
+    const pdfResponse = await request.get(`${apiBaseUrl}/api/v1/reports/simulation-summary?window=15m&format=pdf`);
+    expect(pdfResponse.ok()).toBeTruthy();
+    expect(pdfResponse.headers()["content-type"]).toContain("application/pdf");
+    const pdfBytes = await pdfResponse.body();
+    expect(pdfBytes.subarray(0, 4).toString()).toBe("%PDF");
   });
 });

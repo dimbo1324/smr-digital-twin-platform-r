@@ -103,6 +103,10 @@ curl -X POST http://localhost:8081/api/v1/simulation/reset
 
 ## Scenarios
 
+Scenario definitions are embedded YAML files under `apps/simulation/config/scenarios/`.
+
+Current scenario IDs:
+
 - `normal`
 - `startup`
 - `load_ramp`
@@ -114,6 +118,10 @@ curl -X POST http://localhost:8081/api/v1/simulation/reset
 
 All scenarios are synthetic demonstrations for portfolio and UI validation.
 Starting and stopping a predefined scenario writes `SCENARIO_STARTED` and `SCENARIO_COMPLETED` records to the same event stream used by commands and alarms.
+
+Each YAML scenario includes an ID, name, description, category, severity, duration, tags, expected alarms, report tags, a simulation-only safety note, enabled flag, version, and a constrained `effects` block. The registry validates required fields, duration syntax, supported severities, supported effect behaviors, duplicate IDs, and disabled scenarios before the API exposes the scenario list.
+
+This registry is not a scripting language and not a real operating procedure system. Effects are interpreted by the synthetic simulation engine only.
 
 ## Alarm Lifecycle
 

@@ -12,6 +12,7 @@ test("trends historian and live data visibility flow", async ({ page, request })
     await expect(page.getByTestId("trends-source-badge")).toBeVisible();
     await expect(page.getByTestId("historian-source-badge")).toBeVisible();
     await expect(page.getByTestId("trends-telemetry-cards")).toBeVisible();
+    await expect(page.getByTestId("trends-query-status")).toBeVisible();
   });
 
   await test.step("show process metrics without exact-value assumptions", async () => {
@@ -20,5 +21,14 @@ test("trends historian and live data visibility flow", async ({ page, request })
     await expect(page.getByText(/PT-101|Pressure/i).first()).toBeVisible();
     await expectNumericText(page.getByTestId("trends-telemetry-cards"));
     await expectSimulationOnlyBoundary(page);
+  });
+
+  await test.step("switch historian query window and resolution", async () => {
+    await page.getByTestId("trends-window-24h").click();
+    await expect(page.getByTestId("trends-query-status")).toContainText(/Auto|1m|raw/i);
+    await page.getByTestId("trends-resolution-raw").click();
+    await expect(page.getByTestId("trends-query-status")).toContainText(/Raw samples/i);
+    await page.getByTestId("trends-resolution-auto").click();
+    await expect(page.getByTestId("trends-query-status")).toContainText(/Auto/i);
   });
 });

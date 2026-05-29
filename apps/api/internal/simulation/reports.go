@@ -28,8 +28,8 @@ func (g *Gateway) SimulationReport(w http.ResponseWriter, r *http.Request) {
 	if format == "" {
 		format = "json"
 	}
-	if format != "json" && format != "csv" {
-		httpapi.WriteError(w, r, http.StatusBadRequest, "INVALID_REPORT_FORMAT", "format must be json or csv")
+	if format != "json" && format != "csv" && format != "pdf" {
+		httpapi.WriteError(w, r, http.StatusBadRequest, "INVALID_REPORT_FORMAT", "format must be json, csv, or pdf")
 		return
 	}
 
@@ -46,6 +46,18 @@ func (g *Gateway) SimulationReport(w http.ResponseWriter, r *http.Request) {
 		}
 		w.Header().Set("Content-Type", "text/csv; charset=utf-8")
 		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s.csv"`, report.ReportID))
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(payload)
+		return
+	}
+	if format == "pdf" {
+		payload, err := simulationReportPDF(report)
+		if err != nil {
+			httpapi.WriteError(w, r, http.StatusInternalServerError, "REPORT_PDF_FAILED", "Failed to render report PDF")
+			return
+		}
+		w.Header().Set("Content-Type", "application/pdf")
+		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s.pdf"`, report.ReportID))
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write(payload)
 		return

@@ -2,7 +2,7 @@
 
 ![CI](https://github.com/dimbo1324/smr-digital-twin-platform-r/actions/workflows/ci.yml/badge.svg)
 
-Simulation-only industrial digital twin / IIoT demo platform for synthetic SMR-style thermal process monitoring, control workflow, historian persistence, MQTT publishing, JSON/CSV reporting, and local observability. No real plant control.
+Simulation-only industrial digital twin / IIoT demo platform for synthetic SMR-style thermal process monitoring, control workflow, historian persistence, MQTT publishing, JSON/CSV/PDF reporting, and local observability. No real plant control.
 
 SMR Digital Twin Platform is a portfolio-grade engineering project, not a nuclear operations product. It demonstrates a full-stack industrial software architecture: React HMI, Go API gateway, Go simulation service, PostgreSQL/TimescaleDB historian, publish-only MQTT bridge, demo Auth/RBAC, OpenAPI/JSON Schema contracts, report export, Prometheus/Grafana local observability, and a broad CI test suite.
 
@@ -27,7 +27,7 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 | Command workflow | Manual/auto/disabled arbitration, command status, event records | Demonstrates control authority boundaries in a simulation-only setting. |
 | Historian | Optional PostgreSQL/TimescaleDB persistence, 30-day raw retention metadata, and 1-minute synthetic telemetry aggregates | Demonstrates time-series storage, downsampling, and fallback behavior. |
 | MQTT | Publish-only synthetic telemetry/events/alarms/status bridge | Shows IIoT integration while explicitly avoiding MQTT command ingestion. |
-| Reports | JSON/CSV simulation summary export | Useful portfolio/demo artifact, clearly not regulatory reporting. |
+| Reports | JSON/CSV/PDF simulation summary export | Useful portfolio/demo artifact, clearly not regulatory reporting. |
 | Observability | API/simulation `/metrics`, Prometheus, Grafana dashboard provisioning | Gives local diagnostics for platform health and synthetic process metrics. |
 | Quality gates | Go test/vet/race/coverage, Vitest, Playwright E2E/a11y/visual, smokes, scans | Shows production-style engineering discipline without production claims. |
 
@@ -38,7 +38,7 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 3. Switch to a supervisor or admin role and change `TIC-101` to `AUTO`; show that the simulation-only PID owns the valve output.
 4. Trigger a synthetic scenario, then open Alarms and Events to show alarm activation, acknowledgement, clearing, and the unified event trail.
 5. Open Trends to show live, raw historian, or 1-minute aggregated historian source labels.
-6. Open Reports and export a JSON or CSV simulation summary. Emphasize that it is not a regulatory or production audit report.
+6. Open Reports and export a JSON, CSV, or PDF simulation summary. Emphasize that it is not a regulatory or production audit report.
 7. Start the optional observability profile and show Prometheus/Grafana local metrics for API and simulation health.
 8. Mention that MQTT publishes synthetic data only and has no command ingestion topics.
 9. Close with the CI page: API, simulation, web, E2E, a11y, visual regression, Docker smokes, race/coverage, and dependency scans.
@@ -51,7 +51,7 @@ flowchart LR
     API --> Sim["Go Simulation Service<br/>synthetic process loop"]
     Sim --> Historian["PostgreSQL / TimescaleDB<br/>synthetic historian"]
     Sim --> MQTT["Mosquitto MQTT<br/>publish-only bridge"]
-    API --> Reports["JSON / CSV<br/>simulation summaries"]
+    API --> Reports["JSON / CSV / PDF<br/>simulation summaries"]
     API --> MetricsAPI["/metrics"]
     Sim --> MetricsSim["/metrics"]
     Prom["Prometheus<br/>local demo"] --> MetricsAPI
@@ -69,7 +69,7 @@ The frontend talks only to `apps/api`. The API gateway enforces demo RBAC for pr
 | Demo RBAC | Static users via `X-Demo-User` and frontend role switcher | No passwords, OAuth/JWT, persistent users, or production identity controls. |
 | Historian | Stores synthetic telemetry/events/commands/alarms, with demo raw retention metadata and 1-minute aggregate history | No immutable audit policy, regulatory retention, or compliance guarantees. |
 | MQTT | Publishes synthetic data only | No MQTT command ingestion, broker ACL/TLS hardening, or real equipment topics. |
-| Reports | JSON/CSV synthetic simulation summaries | Not regulatory reporting, not a production audit export, not nuclear compliance evidence. |
+| Reports | JSON/CSV/PDF synthetic simulation summaries | Not regulatory reporting, not a production audit export, not nuclear compliance evidence. |
 | Observability | Local Prometheus/Grafana demo profile | No production alerting, log aggregation, tracing, SLOs, or secure operations setup. |
 
 ## Quickstart
@@ -131,11 +131,11 @@ cd apps/web && npm ci && npm run dev
 - Publish-only MQTT bridge for synthetic telemetry snapshots, events, alarms, command status, PID status, control mode, historian status, and system status.
 - MQTT bridge status endpoint and minimal Dashboard/Settings status labels.
 - Demo Auth/RBAC layer with static simulation-only users, a role switcher, `X-Demo-User` header, and backend enforcement for protected write/action endpoints.
-- Simulation-only JSON/CSV report export through the API gateway and Reports page. These reports are not regulatory, compliance, or production audit reports.
+- Simulation-only JSON/CSV/PDF report export through the API gateway and Reports page. These reports are not regulatory, compliance, or production audit reports.
 - Local demo observability baseline with API/simulation `/metrics`, Prometheus scraping, and Grafana dashboard provisioning.
 - Frontend valve and pump control panels with pending, success, and error states.
 - GitHub Actions CI quality gates for Go API, Go simulation, frontend, Docker Compose config validation, visual regression, smoke tests, race/coverage checks, and dependency/security scans.
-- Expanded Playwright Chromium E2E suite for Dashboard, Process commands, PID/manual-auto arbitration, Alarms, Events, Trends, Settings, MQTT status, and historian status.
+- Expanded Playwright Chromium E2E suite plus a lightweight Chromium/Firefox smoke matrix for Dashboard, Process, Reports, Settings, MQTT status, and historian status. WebKit is deferred until the CI smoke is stable.
 - Playwright visual regression baseline for Dashboard, Process, Alarms, Events, Trends, Reports, and Settings across deterministic themes and responsive widths.
 - Local log artifact folder and smoke diagnostic reports under `logs/`.
 - OpenAPI 3.1 contract and JSON Schema reference files under `packages/schemas`, with CI checks for OpenAPI parsing, JSON Schema compilation, generated TypeScript drift, and runtime validation coverage.
@@ -148,13 +148,13 @@ cd apps/web && npm ci && npm run dev
 ## Partially Implemented
 
 - **Alarms**: active, acknowledged, and cleared alarm workflow exists in memory. Shelving, persistent audit, and production operator workflow are planned.
-- **Trends**: PostgreSQL/TimescaleDB-backed raw telemetry history and 1-minute aggregate history exist when the historian is enabled. In-memory history remains the fallback, and the current UI exposes raw vs 1-minute resolution controls.
+- **Trends**: PostgreSQL/TimescaleDB-backed raw telemetry history and 1-minute aggregate history exist when the historian is enabled. In-memory history remains the fallback, and the current UI exposes Auto, Raw, and 1-minute resolution controls with source/sample/retention labels.
 - **Events**: command, alarm, control, PID, scenario, and simulation events are captured in memory and persisted when the historian is connected. This is still not a production audit archive.
 - **Process UI**: process-loop values are bound to live API telemetry when available. Valve and pump controls call simulation-only command endpoints; `TIC-101` mode controls whether direct valve commands are allowed.
-- **Scenario controls**: predefined synthetic scenarios can be started/stopped through the API. Declarative YAML/JSON scenario definitions are planned.
+- **Scenario controls**: predefined synthetic scenarios are loaded from validated YAML configuration and can be started/stopped through the API.
 - **Assets**: API exposes current simulation assets and fallback process-loop assets. Persistent asset registry is planned.
 - **API contract layer**: OpenAPI, JSON Schema references, generated TypeScript types, runtime validation mappings, and CI drift checks exist for core DTOs. Go server code generation is not implemented yet.
-- **Report export**: JSON and CSV simulation summaries are implemented for demo use. PDF/Excel export and regulatory reporting are not implemented.
+- **Report export**: JSON, CSV, and PDF simulation summaries are implemented for demo use. Excel export and regulatory reporting are not implemented.
 - **Observability**: local Prometheus/Grafana demo stack and service metrics are implemented. Production logging/tracing/alerting is not implemented.
 
 ## Planned Next
@@ -172,7 +172,7 @@ cd apps/web && npm ci && npm run dev
 - Kafka, Redpanda, or NATS.
 - InfluxDB, Redis, or MinIO persistence.
 - Production auth/RBAC.
-- PDF/Excel report export.
+- Excel report export.
 - Regulatory/compliance report export.
 - Kubernetes or Helm deployment.
 - Real nuclear plant interface.
@@ -455,14 +455,15 @@ The role switcher in the HMI is explicitly labelled as demo RBAC. It only contro
 
 ## Simulation Report Export
 
-The Reports page and API gateway can export a synthetic simulation summary as JSON or CSV:
+The Reports page and API gateway can export a synthetic simulation summary as JSON, CSV, or PDF:
 
 ```bash
 curl "http://localhost:8080/api/v1/reports/simulation-summary?window=1h"
 curl "http://localhost:8080/api/v1/reports/simulation-summary?window=1h&format=csv"
+curl "http://localhost:8080/api/v1/reports/simulation-summary?window=1h&format=pdf"
 ```
 
-Supported windows are `15m`, `1h`, `6h`, and `24h`. The report includes the current demo user, system/historian/MQTT/control/PID status, latest telemetry, simple telemetry min/max/average summaries, and command/event/alarm counts from existing simulation APIs. It is explicitly simulation-only and is not a regulatory report, production audit export, or nuclear compliance artifact.
+Supported windows are `15m`, `1h`, `6h`, and `24h`. The report includes the current demo user, system/historian/MQTT/control/PID status, latest telemetry, simple telemetry min/max/average summaries, and command/event/alarm counts from existing simulation APIs. PDF output is a simple human-readable simulation summary generated by the API gateway without external rendering services. It is explicitly simulation-only and is not a regulatory report, production audit export, or nuclear compliance artifact.
 
 ## Local Observability
 
@@ -703,6 +704,7 @@ curl "http://localhost:8080/api/v1/commands/recent?limit=50"
 curl "http://localhost:8080/api/v1/events/recent?limit=50"
 curl "http://localhost:8080/api/v1/reports/simulation-summary?window=1h"
 curl "http://localhost:8080/api/v1/reports/simulation-summary?window=1h&format=csv"
+curl "http://localhost:8080/api/v1/reports/simulation-summary?window=1h&format=pdf"
 curl http://localhost:8080/api/v1/simulation/scenarios
 curl -X POST http://localhost:8080/api/v1/simulation/scenarios/high_temperature/start
 curl -X POST http://localhost:8080/api/v1/simulation/scenarios/stop
@@ -749,7 +751,7 @@ curl "http://localhost:8081/api/v1/simulation/events/recent?limit=50"
 - Events are simulation records backed by the historian when available, with in-memory fallback if the DB is disabled or unavailable.
 - MQTT publishing is one-way and publish-only; MQTT command ingestion, broker auth/ACL, and TLS are not implemented.
 - Demo RBAC is header-based and local-demo only; passwords, OAuth/JWT production auth, persistent users, and real plant access control are not implemented.
-- Report export is JSON/CSV for synthetic simulation summaries only; PDF/Excel, production audit immutability, and regulatory reporting are not implemented.
+- Report export is JSON/CSV/PDF for synthetic simulation summaries only; Excel export, production audit immutability, and regulatory reporting are not implemented.
 - Observability is a local Prometheus/Grafana demo baseline only; it is not a production logging, tracing, alerting, or SRE stack.
 - Data source switching in UI is not a real runtime integration switch yet.
 - Frontend uses route-level code splitting; deeper vendor/chart chunk tuning can be added later if needed.
@@ -766,9 +768,9 @@ curl "http://localhost:8081/api/v1/simulation/events/recent?limit=50"
 4. Harden API contract tooling, simulation domain boundaries, and quality gates.
 5. Add persistent historian storage for telemetry, events, commands, and alarm history.
 6. Add publish-only MQTT bridge for simulated telemetry and integration smoke coverage.
-7. Add richer historian query UX and optional longer-range aggregate resolutions if they remain clearly simulation-only.
+7. Add optional longer-range aggregate resolutions if they remain clearly simulation-only.
 8. Add production-style auth hardening, deployment hardening, and extended CI checks.
-9. Add PDF/Excel report export only if it remains clearly simulation-only and non-regulatory.
+9. Add Excel report export only if it remains clearly simulation-only and non-regulatory.
 
 ## Documentation
 
