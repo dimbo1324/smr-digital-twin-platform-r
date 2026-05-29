@@ -31,7 +31,10 @@ export function CommandEventPanel({ commands, events, state }: CommandEventPanel
             <EmptyState label="No simulation commands yet." />
           ) : (
             latestCommands.map((command) => (
-              <div key={command.id} className="rounded-2xl border border-border/70 bg-surface-elevated/60 p-4">
+              <div
+                key={command.id}
+                className="rounded-2xl border border-border/70 bg-surface-elevated/60 p-4"
+              >
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-mono text-xs text-muted-foreground">{command.id}</span>
                   <Badge variant="mock">{command.targetTag}</Badge>
@@ -61,10 +64,21 @@ export function CommandEventPanel({ commands, events, state }: CommandEventPanel
             <EmptyState label="No simulation events yet." />
           ) : (
             latestEvents.map((event) => (
-              <div key={event.id} className="rounded-2xl border border-border/70 bg-surface-elevated/60 p-4">
+              <div
+                key={event.id}
+                className="rounded-2xl border border-border/70 bg-surface-elevated/60 p-4"
+              >
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-mono text-xs text-muted-foreground">{event.id}</span>
-                  <Badge variant={event.severity === "ERROR" ? "destructive" : event.severity === "WARNING" ? "warning" : "outline"}>
+                  <Badge
+                    variant={
+                      event.severity === "ERROR"
+                        ? "destructive"
+                        : event.severity === "WARNING"
+                          ? "warning"
+                          : "outline"
+                    }
+                  >
                     {event.severity}
                   </Badge>
                   {event.targetTag ? <Badge variant="mock">{event.targetTag}</Badge> : null}

@@ -29,6 +29,8 @@ The local Prometheus/Grafana observability stack is a development diagnostic aid
 
 Demo RBAC restricts synthetic simulation actions inside the portfolio platform. It is header-based, uses static demo users, has no passwords, has no OAuth/JWT production identity flow, and does not provide real plant access control. It helps demonstrate role-aware HMI behavior; it must not be treated as certified or production-grade security.
 
+Frontend clients should call the API gateway. The simulation service is a local/demo backend dependency, not a public security boundary, and Docker Compose binds its diagnostic host port to localhost.
+
 Alarm and event operations are also simulation-only. Acknowledging an alarm only changes a synthetic alarm instance created by `apps/simulation`; it does not confirm, silence, or clear a real plant condition. Cleared alarm history and recent events are demo workflow records, not a regulated operational archive, even when persisted by the historian.
 
 Manual, auto, and disabled control modes are simulation-only state on `TIC-101`. Switching modes changes only in-memory command arbitration for the simulated `V-101` valve. `AUTO` mode lets the synthetic `TIC-101` PID controller apply an in-memory `V-101.POS` target. This PID is educational simulation logic only; it is not safety automation or real controller behavior.

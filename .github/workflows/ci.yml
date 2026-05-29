@@ -11,6 +11,7 @@ on:
       - "ci/**"
       - "test/**"
       - "epic/**"
+      - "hardening/**"
       - "codex/**"
   pull_request:
     branches:
@@ -24,6 +25,48 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  repository-hygiene:
+    name: Repository Hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25.10"
+          cache-dependency-path: |
+            apps/api/go.sum
+            apps/simulation/go.sum
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: apps/web
+        run: npm ci
+
+      - name: Run generated artifact guard
+        run: node scripts/check-generated-artifacts.mjs
+
+      - name: Run gofmt check
+        run: node scripts/check-gofmt.mjs
+
+      - name: Run go mod tidy check
+        run: node scripts/check-go-mod-tidy.mjs
+
+      - name: Run frontend format check
+        working-directory: apps/web
+        run: npm run format:check
+
+      - name: Validate Docker Compose config
+        run: docker compose config --quiet
+
   api:
     name: API
     runs-on: ubuntu-latest
@@ -115,6 +158,9 @@ jobs:
 
       - name: Validate runtime contract coverage
         run: npm run api:validate-contract-coverage
+
+      - name: Run frontend format check
+        run: npm run format:check
 
       - name: Run frontend typecheck
         run: npm run typecheck

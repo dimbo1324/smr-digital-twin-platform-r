@@ -2,6 +2,8 @@
 
 Backend API gateway for **SMR Twin Platform**, a simulation-only digital twin platform for a small modular reactor energy loop. This service exposes REST endpoints for the frontend HMI, proxies the Go simulation service, and provides labelled in-memory fallback data when the simulation service is unavailable. It also exposes the simulation historian status. It does not connect to real equipment and does not implement real plant control.
 
+Request handling is intentionally strict for maintainability: JSON request bodies are size-limited, unknown fields are rejected, and trailing JSON tokens are treated as malformed input. Upstream simulation responses are also decoded with a bounded body limit so the gateway fails safely if a local demo dependency returns an unexpectedly large payload.
+
 ## Scope
 
 Current milestone:

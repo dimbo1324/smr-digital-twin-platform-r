@@ -4,7 +4,12 @@ export const apiBaseUrl = process.env.VITE_API_BASE_URL ?? "http://127.0.0.1:808
 
 type ControlMode = "MANUAL" | "AUTO" | "DISABLED";
 type PumpCommand = "START" | "STOP";
-type DemoUserId = "demo-viewer" | "demo-engineer" | "demo-operator" | "demo-supervisor" | "demo-admin";
+type DemoUserId =
+  | "demo-viewer"
+  | "demo-engineer"
+  | "demo-operator"
+  | "demo-supervisor"
+  | "demo-admin";
 
 interface ApiEnvelope<T> {
   data: T;
@@ -37,10 +42,13 @@ interface CommandRecord {
 
 export async function waitForApiHealth(request: APIRequestContext) {
   await expect
-    .poll(async () => {
-      const response = await request.get(`${apiBaseUrl}/health`);
-      return response.ok();
-    }, { timeout: 30_000 })
+    .poll(
+      async () => {
+        const response = await request.get(`${apiBaseUrl}/health`);
+        return response.ok();
+      },
+      { timeout: 30_000 },
+    )
     .toBe(true);
 }
 
@@ -53,49 +61,82 @@ export async function stopScenario(request: APIRequestContext) {
 }
 
 export async function startScenario(request: APIRequestContext, scenarioName: string) {
-  await postJson(request, `/api/v1/simulation/scenarios/${encodeURIComponent(scenarioName)}/start`, undefined, "demo-admin");
+  await postJson(
+    request,
+    `/api/v1/simulation/scenarios/${encodeURIComponent(scenarioName)}/start`,
+    undefined,
+    "demo-admin",
+  );
 }
 
 export async function setControlMode(request: APIRequestContext, mode: ControlMode) {
-  await postJson(request, "/api/v1/control/mode", {
-    mode,
-    requestedBy: "e2e-test",
-    reason: "Expanded E2E suite setup",
-  }, "demo-admin");
+  await postJson(
+    request,
+    "/api/v1/control/mode",
+    {
+      mode,
+      requestedBy: "e2e-test",
+      reason: "Expanded E2E suite setup",
+    },
+    "demo-admin",
+  );
 }
 
 export async function updatePidConfig(request: APIRequestContext) {
-  await patchJson(request, "/api/v1/pid/config", {
-    setpoint: 288,
-    kp: 0.9,
-    ki: 0.05,
-    kd: 0.1,
-    requestedBy: "e2e-test",
-    reason: "Expanded E2E PID setup",
-  }, "demo-admin");
+  await patchJson(
+    request,
+    "/api/v1/pid/config",
+    {
+      setpoint: 288,
+      kp: 0.9,
+      ki: 0.05,
+      kd: 0.1,
+      requestedBy: "e2e-test",
+      reason: "Expanded E2E PID setup",
+    },
+    "demo-admin",
+  );
 }
 
-export async function sendValveCommand(request: APIRequestContext, positionPercent = 65, userId: DemoUserId = "demo-operator") {
+export async function sendValveCommand(
+  request: APIRequestContext,
+  positionPercent = 65,
+  userId: DemoUserId = "demo-operator",
+) {
   const correlationId = `e2e-valve-${Date.now()}`;
-  const response = await postJson<CommandRecord>(request, "/api/v1/commands", {
-    targetTag: "V-101",
-    commandType: "SET_POSITION",
-    source: "frontend",
-    requestedBy: "e2e-test",
-    correlationId,
-    payload: { positionPercent, reason: "Expanded E2E valve command" },
-  }, userId);
+  const response = await postJson<CommandRecord>(
+    request,
+    "/api/v1/commands",
+    {
+      targetTag: "V-101",
+      commandType: "SET_POSITION",
+      source: "frontend",
+      requestedBy: "e2e-test",
+      correlationId,
+      payload: { positionPercent, reason: "Expanded E2E valve command" },
+    },
+    userId,
+  );
   return { command: response.data, correlationId };
 }
 
-export async function sendPumpCommand(request: APIRequestContext, commandType: PumpCommand, userId: DemoUserId = "demo-operator") {
-  const response = await postJson<CommandRecord>(request, "/api/v1/commands", {
-    targetTag: "P-101",
-    commandType,
-    source: "frontend",
-    requestedBy: "e2e-test",
-    payload: { reason: "Expanded E2E pump command" },
-  }, userId);
+export async function sendPumpCommand(
+  request: APIRequestContext,
+  commandType: PumpCommand,
+  userId: DemoUserId = "demo-operator",
+) {
+  const response = await postJson<CommandRecord>(
+    request,
+    "/api/v1/commands",
+    {
+      targetTag: "P-101",
+      commandType,
+      source: "frontend",
+      requestedBy: "e2e-test",
+      payload: { reason: "Expanded E2E pump command" },
+    },
+    userId,
+  );
   return response.data;
 }
 
@@ -116,10 +157,17 @@ export async function getRecentCommands(request: APIRequestContext) {
 }
 
 export async function acknowledgeAlarm(request: APIRequestContext, alarmId: string) {
-  return (await postJson<Alarm>(request, `/api/v1/alarms/${encodeURIComponent(alarmId)}/acknowledge`, {
-    acknowledgedBy: "e2e-test",
-    comment: "Acknowledged by expanded E2E suite",
-  }, "demo-supervisor")).data;
+  return (
+    await postJson<Alarm>(
+      request,
+      `/api/v1/alarms/${encodeURIComponent(alarmId)}/acknowledge`,
+      {
+        acknowledgedBy: "e2e-test",
+        comment: "Acknowledged by expanded E2E suite",
+      },
+      "demo-supervisor",
+    )
+  ).data;
 }
 
 export async function postJsonAs<T = unknown>(
@@ -133,28 +181,37 @@ export async function postJsonAs<T = unknown>(
 
 export async function waitForActiveAlarm(request: APIRequestContext) {
   return expect
-    .poll(async () => {
-      const alarms = await getActiveAlarms(request);
-      return alarms.find((alarm) => alarm.status === "ACTIVE")?.id ?? "";
-    }, { timeout: 35_000 })
+    .poll(
+      async () => {
+        const alarms = await getActiveAlarms(request);
+        return alarms.find((alarm) => alarm.status === "ACTIVE")?.id ?? "";
+      },
+      { timeout: 35_000 },
+    )
     .not.toBe("");
 }
 
 export async function waitForAlarmHistory(request: APIRequestContext) {
   await expect
-    .poll(async () => {
-      const history = await getAlarmHistory(request);
-      return history.some((alarm) => alarm.status === "CLEARED");
-    }, { timeout: 35_000 })
+    .poll(
+      async () => {
+        const history = await getAlarmHistory(request);
+        return history.some((alarm) => alarm.status === "CLEARED");
+      },
+      { timeout: 35_000 },
+    )
     .toBe(true);
 }
 
 export async function waitForEventType(request: APIRequestContext, pattern: RegExp) {
   await expect
-    .poll(async () => {
-      const events = await getRecentEvents(request);
-      return events.some((event) => pattern.test(event.type) || pattern.test(event.message));
-    }, { timeout: 20_000 })
+    .poll(
+      async () => {
+        const events = await getRecentEvents(request);
+        return events.some((event) => pattern.test(event.type) || pattern.test(event.message));
+      },
+      { timeout: 20_000 },
+    )
     .toBe(true);
 }
 
@@ -172,7 +229,12 @@ async function getJson<T>(request: APIRequestContext, path: string) {
   return JSON.parse(text) as ApiEnvelope<T>;
 }
 
-async function postJson<T = unknown>(request: APIRequestContext, path: string, body?: unknown, userId?: DemoUserId) {
+async function postJson<T = unknown>(
+  request: APIRequestContext,
+  path: string,
+  body?: unknown,
+  userId?: DemoUserId,
+) {
   const response = await request.post(`${apiBaseUrl}${path}`, {
     data: body ?? {},
     headers: apiHeaders(userId),
@@ -182,7 +244,12 @@ async function postJson<T = unknown>(request: APIRequestContext, path: string, b
   return (text ? JSON.parse(text) : { data: null }) as ApiEnvelope<T>;
 }
 
-async function patchJson<T = unknown>(request: APIRequestContext, path: string, body: unknown, userId?: DemoUserId) {
+async function patchJson<T = unknown>(
+  request: APIRequestContext,
+  path: string,
+  body: unknown,
+  userId?: DemoUserId,
+) {
   const response = await request.patch(`${apiBaseUrl}${path}`, {
     data: body,
     headers: apiHeaders(userId),

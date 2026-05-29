@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 )
 
 func simulationReportPDF(report SimulationReport) ([]byte, error) {
@@ -138,17 +139,36 @@ func pdfTextStream(lines []string) string {
 
 func truncatePDFLine(line string) string {
 	const maxLineLength = 110
-	if len(line) <= maxLineLength {
+	runes := []rune(line)
+	if len(runes) <= maxLineLength {
 		return line
 	}
-	return line[:maxLineLength-3] + "..."
+	return string(runes[:maxLineLength-3]) + "..."
 }
 
 func escapePDFText(value string) string {
+	value = normalizePDFText(value)
 	value = strings.ReplaceAll(value, `\`, `\\`)
 	value = strings.ReplaceAll(value, "(", `\(`)
 	value = strings.ReplaceAll(value, ")", `\)`)
 	value = strings.ReplaceAll(value, "\r", " ")
 	value = strings.ReplaceAll(value, "\n", " ")
 	return value
+}
+
+func normalizePDFText(value string) string {
+	builder := strings.Builder{}
+	for _, r := range value {
+		switch {
+		case r == '\r' || r == '\n' || r == '\t':
+			builder.WriteRune(' ')
+		case r >= 32 && r <= 126:
+			builder.WriteRune(r)
+		case unicode.IsSpace(r):
+			builder.WriteRune(' ')
+		default:
+			builder.WriteRune('?')
+		}
+	}
+	return builder.String()
 }

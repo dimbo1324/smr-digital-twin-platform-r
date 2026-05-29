@@ -11,7 +11,8 @@ export const queryKeys = {
   },
   telemetry: {
     latest: ["telemetry", "latest"] as const,
-    history: (windowValue: string, resolution = "raw") => ["telemetry", "history", windowValue, resolution] as const,
+    history: (windowValue: string, resolution = "raw") =>
+      ["telemetry", "history", windowValue, resolution] as const,
     histories: ["telemetry", "history"] as const,
   },
   control: {
@@ -41,6 +42,7 @@ export const queryKeys = {
     status: ["scenarios", "status"] as const,
   },
   reports: {
-    simulationSummary: (windowValue: string) => ["reports", "simulation-summary", windowValue] as const,
+    simulationSummary: (windowValue: string) =>
+      ["reports", "simulation-summary", windowValue] as const,
   },
 };

@@ -37,19 +37,20 @@ export function DashboardPage() {
       : systemStatus.state === "checking"
         ? "Checking"
         : "Offline";
-  const telemetrySource = liveTelemetry.state === "connected" ? "Simulation API" : "Waiting/offline";
+  const telemetrySource =
+    liveTelemetry.state === "connected" ? "Simulation API" : "Waiting/offline";
   const historianLabel =
     historian.status?.status === "connected"
       ? "Persistent historian"
       : historian.status?.fallbackActive
         ? "In-memory fallback"
-        : historian.status?.status ?? "Checking";
+        : (historian.status?.status ?? "Checking");
   const mqttLabel =
     mqtt.status?.status === "connected"
       ? "Publish-only connected"
       : mqtt.status?.status === "disabled"
         ? "Disabled"
-        : mqtt.status?.status ?? "Checking";
+        : (mqtt.status?.status ?? "Checking");
 
   return (
     <PageShell data-testid="dashboard-page">
@@ -81,7 +82,10 @@ export function DashboardPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-border/70 bg-background/40 p-5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.05)]" data-testid="dashboard-status-card">
+          <div
+            className="rounded-3xl border border-border/70 bg-background/40 p-5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.05)]"
+            data-testid="dashboard-status-card"
+          >
             <div className="flex items-center gap-3">
               <div className="rounded-2xl bg-success/10 p-3 text-success">
                 <ShieldCheck className="h-6 w-6" aria-hidden="true" />
@@ -98,10 +102,24 @@ export function DashboardPage() {
               <Metric label="Environment" value={environment} />
               <Metric label="Mode" value={mode} />
               <Metric label="Telemetry" value={telemetrySource} />
-              <Metric label="Historian" value={historianLabel} testId="dashboard-historian-status" />
+              <Metric
+                label="Historian"
+                value={historianLabel}
+                testId="dashboard-historian-status"
+              />
               <Metric label="MQTT bridge" value={mqttLabel} testId="dashboard-mqtt-status" />
-              <Metric label="Active alarms" value={String(alarms.activeAlarms.filter((alarm) => alarm.status === "ACTIVE").length)} testId="dashboard-active-alarms-count" />
-              <Metric label="Recent events" value={String(recentEvents.events.length)} testId="dashboard-recent-events" />
+              <Metric
+                label="Active alarms"
+                value={String(
+                  alarms.activeAlarms.filter((alarm) => alarm.status === "ACTIVE").length,
+                )}
+                testId="dashboard-active-alarms-count"
+              />
+              <Metric
+                label="Recent events"
+                value={String(recentEvents.events.length)}
+                testId="dashboard-recent-events"
+              />
             </div>
           </div>
         </div>

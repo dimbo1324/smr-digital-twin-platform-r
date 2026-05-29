@@ -17,10 +17,16 @@ test("manual to auto PID active flow and valve arbitration", async ({ page, requ
 
   await test.step("switch to AUTO and verify PID authority", async () => {
     await page.getByTestId("control-mode-auto-button").click();
-    await expect(page.getByTestId("control-mode-current")).toContainText(/AUTO/i, { timeout: 15_000 });
+    await expect(page.getByTestId("control-mode-current")).toContainText(/AUTO/i, {
+      timeout: 15_000,
+    });
     await expect(page.getByTestId("control-authority-current")).toContainText(/PID/i);
-    await expect(page.getByTestId("pid-active-badge")).toContainText(/Active/i, { timeout: 15_000 });
-    await expect(page.getByTestId("pid-status")).toContainText(/Active|Saturated/i, { timeout: 15_000 });
+    await expect(page.getByTestId("pid-active-badge")).toContainText(/Active/i, {
+      timeout: 15_000,
+    });
+    await expect(page.getByTestId("pid-status")).toContainText(/Active|Saturated/i, {
+      timeout: 15_000,
+    });
     await expect(page.getByTestId("pid-output")).toContainText(/[0-9]/);
     await expect(page.getByTestId("pid-error")).toContainText(/[0-9]/);
     await expect(page.getByTestId("valve-command-disabled-reason")).toBeVisible();
@@ -28,12 +34,17 @@ test("manual to auto PID active flow and valve arbitration", async ({ page, requ
   });
 
   await test.step("verify control and PID events", async () => {
-    await waitForEventType(request, /PID_SETPOINT_CHANGED|PID_TUNING_CHANGED|CONTROL_MODE_CHANGED|PID_ENABLED/i);
+    await waitForEventType(
+      request,
+      /PID_SETPOINT_CHANGED|PID_TUNING_CHANGED|CONTROL_MODE_CHANGED|PID_ENABLED/i,
+    );
   });
 
   await test.step("return to MANUAL and verify direct valve command works again", async () => {
     await page.getByTestId("control-mode-manual-button").click();
-    await expect(page.getByTestId("control-mode-current")).toContainText(/MANUAL/i, { timeout: 15_000 });
+    await expect(page.getByTestId("control-mode-current")).toContainText(/MANUAL/i, {
+      timeout: 15_000,
+    });
     await expect(page.getByTestId("valve-apply-position-button")).toBeEnabled({ timeout: 15_000 });
     await sendValveSetPosition(page, 55);
   });

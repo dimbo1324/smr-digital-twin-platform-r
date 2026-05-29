@@ -59,17 +59,17 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller
 
 Current process-loop assets:
 
-| Tag | Name | Type | Purpose |
-| --- | --- | --- | --- |
-| `T-101` | Tank | tank | Level/inventory display |
-| `P-101` | Pump | pump | Simulation-only pump state machine and command target |
-| `V-101` | Control Valve | valve | Simulation-only valve state machine and command target |
-| `HX-101` | Heat Exchanger | heat-exchanger | Synthetic heat transfer display |
-| `TT-101` | Loop Temperature Transmitter | sensor | Process loop temperature |
-| `PT-101` | Loop Pressure Transmitter | sensor | Process loop pressure |
-| `FT-101` | Loop Flow Transmitter | sensor | Process loop flow |
-| `LT-101` | Tank Level Transmitter | sensor | Tank level |
-| `TIC-101` | Temperature Controller | controller | Manual/auto/disabled arbitration and simulation-only PID |
+| Tag       | Name                         | Type           | Purpose                                                  |
+| --------- | ---------------------------- | -------------- | -------------------------------------------------------- |
+| `T-101`   | Tank                         | tank           | Level/inventory display                                  |
+| `P-101`   | Pump                         | pump           | Simulation-only pump state machine and command target    |
+| `V-101`   | Control Valve                | valve          | Simulation-only valve state machine and command target   |
+| `HX-101`  | Heat Exchanger               | heat-exchanger | Synthetic heat transfer display                          |
+| `TT-101`  | Loop Temperature Transmitter | sensor         | Process loop temperature                                 |
+| `PT-101`  | Loop Pressure Transmitter    | sensor         | Process loop pressure                                    |
+| `FT-101`  | Loop Flow Transmitter        | sensor         | Process loop flow                                        |
+| `LT-101`  | Tank Level Transmitter       | sensor         | Tank level                                               |
+| `TIC-101` | Temperature Controller       | controller     | Manual/auto/disabled arbitration and simulation-only PID |
 
 ## Asset Model
 
@@ -119,26 +119,26 @@ Current API telemetry points include the common fields used by the frontend:
 
 Current process-loop telemetry:
 
-| Tag | Name | Type | Unit | Current source |
-| --- | --- | --- | --- | --- |
-| `TT-101` | Loop Temperature | numeric | `C` | simulation via API |
-| `PT-101` | Loop Pressure | numeric | `MPa` | simulation via API |
-| `FT-101` | Loop Flow | numeric | `kg/s` | simulation via API |
-| `LT-101` | Tank Level | numeric | `%` | simulation via API |
-| `V-101.POS` | Valve Position | numeric | `%` | simulation via API |
-| `V-101.STATE` | Valve State | text | empty | simulation via API |
-| `P-101.STATE` | Pump State | text | empty | simulation via API |
-| `P-101.RPM` | Pump Speed | numeric | `rpm` | simulation via API |
-| `HX-101.STATE` | Heat Exchanger State | text | empty | simulation via API |
-| `TIC-101.MODE` | Control Mode | text | empty | simulation via API |
-| `TIC-101.SETPOINT` | PID Setpoint | numeric | `C` | simulation via API |
-| `TIC-101.PV` | PID Process Value | numeric | `C` | simulation via API |
-| `TIC-101.ERROR` | PID Error | numeric | `C` | simulation via API |
-| `TIC-101.OUTPUT` | PID Output | numeric | `%` | simulation via API |
-| `TIC-101.P_TERM` | PID P Term | numeric | `%` | simulation via API |
-| `TIC-101.I_TERM` | PID I Term | numeric | `%` | simulation via API |
-| `TIC-101.D_TERM` | PID D Term | numeric | `%` | simulation via API |
-| `TIC-101.STATUS` | PID Status | text | empty | simulation via API |
+| Tag                | Name                 | Type    | Unit   | Current source     |
+| ------------------ | -------------------- | ------- | ------ | ------------------ |
+| `TT-101`           | Loop Temperature     | numeric | `C`    | simulation via API |
+| `PT-101`           | Loop Pressure        | numeric | `MPa`  | simulation via API |
+| `FT-101`           | Loop Flow            | numeric | `kg/s` | simulation via API |
+| `LT-101`           | Tank Level           | numeric | `%`    | simulation via API |
+| `V-101.POS`        | Valve Position       | numeric | `%`    | simulation via API |
+| `V-101.STATE`      | Valve State          | text    | empty  | simulation via API |
+| `P-101.STATE`      | Pump State           | text    | empty  | simulation via API |
+| `P-101.RPM`        | Pump Speed           | numeric | `rpm`  | simulation via API |
+| `HX-101.STATE`     | Heat Exchanger State | text    | empty  | simulation via API |
+| `TIC-101.MODE`     | Control Mode         | text    | empty  | simulation via API |
+| `TIC-101.SETPOINT` | PID Setpoint         | numeric | `C`    | simulation via API |
+| `TIC-101.PV`       | PID Process Value    | numeric | `C`    | simulation via API |
+| `TIC-101.ERROR`    | PID Error            | numeric | `C`    | simulation via API |
+| `TIC-101.OUTPUT`   | PID Output           | numeric | `%`    | simulation via API |
+| `TIC-101.P_TERM`   | PID P Term           | numeric | `%`    | simulation via API |
+| `TIC-101.I_TERM`   | PID I Term           | numeric | `%`    | simulation via API |
+| `TIC-101.D_TERM`   | PID D Term           | numeric | `%`    | simulation via API |
+| `TIC-101.STATUS`   | PID Status           | text    | empty  | simulation via API |
 
 Telemetry quality values:
 

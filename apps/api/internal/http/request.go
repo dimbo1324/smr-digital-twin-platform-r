@@ -2,6 +2,8 @@ package httpapi
 
 import (
 	"encoding/json"
+	"errors"
+	"io"
 	"net/http"
 )
 
@@ -11,6 +13,11 @@ func DecodeJSONBody[T any](w http.ResponseWriter, r *http.Request, maxBytes int6
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(&payload); err != nil {
+		WriteError(w, r, http.StatusBadRequest, "MALFORMED_JSON", invalidMessage)
+		return payload, false
+	}
+	var trailing any
+	if err := decoder.Decode(&trailing); !errors.Is(err, io.EOF) {
 		WriteError(w, r, http.StatusBadRequest, "MALFORMED_JSON", invalidMessage)
 		return payload, false
 	}

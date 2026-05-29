@@ -1,15 +1,5 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  type PropsWithChildren,
-} from "react";
-import {
-  THEME_STORAGE_KEY,
-  ThemeContext,
-  type Theme,
-} from "@/app/providers/theme/themeContext";
+import { useCallback, useEffect, useMemo, useState, type PropsWithChildren } from "react";
+import { THEME_STORAGE_KEY, ThemeContext, type Theme } from "@/app/providers/theme/themeContext";
 
 function getInitialTheme(): Theme {
   if (typeof window === "undefined") {

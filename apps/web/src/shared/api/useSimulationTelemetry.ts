@@ -5,7 +5,10 @@ import type {
   TelemetryQuality,
   TelemetryStatus,
 } from "@/entities/telemetry/model/types";
-import type { SimulationAlarm, SimulationTelemetrySnapshot } from "@/entities/simulation/model/types";
+import type {
+  SimulationAlarm,
+  SimulationTelemetrySnapshot,
+} from "@/entities/simulation/model/types";
 import { useScenarioActions } from "@/entities/scenarios/api/useScenarioActions";
 import { useScenarios } from "@/entities/scenarios/api/useScenarios";
 import { apiGet } from "@/shared/api/client";

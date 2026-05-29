@@ -29,6 +29,24 @@
       "additionalProperties": true
     }
   },
-  "required": ["id", "ruleId", "assetId", "tag", "code", "title", "message", "severity", "status", "value", "lastValue", "threshold", "unit", "source", "startedAt", "activeAt", "updatedAt"],
+  "required": [
+    "id",
+    "ruleId",
+    "assetId",
+    "tag",
+    "code",
+    "title",
+    "message",
+    "severity",
+    "status",
+    "value",
+    "lastValue",
+    "threshold",
+    "unit",
+    "source",
+    "startedAt",
+    "activeAt",
+    "updatedAt"
+  ],
   "additionalProperties": false
 }

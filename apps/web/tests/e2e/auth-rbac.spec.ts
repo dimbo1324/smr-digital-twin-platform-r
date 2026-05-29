@@ -12,7 +12,10 @@ import {
 import { gotoAlarms, gotoDashboard, gotoProcess, gotoTrends } from "./helpers/navigation";
 import { sendValveSetPosition, updatePidSettings } from "./helpers/ui-flows";
 
-test("viewer role is read-only while dashboard and trends remain visible", async ({ page, request }) => {
+test("viewer role is read-only while dashboard and trends remain visible", async ({
+  page,
+  request,
+}) => {
   await setDemoUserBeforeLoad(page, "demo-viewer");
   await prepareManualState(request);
 
@@ -23,7 +26,9 @@ test("viewer role is read-only while dashboard and trends remain visible", async
     await expect(page.getByTestId("pump-start-button")).toBeDisabled();
     await expect(page.getByTestId("control-mode-auto-button")).toBeDisabled();
     await expect(page.getByTestId("pid-apply-settings-button")).toBeDisabled();
-    await expect(page.getByTestId("valve-rbac-disabled-reason")).toContainText(/VIEWER cannot send/i);
+    await expect(page.getByTestId("valve-rbac-disabled-reason")).toContainText(
+      /VIEWER cannot send/i,
+    );
   });
 
   await test.step("verify read-only pages still load", async () => {
@@ -34,7 +39,9 @@ test("viewer role is read-only while dashboard and trends remain visible", async
   });
 });
 
-test("backend rejects viewer write actions and allows operator simulation commands", async ({ request }) => {
+test("backend rejects viewer write actions and allows operator simulation commands", async ({
+  request,
+}) => {
   await prepareManualState(request);
 
   await test.step("viewer command is rejected with structured RBAC error", async () => {
@@ -76,7 +83,10 @@ test("operator can send UI commands after choosing the demo role", async ({ page
   await sendValveSetPosition(page, 63);
 });
 
-test("engineer can tune PID but cannot send direct actuator commands", async ({ page, request }) => {
+test("engineer can tune PID but cannot send direct actuator commands", async ({
+  page,
+  request,
+}) => {
   await setDemoUserBeforeLoad(page, "demo-engineer");
   await prepareManualState(request);
 
@@ -84,20 +94,28 @@ test("engineer can tune PID but cannot send direct actuator commands", async ({ 
   await expect(page.getByTestId("pid-apply-settings-button")).toBeEnabled({ timeout: 15_000 });
   await updatePidSettings(page);
   await expect(page.getByTestId("valve-apply-position-button")).toBeDisabled();
-  await expect(page.getByTestId("valve-rbac-disabled-reason")).toContainText(/ENGINEER cannot send/i);
+  await expect(page.getByTestId("valve-rbac-disabled-reason")).toContainText(
+    /ENGINEER cannot send/i,
+  );
 });
 
-test("supervisor can acknowledge synthetic alarms while viewer cannot", async ({ page, request }) => {
+test("supervisor can acknowledge synthetic alarms while viewer cannot", async ({
+  page,
+  request,
+}) => {
   await setDemoUserBeforeLoad(page, "demo-viewer");
   await prepareManualState(request);
 
   await test.step("activate a deterministic synthetic alarm", async () => {
     await startScenario(request, "trip");
     await expect
-      .poll(async () => {
-        const alarms = await getActiveAlarms(request);
-        return alarms.some((alarm) => alarm.status === "ACTIVE");
-      }, { timeout: 35_000 })
+      .poll(
+        async () => {
+          const alarms = await getActiveAlarms(request);
+          return alarms.some((alarm) => alarm.status === "ACTIVE");
+        },
+        { timeout: 35_000 },
+      )
       .toBe(true);
   });
 
@@ -111,7 +129,9 @@ test("supervisor can acknowledge synthetic alarms while viewer cannot", async ({
     const acknowledgeButton = page.getByTestId("acknowledge-alarm-button").first();
     await expect(acknowledgeButton).toBeEnabled({ timeout: 15_000 });
     await acknowledgeButton.click();
-    await expect(page.getByTestId("alarm-row").first()).toContainText(/ACKNOWLEDGED|seen/i, { timeout: 15_000 });
+    await expect(page.getByTestId("alarm-row").first()).toContainText(/ACKNOWLEDGED|seen/i, {
+      timeout: 15_000,
+    });
   });
 
   await stopScenario(request);

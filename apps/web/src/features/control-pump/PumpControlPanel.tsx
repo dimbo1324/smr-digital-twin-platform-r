@@ -48,7 +48,11 @@ export function PumpControlPanel({
   const pumpState = getTextTelemetryValue(telemetryPoints, "P-101.STATE", "UNKNOWN");
   const [feedback, setFeedback] = useState<CommandFeedback>({ state: "idle" });
   const commandMutation = useSendCommand();
-  const canSend = dataState === "connected" && feedback.state !== "pending" && !commandMutation.isPending && canSendCommand;
+  const canSend =
+    dataState === "connected" &&
+    feedback.state !== "pending" &&
+    !commandMutation.isPending &&
+    canSendCommand;
 
   const submitPumpCommand = (commandType: CommandType) => {
     setFeedback({ state: "pending", message: `${commandType} command is being sent...` });
@@ -67,14 +71,13 @@ export function PumpControlPanel({
         onCommandComplete?.();
       })
       .catch((error: unknown) => {
-        const message =
-          isRbacDenied(error)
-            ? "Demo RBAC denied this pump command for the current role."
-            : error instanceof ApiError
+        const message = isRbacDenied(error)
+          ? "Demo RBAC denied this pump command for the current role."
+          : error instanceof ApiError
             ? `${error.code ?? "COMMAND_FAILED"}: ${error.message}`
             : error instanceof Error
               ? error.message
-            : "Command request failed";
+              : "Command request failed";
         setFeedback({ state: "error", message });
       });
   };
@@ -106,12 +109,20 @@ export function PumpControlPanel({
 
           <div className="mt-4 grid grid-cols-[repeat(auto-fit,minmax(8.75rem,1fr))] gap-2 text-xs text-muted-foreground">
             <StatusItem label="RPM" value={formatTelemetryValue(pumpRpmPoint)} testId="pump-rpm" />
-            <StatusItem label="Source" value={telemetrySourceLabel(pumpStatePoint)} variant={pumpStatePoint?.source === "simulation" ? "success" : "mock"} />
-            <StatusItem label="Updated" value={formatTelemetryAge(getTelemetryAge(telemetryPoints, "P-101.STATE"))} />
+            <StatusItem
+              label="Source"
+              value={telemetrySourceLabel(pumpStatePoint)}
+              variant={pumpStatePoint?.source === "simulation" ? "success" : "mock"}
+            />
+            <StatusItem
+              label="Updated"
+              value={formatTelemetryAge(getTelemetryAge(telemetryPoints, "P-101.STATE"))}
+            />
           </div>
 
           <InlineInfo className="mt-4">
-            Commands mutate only the local simulation state. They are not real plant control commands.
+            Commands mutate only the local simulation state. They are not real plant control
+            commands.
           </InlineInfo>
           {!canSendCommand && roleDeniedReason ? (
             <PermissionDeniedHint className="mt-3 text-xs" testId="pump-rbac-disabled-reason">
@@ -121,7 +132,12 @@ export function PumpControlPanel({
         </div>
 
         <div className="mt-4 grid gap-2 sm:grid-cols-2">
-          <CommandButton loading={commandMutation.isPending} disabled={!canSend} onClick={() => submitPumpCommand("START")} data-testid="pump-start-button">
+          <CommandButton
+            loading={commandMutation.isPending}
+            disabled={!canSend}
+            onClick={() => submitPumpCommand("START")}
+            data-testid="pump-start-button"
+          >
             <Play className="h-4 w-4" aria-hidden="true" />
             Start
           </CommandButton>
@@ -181,9 +197,16 @@ function StatusItem({
   testId?: string;
 }) {
   return (
-    <div className="min-w-0 rounded-xl border border-border/70 bg-card/50 px-3 py-2" data-testid={testId}>
+    <div
+      className="min-w-0 rounded-xl border border-border/70 bg-card/50 px-3 py-2"
+      data-testid={testId}
+    >
       <span className="truncate">{label}</span>
-      <StatusBadge value={value} tone={variant === "success" ? "connected" : variant === "mock" ? "simulation" : "neutral"} className="mt-2 max-w-full truncate" />
+      <StatusBadge
+        value={value}
+        tone={variant === "success" ? "connected" : variant === "mock" ? "simulation" : "neutral"}
+        className="mt-2 max-w-full truncate"
+      />
     </div>
   );
 }

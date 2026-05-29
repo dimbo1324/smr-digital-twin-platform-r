@@ -3,10 +3,7 @@ import { Badge } from "@/shared/ui/badge";
 import { Card, CardContent } from "@/shared/ui/card";
 import { cn } from "@/shared/lib/cn";
 
-const statusVariant: Record<
-  TelemetryStatus,
-  "offline" | "mock" | "warning" | "success"
-> = {
+const statusVariant: Record<TelemetryStatus, "offline" | "mock" | "warning" | "success"> = {
   offline: "offline",
   mock: "mock",
   warning: "warning",

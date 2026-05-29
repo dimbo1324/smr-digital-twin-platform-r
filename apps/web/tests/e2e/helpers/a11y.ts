@@ -12,10 +12,12 @@ export async function expectNoSeriousA11yViolations(page: Page) {
       }
     `,
   });
-  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  await page.evaluate(
+    () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+  );
   const results = await new AxeBuilder({ page }).analyze();
-  const blockingViolations = results.violations.filter((violation) =>
-    violation.impact === "serious" || violation.impact === "critical",
+  const blockingViolations = results.violations.filter(
+    (violation) => violation.impact === "serious" || violation.impact === "critical",
   );
 
   expect(

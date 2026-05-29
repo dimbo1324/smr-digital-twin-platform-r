@@ -3,7 +3,10 @@ import { setDemoUserBeforeLoad } from "./helpers/auth";
 import { prepareManualState, waitForApiHealth } from "./helpers/api";
 import { gotoDashboard, gotoProcess } from "./helpers/navigation";
 
-test("keyboard users can skip to content and navigate primary sidebar", async ({ page, request }) => {
+test("keyboard users can skip to content and navigate primary sidebar", async ({
+  page,
+  request,
+}) => {
   await waitForApiHealth(request);
   await gotoDashboard(page);
 
@@ -26,7 +29,10 @@ test("keyboard users can skip to content and navigate primary sidebar", async ({
   await expect(page.getByTestId("nav-process")).toHaveAttribute("aria-current", "page");
 });
 
-test("sidebar stays available during desktop scroll without overlaying main content", async ({ page, request }) => {
+test("sidebar stays available during desktop scroll without overlaying main content", async ({
+  page,
+  request,
+}) => {
   await waitForApiHealth(request);
   await gotoDashboard(page);
   await page.setViewportSize({ width: 1440, height: 800 });
@@ -47,7 +53,10 @@ test("sidebar stays available during desktop scroll without overlaying main cont
   expect(mainBox && after ? mainBox.x >= after.x + after.width : false).toBe(true);
 });
 
-test("PID and valve controls are reachable and editable from the keyboard", async ({ page, request }) => {
+test("PID and valve controls are reachable and editable from the keyboard", async ({
+  page,
+  request,
+}) => {
   await setDemoUserBeforeLoad(page, "demo-admin");
   await prepareManualState(request);
   await gotoProcess(page);

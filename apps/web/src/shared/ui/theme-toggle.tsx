@@ -19,9 +19,15 @@ export function ThemeToggle() {
       <span className="absolute inset-1 rounded-full bg-gradient-to-br from-primary/20 via-primary/10 to-warning/10 opacity-80 transition-opacity duration-500 group-hover:opacity-100" />
       <span className="relative z-10 grid h-full w-full place-items-center">
         {isDark ? (
-          <Moon className="h-4 w-4 text-primary transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:rotate-[-8deg]" aria-hidden="true" />
+          <Moon
+            className="h-4 w-4 text-primary transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:rotate-[-8deg]"
+            aria-hidden="true"
+          />
         ) : (
-          <Sun className="h-4 w-4 text-warning transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:rotate-45" aria-hidden="true" />
+          <Sun
+            className="h-4 w-4 text-warning transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:rotate-45"
+            aria-hidden="true"
+          />
         )}
       </span>
     </Button>

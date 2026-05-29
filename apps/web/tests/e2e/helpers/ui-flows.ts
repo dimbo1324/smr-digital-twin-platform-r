@@ -19,7 +19,13 @@ export async function sendValveSetPosition(page: Page, positionPercent: number) 
       timeout: 15_000,
       message: "valve position should either change or continue reporting live telemetry",
     })
-    .toMatch(new RegExp(initialPosition === "" ? ".+" : `^(?!${escapeRegExp(initialPosition)}$).+|${positionPercent}|[0-9]`));
+    .toMatch(
+      new RegExp(
+        initialPosition === ""
+          ? ".+"
+          : `^(?!${escapeRegExp(initialPosition)}$).+|${positionPercent}|[0-9]`,
+      ),
+    );
 }
 
 export async function ensurePumpStartAccepted(page: Page) {
@@ -31,17 +37,25 @@ export async function ensurePumpStartAccepted(page: Page) {
   const initialState = await textOf(page.getByTestId("pump-state"));
   if (/RUNNING|STARTING/i.test(initialState)) {
     await stopButton.click();
-    await expect(page.getByTestId("pump-command-feedback")).toContainText(/accepted|completed|simulation/i, {
-      timeout: 15_000,
-    });
-    await expect.poll(async () => textOf(page.getByTestId("pump-state")), { timeout: 20_000 }).toMatch(/STOPPED/i);
+    await expect(page.getByTestId("pump-command-feedback")).toContainText(
+      /accepted|completed|simulation/i,
+      {
+        timeout: 15_000,
+      },
+    );
+    await expect
+      .poll(async () => textOf(page.getByTestId("pump-state")), { timeout: 20_000 })
+      .toMatch(/STOPPED/i);
   }
 
   await expect(startButton).toBeEnabled({ timeout: 20_000 });
   await startButton.click();
-  await expect(page.getByTestId("pump-command-feedback")).toContainText(/accepted|completed|simulation/i, {
-    timeout: 15_000,
-  });
+  await expect(page.getByTestId("pump-command-feedback")).toContainText(
+    /accepted|completed|simulation/i,
+    {
+      timeout: 15_000,
+    },
+  );
 
   await expect
     .poll(async () => textOf(page.getByTestId("pump-state")), {

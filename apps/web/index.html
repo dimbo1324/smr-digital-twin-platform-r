@@ -13,11 +13,12 @@
         try {
           var storedTheme = localStorage.getItem("smr-twin-theme");
           var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-          var theme = storedTheme === "light" || storedTheme === "dark"
-            ? storedTheme
-            : prefersDark
-              ? "dark"
-              : "light";
+          var theme =
+            storedTheme === "light" || storedTheme === "dark"
+              ? storedTheme
+              : prefersDark
+                ? "dark"
+                : "light";
           document.documentElement.classList.toggle("dark", theme === "dark");
           document.documentElement.style.colorScheme = theme;
         } catch (_) {

@@ -1,8 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import {
-  getSimulationReport,
-  type ReportWindow,
-} from "@/entities/reports/api/reportsApi";
+import { getSimulationReport, type ReportWindow } from "@/entities/reports/api/reportsApi";
 import { queryKeys } from "@/shared/api/query-keys";
 
 export function useSimulationReport(windowValue: ReportWindow) {

@@ -5,7 +5,9 @@ import { useActiveAlarms } from "@/entities/alarms/api/useActiveAlarms";
 import { useAlarmHistory } from "@/entities/alarms/api/useAlarmHistory";
 
 export function useAlarms(refreshMs = 2000) {
-  const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | undefined>();
+  const [feedback, setFeedback] = useState<
+    { type: "success" | "error"; message: string } | undefined
+  >();
   const active = useActiveAlarms(refreshMs);
   const history = useAlarmHistory(5000);
   const acknowledgeMutation = useAcknowledgeAlarm();

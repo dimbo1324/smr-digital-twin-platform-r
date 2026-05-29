@@ -109,7 +109,9 @@ function objectType(schema, indentLevel) {
   if (schema.additionalProperties === true) {
     body.push(`${childIndent}[key: string]: unknown;`);
   } else if (schema.additionalProperties && typeof schema.additionalProperties === "object") {
-    body.push(`${childIndent}[key: string]: ${toType(schema.additionalProperties, indentLevel + 2)} | undefined;`);
+    body.push(
+      `${childIndent}[key: string]: ${toType(schema.additionalProperties, indentLevel + 2)} | undefined;`,
+    );
   }
 
   return `{\n${body.join("\n")}\n${indent}}`;

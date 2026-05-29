@@ -1,5 +1,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { resetSimulation, startScenario, stopScenario } from "@/entities/scenarios/api/scenariosApi";
+import {
+  resetSimulation,
+  startScenario,
+  stopScenario,
+} from "@/entities/scenarios/api/scenariosApi";
 import { queryKeys } from "@/shared/api/query-keys";
 
 export function useScenarioActions() {

@@ -24,7 +24,8 @@ export function simulationReportDownloadUrl(windowValue: ReportWindow, format: R
 export async function downloadSimulationReport(windowValue: ReportWindow, format: ReportFormat) {
   const response = await fetch(simulationReportDownloadUrl(windowValue, format), {
     headers: {
-      Accept: format === "csv" ? "text/csv" : format === "pdf" ? "application/pdf" : "application/json",
+      Accept:
+        format === "csv" ? "text/csv" : format === "pdf" ? "application/pdf" : "application/json",
       "X-Demo-User": getSelectedDemoUserId(),
     },
   });

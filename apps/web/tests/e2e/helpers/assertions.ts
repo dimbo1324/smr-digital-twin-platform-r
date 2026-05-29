@@ -5,11 +5,15 @@ export async function expectNumericText(locator: Locator) {
 }
 
 export async function expectNoFatalPageError(page: Page) {
-  await expect(page.getByText(/application error|failed to fetch|uncaught|stack trace/i)).toHaveCount(0);
+  await expect(
+    page.getByText(/application error|failed to fetch|uncaught|stack trace/i),
+  ).toHaveCount(0);
 }
 
 export async function expectSimulationOnlyBoundary(page: Page) {
-  await expect(page.getByText(/simulation-only|synthetic|no real plant control/i).first()).toBeVisible();
+  await expect(
+    page.getByText(/simulation-only|synthetic|no real plant control/i).first(),
+  ).toBeVisible();
 }
 
 export async function textOf(locator: Locator) {

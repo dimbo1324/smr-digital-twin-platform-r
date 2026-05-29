@@ -1,6 +1,11 @@
 import { expect, type Page } from "@playwright/test";
 
-export type DemoUserId = "demo-viewer" | "demo-engineer" | "demo-operator" | "demo-supervisor" | "demo-admin";
+export type DemoUserId =
+  | "demo-viewer"
+  | "demo-engineer"
+  | "demo-operator"
+  | "demo-supervisor"
+  | "demo-admin";
 
 const roleLabels: Record<DemoUserId, RegExp> = {
   "demo-viewer": /VIEWER/i,

@@ -24,9 +24,12 @@ test("core HMI flows work across supported browsers", async ({ page, request }) 
     await gotoReports(page);
     await expect(page.getByTestId("reports-preview-card")).toBeVisible();
 
-    const response = await request.get(`${apiBaseUrl}/api/v1/reports/simulation-summary?window=15m`, {
-      headers: { "X-Demo-User": "demo-viewer" },
-    });
+    const response = await request.get(
+      `${apiBaseUrl}/api/v1/reports/simulation-summary?window=15m`,
+      {
+        headers: { "X-Demo-User": "demo-viewer" },
+      },
+    );
     expect(response.ok()).toBeTruthy();
     const payload = await response.json();
     expect(payload.data.simulationOnly).toBe(true);

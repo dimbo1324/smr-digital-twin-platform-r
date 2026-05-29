@@ -12,6 +12,8 @@ Expected generated structure:
 
 Generated files under those folders are ignored by Git and can be safely deleted. The committed files are only this README and `.gitkeep`.
 
+Repository hygiene checks include a generated-artifact guard (`node scripts/check-generated-artifacts.mjs`) to prevent accidentally committing smoke logs, Playwright reports, coverage output, temporary reports, or local build artifacts.
+
 These artifacts contain synthetic simulation diagnostics only. They do not contain real plant data, they are not a production observability stack, and they are not a certified audit trail.
 
 Useful commands:

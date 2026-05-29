@@ -20,6 +20,7 @@
 *.ts text eol=lf
 *.tsx text eol=lf
 *.js text eol=lf
+*.mjs text eol=lf
 *.jsx text eol=lf
 *.css text eol=lf
 *.scss text eol=lf
@@ -27,6 +28,7 @@
 *.sql text eol=lf
 Makefile text eol=lf
 Dockerfile text eol=lf
+.githooks/* text eol=lf
 
 # Keep generated/binary assets untouched.
 *.png binary

@@ -21,7 +21,9 @@ test("dashboard live status flow", async ({ page, request }) => {
   await test.step("preserve simulation boundary copy", async () => {
     await expectSimulationOnlyBoundary(page);
     await expectNoFatalPageError(page);
-    await expect(page.getByText(/real plant operations screen|no real plant control/i).first()).toBeVisible();
+    await expect(
+      page.getByText(/real plant operations screen|no real plant control/i).first(),
+    ).toBeVisible();
   });
 });
 
@@ -45,7 +47,8 @@ test("dashboard renders degraded integration statuses", async ({ page, request }
           messagesPublished: 0,
           messagesFailed: 1,
           simulationOnly: true,
-          safetyDisclaimer: "MQTT topics contain synthetic simulation payloads only. The bridge is publish-only and cannot control equipment.",
+          safetyDisclaimer:
+            "MQTT topics contain synthetic simulation payloads only. The bridge is publish-only and cannot control equipment.",
         },
         meta: { timestamp: new Date().toISOString(), source: "test" },
       }),
@@ -69,7 +72,8 @@ test("dashboard renders degraded integration statuses", async ({ page, request }
           supportedResolutions: ["raw"],
           aggregateStatus: "disabled",
           simulationOnly: true,
-          safetyDisclaimer: "The historian stores synthetic simulation data for demo, learning and portfolio purposes only.",
+          safetyDisclaimer:
+            "The historian stores synthetic simulation data for demo, learning and portfolio purposes only.",
         },
         meta: { timestamp: new Date().toISOString(), source: "test" },
       }),

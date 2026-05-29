@@ -27,6 +27,7 @@ export function newestEvents(events: EventRecord[]): EventRecord[] {
 
 export function highestAlarmSeverity(alarms: Alarm[]): AlarmSeverity | undefined {
   return [...alarms].sort(
-    (left, right) => (alarmSeverityRank[right.severity] ?? 0) - (alarmSeverityRank[left.severity] ?? 0),
+    (left, right) =>
+      (alarmSeverityRank[right.severity] ?? 0) - (alarmSeverityRank[left.severity] ?? 0),
   )[0]?.severity;
 }

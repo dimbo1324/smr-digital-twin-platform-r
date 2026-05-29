@@ -55,13 +55,9 @@ export function Topbar() {
       <div className="mx-auto flex w-full max-w-[1520px] flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8 xl:px-10">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div className="min-w-0">
-            <p className="text-xs font-medium uppercase text-muted-foreground">
-              {meta.eyebrow}
-            </p>
+            <p className="text-xs font-medium uppercase text-muted-foreground">{meta.eyebrow}</p>
             <div className="mt-1 flex flex-wrap items-end gap-x-3 gap-y-1">
-              <h2 className="text-2xl font-semibold leading-tight text-foreground">
-                {meta.title}
-              </h2>
+              <h2 className="text-2xl font-semibold leading-tight text-foreground">{meta.title}</h2>
               <p className="pb-1 text-sm text-muted-foreground">{meta.description}</p>
             </div>
           </div>

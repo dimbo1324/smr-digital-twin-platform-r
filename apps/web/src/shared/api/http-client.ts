@@ -1,8 +1,5 @@
 import type { components } from "@/shared/api/generated/schema";
-import {
-  validateApiRequest,
-  validateApiResponse,
-} from "@/shared/api/validation/api-validation";
+import { validateApiRequest, validateApiResponse } from "@/shared/api/validation/api-validation";
 import type { ApiSchemaName } from "@/shared/api/validation/schemas";
 import { getSelectedDemoUserId } from "@/entities/auth/model/storage";
 
@@ -55,7 +52,11 @@ export async function apiGet<T>(
 export async function apiPost<TResponse, TBody = unknown>(
   path: string,
   body?: TBody,
-  options: { signal?: AbortSignal; requestSchema?: ApiSchemaName; responseSchema?: ApiSchemaName } = {},
+  options: {
+    signal?: AbortSignal;
+    requestSchema?: ApiSchemaName;
+    responseSchema?: ApiSchemaName;
+  } = {},
 ): Promise<ApiEnvelope<TResponse>> {
   if (body !== undefined) {
     await validateApiRequest(options.requestSchema, body, path);
@@ -85,7 +86,11 @@ export async function apiPost<TResponse, TBody = unknown>(
 export async function apiPatch<TResponse, TBody = unknown>(
   path: string,
   body?: TBody,
-  options: { signal?: AbortSignal; requestSchema?: ApiSchemaName; responseSchema?: ApiSchemaName } = {},
+  options: {
+    signal?: AbortSignal;
+    requestSchema?: ApiSchemaName;
+    responseSchema?: ApiSchemaName;
+  } = {},
 ): Promise<ApiEnvelope<TResponse>> {
   if (body !== undefined) {
     await validateApiRequest(options.requestSchema, body, path);

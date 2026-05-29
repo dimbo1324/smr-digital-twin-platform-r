@@ -53,7 +53,9 @@ if (missingRefs.length > 0) {
   process.exit(1);
 }
 
-console.log(`OpenAPI parsed: ${Object.keys(document.paths ?? {}).length} paths, ${Object.keys(schemas).length} schemas.`);
+console.log(
+  `OpenAPI parsed: ${Object.keys(document.paths ?? {}).length} paths, ${Object.keys(schemas).length} schemas.`,
+);
 
 function walk(value, visitor) {
   visitor(value);

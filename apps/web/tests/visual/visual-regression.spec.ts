@@ -21,29 +21,128 @@ interface VisualScenario {
 
 const desktopDarkPages: VisualScenario[] = [
   // Dashboard desktop has the densest card surface and needs a narrow Linux rendering allowance.
-  { route: "/dashboard", pageTestId: "dashboard-page", name: "dashboard", theme: "dark", viewport: "desktop", maxDiffPixelRatio: 0.07 },
-  { route: "/process", pageTestId: "process-page", name: "process", theme: "dark", viewport: "desktop" },
-  { route: "/alarms", pageTestId: "alarms-page", name: "alarms", theme: "dark", viewport: "desktop" },
-  { route: "/events", pageTestId: "events-page", name: "events", theme: "dark", viewport: "desktop" },
-  { route: "/trends", pageTestId: "trends-page", name: "trends", theme: "dark", viewport: "desktop" },
-  { route: "/reports", pageTestId: "reports-page", name: "reports", theme: "dark", viewport: "desktop" },
-  { route: "/settings", pageTestId: "settings-page", name: "settings", theme: "dark", viewport: "desktop" },
+  {
+    route: "/dashboard",
+    pageTestId: "dashboard-page",
+    name: "dashboard",
+    theme: "dark",
+    viewport: "desktop",
+    maxDiffPixelRatio: 0.07,
+  },
+  {
+    route: "/process",
+    pageTestId: "process-page",
+    name: "process",
+    theme: "dark",
+    viewport: "desktop",
+  },
+  {
+    route: "/alarms",
+    pageTestId: "alarms-page",
+    name: "alarms",
+    theme: "dark",
+    viewport: "desktop",
+  },
+  {
+    route: "/events",
+    pageTestId: "events-page",
+    name: "events",
+    theme: "dark",
+    viewport: "desktop",
+  },
+  {
+    route: "/trends",
+    pageTestId: "trends-page",
+    name: "trends",
+    theme: "dark",
+    viewport: "desktop",
+  },
+  {
+    route: "/reports",
+    pageTestId: "reports-page",
+    name: "reports",
+    theme: "dark",
+    viewport: "desktop",
+  },
+  {
+    route: "/settings",
+    pageTestId: "settings-page",
+    name: "settings",
+    theme: "dark",
+    viewport: "desktop",
+  },
 ];
 
 const desktopLightPages: VisualScenario[] = [
   // Keep this scoped to dashboard desktop; other light-theme pages stay on the default threshold.
-  { route: "/dashboard", pageTestId: "dashboard-page", name: "dashboard", theme: "light", viewport: "desktop", maxDiffPixelRatio: 0.07 },
-  { route: "/process", pageTestId: "process-page", name: "process", theme: "light", viewport: "desktop" },
-  { route: "/reports", pageTestId: "reports-page", name: "reports", theme: "light", viewport: "desktop" },
-  { route: "/settings", pageTestId: "settings-page", name: "settings", theme: "light", viewport: "desktop" },
+  {
+    route: "/dashboard",
+    pageTestId: "dashboard-page",
+    name: "dashboard",
+    theme: "light",
+    viewport: "desktop",
+    maxDiffPixelRatio: 0.07,
+  },
+  {
+    route: "/process",
+    pageTestId: "process-page",
+    name: "process",
+    theme: "light",
+    viewport: "desktop",
+  },
+  {
+    route: "/reports",
+    pageTestId: "reports-page",
+    name: "reports",
+    theme: "light",
+    viewport: "desktop",
+  },
+  {
+    route: "/settings",
+    pageTestId: "settings-page",
+    name: "settings",
+    theme: "light",
+    viewport: "desktop",
+  },
 ];
 
 const responsiveDarkPages: VisualScenario[] = [
-  { route: "/dashboard", pageTestId: "dashboard-page", name: "dashboard", theme: "dark", viewport: "tablet", maxDiffPixelRatio: 0.07 },
-  { route: "/process", pageTestId: "process-page", name: "process", theme: "dark", viewport: "tablet" },
-  { route: "/dashboard", pageTestId: "dashboard-page", name: "dashboard", theme: "dark", viewport: "mobile" },
-  { route: "/process", pageTestId: "process-page", name: "process", theme: "dark", viewport: "mobile" },
-  { route: "/settings", pageTestId: "settings-page", name: "settings", theme: "dark", viewport: "mobile" },
+  {
+    route: "/dashboard",
+    pageTestId: "dashboard-page",
+    name: "dashboard",
+    theme: "dark",
+    viewport: "tablet",
+    maxDiffPixelRatio: 0.07,
+  },
+  {
+    route: "/process",
+    pageTestId: "process-page",
+    name: "process",
+    theme: "dark",
+    viewport: "tablet",
+  },
+  {
+    route: "/dashboard",
+    pageTestId: "dashboard-page",
+    name: "dashboard",
+    theme: "dark",
+    viewport: "mobile",
+  },
+  {
+    route: "/process",
+    pageTestId: "process-page",
+    name: "process",
+    theme: "dark",
+    viewport: "mobile",
+  },
+  {
+    route: "/settings",
+    pageTestId: "settings-page",
+    name: "settings",
+    theme: "dark",
+    viewport: "mobile",
+  },
 ];
 
 const visualScenarios = [...desktopDarkPages, ...desktopLightPages, ...responsiveDarkPages];
@@ -55,7 +154,9 @@ test.describe("visual regression baseline", () => {
 
       await expect(page).toHaveScreenshot(snapshotName(scenario), {
         fullPage: false,
-        ...(scenario.maxDiffPixelRatio === undefined ? {} : { maxDiffPixelRatio: scenario.maxDiffPixelRatio }),
+        ...(scenario.maxDiffPixelRatio === undefined
+          ? {}
+          : { maxDiffPixelRatio: scenario.maxDiffPixelRatio }),
         mask: commonVisualMasks(page),
       });
     });

@@ -8,14 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import { PageShell } from "@/shared/ui/page-shell";
 import { useAuthSession } from "@/entities/auth/api/useAuthSession";
 import { hasPermission, permissions, roleDeniedReason } from "@/entities/auth/lib/permissions";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/shared/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
 
 const severityVariant: Record<Alarm["severity"], "outline" | "warning" | "destructive"> = {
   INFO: "outline",
@@ -36,7 +29,9 @@ export function AlarmsPage() {
   const auth = useAuthSession();
   const canAcknowledgeAlarm = hasPermission(auth.session, permissions.acknowledgeAlarm);
   const activeCount = alarms.activeAlarms.filter((alarm) => alarm.status === "ACTIVE").length;
-  const acknowledgedCount = alarms.activeAlarms.filter((alarm) => alarm.status === "ACKNOWLEDGED").length;
+  const acknowledgedCount = alarms.activeAlarms.filter(
+    (alarm) => alarm.status === "ACKNOWLEDGED",
+  ).length;
 
   return (
     <PageShell data-testid="alarms-page">
@@ -49,15 +44,24 @@ export function AlarmsPage() {
             Alarm operations for the simulation-only process.
           </h1>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">
-            Alarm instances are generated from synthetic telemetry, acknowledged by the demo operator,
-            cleared automatically when the condition normalizes, and recorded in the unified event trail.
+            Alarm instances are generated from synthetic telemetry, acknowledged by the demo
+            operator, cleared automatically when the condition normalizes, and recorded in the
+            unified event trail.
           </p>
         </div>
 
         <div className="grid gap-3 rounded-3xl border border-border/70 bg-surface-elevated/70 p-5">
-          <SummaryItem label="Active" value={String(activeCount)} tone={activeCount > 0 ? "warning" : "success"} />
+          <SummaryItem
+            label="Active"
+            value={String(activeCount)}
+            tone={activeCount > 0 ? "warning" : "success"}
+          />
           <SummaryItem label="Acknowledged" value={String(acknowledgedCount)} tone="mock" />
-          <SummaryItem label="Cleared history" value={String(alarms.history.length)} tone="outline" />
+          <SummaryItem
+            label="Cleared history"
+            value={String(alarms.history.length)}
+            tone="outline"
+          />
         </div>
       </section>
 
@@ -84,11 +88,23 @@ export function AlarmsPage() {
         </CardHeader>
         <CardContent data-testid="active-alarms-list">
           {alarms.state === "loading" ? (
-            <StatePanel icon={Clock3} title="Loading alarms" description="Reading current alarm state from the API." />
+            <StatePanel
+              icon={Clock3}
+              title="Loading alarms"
+              description="Reading current alarm state from the API."
+            />
           ) : alarms.state === "degraded" ? (
-            <StatePanel icon={ShieldAlert} title="Alarm API unavailable" description="The page is not showing live alarm data right now." />
+            <StatePanel
+              icon={ShieldAlert}
+              title="Alarm API unavailable"
+              description="The page is not showing live alarm data right now."
+            />
           ) : alarms.activeAlarms.length === 0 ? (
-            <StatePanel icon={CheckCircle2} title="No active alarms" description="No synthetic alarm conditions are currently active." />
+            <StatePanel
+              icon={CheckCircle2}
+              title="No active alarms"
+              description="No synthetic alarm conditions are currently active."
+            />
           ) : (
             <AlarmTable
               alarms={alarms.activeAlarms}
@@ -105,12 +121,17 @@ export function AlarmsPage() {
         <CardHeader>
           <CardTitle>Cleared Alarm History</CardTitle>
           <CardDescription>
-            Alarm history from the persistent historian when connected, with in-memory fallback otherwise.
+            Alarm history from the persistent historian when connected, with in-memory fallback
+            otherwise.
           </CardDescription>
         </CardHeader>
         <CardContent data-testid="alarm-history-list">
           {alarms.state === "connected" && alarms.history.length === 0 ? (
-            <StatePanel icon={BellRing} title="No cleared alarms yet" description="Cleared alarm instances will appear here after conditions normalize." />
+            <StatePanel
+              icon={BellRing}
+              title="No cleared alarms yet"
+              description="Cleared alarm instances will appear here after conditions normalize."
+            />
           ) : (
             <AlarmTable alarms={alarms.history} />
           )}
@@ -149,7 +170,9 @@ function AlarmTable({
         {alarms.map((alarm) => (
           <TableRow key={alarm.id} data-testid="alarm-row">
             <TableCell className="min-w-[280px]">
-              <div className="font-mono text-xs text-muted-foreground">{alarm.code ?? alarm.id}</div>
+              <div className="font-mono text-xs text-muted-foreground">
+                {alarm.code ?? alarm.id}
+              </div>
               <div className="mt-1 text-sm font-medium text-foreground">{alarm.message}</div>
               <div className="mt-1 text-xs text-muted-foreground">
                 {alarm.tag} · {alarm.source ?? "simulation"}
@@ -167,7 +190,11 @@ function AlarmTable({
             </TableCell>
             <TableCell className="min-w-[260px] text-xs leading-5 text-muted-foreground">
               <div>Active: {formatDate(alarm.activeAt ?? alarm.createdAt)}</div>
-              {alarm.acknowledgedAt ? <div>Ack: {formatDate(alarm.acknowledgedAt)} by {alarm.acknowledgedBy}</div> : null}
+              {alarm.acknowledgedAt ? (
+                <div>
+                  Ack: {formatDate(alarm.acknowledgedAt)} by {alarm.acknowledgedBy}
+                </div>
+              ) : null}
               {alarm.clearedAt ? <div>Cleared: {formatDate(alarm.clearedAt)}</div> : null}
             </TableCell>
             <TableCell>

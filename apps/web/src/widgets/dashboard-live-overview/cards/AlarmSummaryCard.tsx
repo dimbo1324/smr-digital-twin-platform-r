@@ -8,11 +8,7 @@ import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 
-export function AlarmSummaryCard({
-  alarms,
-}: {
-  alarms: DashboardLiveOverviewProps["alarms"];
-}) {
+export function AlarmSummaryCard({ alarms }: { alarms: DashboardLiveOverviewProps["alarms"] }) {
   const active = alarms.activeAlarms.filter((alarm) => alarm.status === "ACTIVE");
   const acknowledged = alarms.activeAlarms.filter((alarm) => alarm.status === "ACKNOWLEDGED");
   const latestActive = newestAlarm(alarms.activeAlarms);
@@ -24,7 +20,11 @@ export function AlarmSummaryCard({
       <CardHeader className="space-y-3">
         <div className="flex items-center justify-between gap-3">
           <CardTitle className="text-base">Alarm Summary</CardTitle>
-          <Badge variant={active.length > 0 ? "destructive" : acknowledged.length > 0 ? "warning" : "success"}>
+          <Badge
+            variant={
+              active.length > 0 ? "destructive" : acknowledged.length > 0 ? "warning" : "success"
+            }
+          >
             {alarms.state === "degraded" ? "Unavailable" : `${active.length} active`}
           </Badge>
         </div>
@@ -50,7 +50,10 @@ export function AlarmSummaryCard({
             {latestActive ? (
               <PreviewText label={latestActive.tag} value={latestActive.message} />
             ) : latestCleared ? (
-              <PreviewText label="Latest cleared" value={`${latestCleared.tag}: ${latestCleared.message}`} />
+              <PreviewText
+                label="Latest cleared"
+                value={`${latestCleared.tag}: ${latestCleared.message}`}
+              />
             ) : (
               <StateNotice label="No active alarms." tone="success" />
             )}

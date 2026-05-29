@@ -125,6 +125,14 @@ func TestSystemStatusIncludesSimulationConnected(t *testing.T) {
 	if data["dataSource"] != "synthetic_simulation" {
 		t.Fatalf("expected synthetic_simulation dataSource, got %v", data["dataSource"])
 	}
+	mqtt := data["mqttBroker"].(map[string]any)
+	if mqtt["status"] != "connected" {
+		t.Fatalf("expected MQTT connected in system status, got %v", mqtt["status"])
+	}
+	historian := data["historian"].(map[string]any)
+	if historian["status"] != "connected" {
+		t.Fatalf("expected historian connected in system status, got %v", historian["status"])
+	}
 }
 
 func TestActiveAlarmsProxiesSimulationAlarms(t *testing.T) {
@@ -476,6 +484,53 @@ func TestSubmitCommandMalformedJSONReturns400(t *testing.T) {
 	}
 }
 
+func TestSubmitCommandTrailingJSONReturns400(t *testing.T) {
+	gateway := newTestGateway("http://127.0.0.1:1", true)
+
+	body := []byte(`{"targetTag":"V-101","commandType":"OPEN","payload":{"reason":"operator_demo"}} {"targetTag":"P-101"}`)
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodPost, "/api/v1/commands", bytes.NewReader(body))
+	gateway.SubmitCommand(recorder, request)
+
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("expected status 400, got %d", recorder.Code)
+	}
+}
+
+func TestSubmitCommandUnknownFieldReturns400(t *testing.T) {
+	gateway := newTestGateway("http://127.0.0.1:1", true)
+
+	body := []byte(`{"targetTag":"V-101","commandType":"OPEN","unknown":true,"payload":{"reason":"operator_demo"}}`)
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodPost, "/api/v1/commands", bytes.NewReader(body))
+	gateway.SubmitCommand(recorder, request)
+
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("expected status 400, got %d", recorder.Code)
+	}
+}
+
+func TestSimulationClientRejectsOversizedUpstreamResponse(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"data":"`))
+		_, _ = w.Write([]byte(strings.Repeat("x", maxUpstreamJSONBytes+1)))
+		_, _ = w.Write([]byte(`"}`))
+	}))
+	defer server.Close()
+
+	client := NewClient(server.URL, time.Second, true)
+	_, err := client.LatestTelemetry(t.Context())
+
+	responseErr, ok := IsResponseError(err)
+	if !ok {
+		t.Fatalf("expected ResponseError, got %T: %v", err, err)
+	}
+	if responseErr.Code != "SIMULATION_RESPONSE_TOO_LARGE" {
+		t.Fatalf("expected SIMULATION_RESPONSE_TOO_LARGE, got %s", responseErr.Code)
+	}
+}
+
 func TestSubmitCommandSimulationUnavailableReturns502(t *testing.T) {
 	gateway := newTestGateway("http://127.0.0.1:1", true)
 
@@ -650,6 +705,36 @@ func TestSimulationReportPDFReturnsDownload(t *testing.T) {
 	}
 	if !strings.Contains(recorder.Body.String(), "Simulation-only engineering report") {
 		t.Fatalf("expected simulation-only disclaimer in PDF payload")
+	}
+}
+
+func TestSimulationReportPDFEscapesLongAndNonASCIIText(t *testing.T) {
+	report := SimulationReport{
+		ReportID:       "sim-report-test",
+		GeneratedAt:    time.Date(2026, 5, 29, 12, 0, 0, 0, time.UTC),
+		TimeWindow:     "1h",
+		SimulationOnly: true,
+		Disclaimer:     "Simulation-only (synthetic) report with Cyrillic: тестирование",
+		GeneratedBy:    ReportUser{DisplayName: strings.Repeat("Operator ", 40) + "Иван", Role: "ADMIN"},
+		System:         ReportSystemSummary{Mode: "NORMAL", Health: "OK", ActiveScenario: "normal", Running: true},
+		Historian:      HistorianStatus{Status: "connected"},
+		MQTT:           MQTTStatus{Status: "connected"},
+		Control:        ControlStatus{Mode: "MANUAL", Authority: "USER"},
+		PID:            PIDStatus{Status: "Manual"},
+	}
+
+	payload, err := simulationReportPDF(report)
+	if err != nil {
+		t.Fatalf("render pdf: %v", err)
+	}
+	if !bytes.HasPrefix(payload, []byte("%PDF")) {
+		t.Fatalf("expected PDF header")
+	}
+	if bytes.Contains(payload, []byte("\nИ")) {
+		t.Fatal("expected non-ASCII PDF text to be normalized")
+	}
+	if !bytes.Contains(payload, []byte(`Simulation-only \(synthetic\)`)) {
+		t.Fatal("expected parentheses to be escaped in PDF text")
 	}
 }
 

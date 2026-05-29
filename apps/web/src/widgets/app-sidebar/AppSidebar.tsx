@@ -26,9 +26,7 @@ export function AppSidebar() {
               <h1 className="truncate text-base font-semibold text-foreground">
                 SMR Twin Platform
               </h1>
-              <p className="truncate text-xs text-muted-foreground">
-                Digital Twin Simulator
-              </p>
+              <p className="truncate text-xs text-muted-foreground">Digital Twin Simulator</p>
             </div>
           </div>
 
@@ -106,9 +104,7 @@ export function AppSidebar() {
               Simulation-only interface. No real plant control.
             </p>
             <div className="mt-4 flex items-center justify-between">
-              <span className="font-mono text-xs text-muted-foreground">
-                v0.1.0-mvp-shell
-              </span>
+              <span className="font-mono text-xs text-muted-foreground">v0.1.0-mvp-shell</span>
               <Badge variant="outline">portfolio</Badge>
             </div>
           </div>

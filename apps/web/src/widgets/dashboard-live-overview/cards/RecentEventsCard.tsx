@@ -18,7 +18,15 @@ export function RecentEventsCard({ events }: { events: DashboardLiveOverviewProp
       <CardHeader className="space-y-3">
         <div className="flex items-center justify-between gap-3">
           <CardTitle>Recent Events</CardTitle>
-          <Badge variant={events.state === "connected" ? "success" : events.state === "loading" ? "warning" : "offline"}>
+          <Badge
+            variant={
+              events.state === "connected"
+                ? "success"
+                : events.state === "loading"
+                  ? "warning"
+                  : "offline"
+            }
+          >
             Live stream
           </Badge>
         </div>
@@ -62,8 +70,12 @@ function EventPreview({ event }: { event: EventRecord }) {
       <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
         <span>{event.source}</span>
         <span>{formatRelativeTime(event.timestamp)}</span>
-        {event.commandId ? <span className="font-mono">cmd {event.commandId.slice(0, 8)}</span> : null}
-        {event.alarmId ? <span className="font-mono">alarm {event.alarmId.slice(0, 8)}</span> : null}
+        {event.commandId ? (
+          <span className="font-mono">cmd {event.commandId.slice(0, 8)}</span>
+        ) : null}
+        {event.alarmId ? (
+          <span className="font-mono">alarm {event.alarmId.slice(0, 8)}</span>
+        ) : null}
       </div>
     </div>
   );

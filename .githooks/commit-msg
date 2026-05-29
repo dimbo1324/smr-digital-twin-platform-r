@@ -1,0 +1,18 @@
+#!/usr/bin/env sh
+set -eu
+
+msg_file="$1"
+first_line="$(head -n 1 "$msg_file")"
+
+case "$first_line" in
+  Merge\ *|Revert\ *) exit 0 ;;
+esac
+
+if printf '%s' "$first_line" | grep -Eq '^(feat|fix|chore|refactor|test|docs|ci|perf|build|revert)(\([a-z0-9._-]+\))?: .{1,120}$'; then
+  exit 0
+fi
+
+echo "Commit message should follow Conventional Commits, for example:"
+echo "  fix(api): reject trailing JSON request bodies"
+exit 1
+

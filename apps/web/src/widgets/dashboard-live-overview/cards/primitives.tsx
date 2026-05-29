@@ -23,7 +23,9 @@ export function SummaryRow({
 export function CompactMetric({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-2xl border border-border/70 bg-surface-elevated/60 p-3">
-      <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">{label}</p>
+      <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+        {label}
+      </p>
       <p className="mt-1 text-2xl font-semibold text-foreground">{value}</p>
     </div>
   );
@@ -32,7 +34,9 @@ export function CompactMetric({ label, value }: { label: string; value: string }
 export function PreviewText({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-2xl border border-border/70 bg-surface-subtle/60 p-4">
-      <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">{label}</p>
+      <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
+        {label}
+      </p>
       <p className="mt-2 text-sm leading-6 text-foreground/80">{value}</p>
     </div>
   );

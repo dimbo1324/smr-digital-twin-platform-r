@@ -44,10 +44,16 @@ func (g *Gateway) SystemStatus(w http.ResponseWriter, r *http.Request) {
 			} else {
 				status.Historian.Status = "in_memory"
 			}
+			if mqttStatus, mqttErr := g.client.MQTTStatus(r.Context()); mqttErr == nil {
+				status.MQTTBroker.Status = mqttStatus.Status
+			} else {
+				status.MQTTBroker.Status = "unavailable"
+			}
 		} else {
 			status.SimulationConnected = false
 			status.DataSource = "in_memory_fallback"
 			status.SimulationService.Status = "not_connected"
+			status.MQTTBroker.Status = "unavailable"
 		}
 	}
 	if err != nil {

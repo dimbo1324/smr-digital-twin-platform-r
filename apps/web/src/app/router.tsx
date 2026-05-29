@@ -31,13 +31,62 @@ export function AppRouter() {
       <Routes>
         <Route element={<AppLayout />}>
           <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<LazyPage><DashboardPage /></LazyPage>} />
-          <Route path="/process" element={<LazyPage><ProcessPage /></LazyPage>} />
-          <Route path="/alarms" element={<LazyPage><AlarmsPage /></LazyPage>} />
-          <Route path="/events" element={<LazyPage><EventsPage /></LazyPage>} />
-          <Route path="/trends" element={<LazyPage><TrendsPage /></LazyPage>} />
-          <Route path="/reports" element={<LazyPage><ReportsPage /></LazyPage>} />
-          <Route path="/settings" element={<LazyPage><SettingsPage /></LazyPage>} />
+          <Route
+            path="/dashboard"
+            element={
+              <LazyPage>
+                <DashboardPage />
+              </LazyPage>
+            }
+          />
+          <Route
+            path="/process"
+            element={
+              <LazyPage>
+                <ProcessPage />
+              </LazyPage>
+            }
+          />
+          <Route
+            path="/alarms"
+            element={
+              <LazyPage>
+                <AlarmsPage />
+              </LazyPage>
+            }
+          />
+          <Route
+            path="/events"
+            element={
+              <LazyPage>
+                <EventsPage />
+              </LazyPage>
+            }
+          />
+          <Route
+            path="/trends"
+            element={
+              <LazyPage>
+                <TrendsPage />
+              </LazyPage>
+            }
+          />
+          <Route
+            path="/reports"
+            element={
+              <LazyPage>
+                <ReportsPage />
+              </LazyPage>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <LazyPage>
+                <SettingsPage />
+              </LazyPage>
+            }
+          />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Route>
       </Routes>

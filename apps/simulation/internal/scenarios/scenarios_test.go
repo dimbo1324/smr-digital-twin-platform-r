@@ -2,6 +2,7 @@ package scenarios
 
 import (
 	"errors"
+	"strings"
 	"testing"
 	"testing/fstest"
 
@@ -69,6 +70,61 @@ effects:
 	}, ".")
 	if !errors.Is(err, ErrInvalidScenario) {
 		t.Fatalf("LoadFS() error = %v, want invalid scenario", err)
+	}
+}
+
+func TestParseDefinitionRejectsInvalidRequiredFields(t *testing.T) {
+	tests := []struct {
+		name string
+		yaml string
+	}{
+		{
+			name: "missing id",
+			yaml: `
+name: Missing ID
+description: Missing id should fail validation.
+category: test
+severity: info
+duration: 1m
+safetyNote: Simulation-only synthetic scenario.
+enabled: true
+version: 1
+effects:
+  behavior: nominal
+`,
+		},
+		{
+			name: "missing name",
+			yaml: `
+id: missing_name
+description: Missing name should fail validation.
+category: test
+severity: info
+duration: 1m
+safetyNote: Simulation-only synthetic scenario.
+enabled: true
+version: 1
+effects:
+  behavior: nominal
+`,
+		},
+		{
+			name: "invalid severity",
+			yaml: strings.Replace(validScenarioYAML("bad_severity", "Bad Severity"), "severity: info", "severity: emergency", 1),
+		},
+		{
+			name: "unknown behavior",
+			yaml: strings.Replace(validScenarioYAML("bad_behavior", "Bad Behavior"), "behavior: nominal", "behavior: script", 1),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := ParseDefinition([]byte(tc.yaml))
+			if !errors.Is(err, ErrInvalidScenario) {
+				t.Fatalf("ParseDefinition() error = %v, want invalid scenario", err)
+			}
+		})
 	}
 }
 

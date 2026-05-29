@@ -19,6 +19,8 @@ type Client struct {
 	enabled bool
 }
 
+const maxUpstreamJSONBytes = 8 << 20
+
 func NewClient(baseURL string, timeout time.Duration, enabled bool) *Client {
 	return &Client{
 		baseURL: strings.TrimRight(baseURL, "/"),
@@ -195,17 +197,37 @@ func doEnvelope[T any](ctx context.Context, c *Client, method, path string, body
 
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
 		var payload errorEnvelope
-		if err := json.NewDecoder(response.Body).Decode(&payload); err == nil && payload.Error.Code != "" {
+		if err := decodeUpstreamJSON(response.Body, &payload); err == nil && payload.Error.Code != "" {
 			return envelope[T]{}, ResponseError{StatusCode: response.StatusCode, Code: payload.Error.Code, Message: payload.Error.Message}
 		}
 		return envelope[T]{}, ResponseError{StatusCode: response.StatusCode, Code: "SIMULATION_ERROR", Message: fmt.Sprintf("simulation response status %d", response.StatusCode)}
 	}
 
 	var payload envelope[T]
-	if err := json.NewDecoder(response.Body).Decode(&payload); err != nil {
+	if err := decodeUpstreamJSON(response.Body, &payload); err != nil {
 		return envelope[T]{}, err
 	}
 	return payload, nil
+}
+
+func decodeUpstreamJSON(reader io.Reader, payload any) error {
+	limited := io.LimitReader(reader, maxUpstreamJSONBytes+1)
+	body, err := io.ReadAll(limited)
+	if err != nil {
+		return err
+	}
+	if len(body) > maxUpstreamJSONBytes {
+		return ResponseError{StatusCode: http.StatusBadGateway, Code: "SIMULATION_RESPONSE_TOO_LARGE", Message: "simulation response exceeded gateway safety limit"}
+	}
+	decoder := json.NewDecoder(bytes.NewReader(body))
+	if err := decoder.Decode(payload); err != nil {
+		return err
+	}
+	var trailing any
+	if err := decoder.Decode(&trailing); !errors.Is(err, io.EOF) {
+		return fmt.Errorf("simulation response contains trailing JSON")
+	}
+	return nil
 }
 
 var ErrDisabled = fmt.Errorf("simulation client disabled")

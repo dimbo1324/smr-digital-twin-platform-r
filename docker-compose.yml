@@ -63,7 +63,7 @@ services:
       MQTT_QOS: 0
       MQTT_RETAIN: "false"
     ports:
-      - "8081:8081"
+      - "127.0.0.1:8081:8081"
     depends_on:
       postgres:
         condition: service_healthy
@@ -83,7 +83,8 @@ services:
     volumes:
       - ./infra/mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
     healthcheck:
-      test: ["CMD-SHELL", "mosquitto_pub -h 127.0.0.1 -p 1883 -t smr/healthcheck -m ok >/dev/null 2>&1"]
+      test:
+        ["CMD-SHELL", "mosquitto_pub -h 127.0.0.1 -p 1883 -t smr/healthcheck -m ok >/dev/null 2>&1"]
       interval: 5s
       timeout: 3s
       retries: 20

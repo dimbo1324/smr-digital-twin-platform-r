@@ -1,4 +1,9 @@
-import type { Asset, Equipment, EquipmentStatus, EquipmentType } from "@/entities/equipment/model/types";
+import type {
+  Asset,
+  Equipment,
+  EquipmentStatus,
+  EquipmentType,
+} from "@/entities/equipment/model/types";
 import { apiGet, type ApiMeta } from "@/shared/api/client";
 
 export interface AssetsResult {
@@ -69,7 +74,12 @@ function normalizeEquipmentStatus(status: string): EquipmentStatus {
 }
 
 function telemetryTagsForAsset(asset: Asset): string[] {
-  if (asset.tag.startsWith("TT-") || asset.tag.startsWith("PT-") || asset.tag.startsWith("FT-") || asset.tag.startsWith("LT-")) {
+  if (
+    asset.tag.startsWith("TT-") ||
+    asset.tag.startsWith("PT-") ||
+    asset.tag.startsWith("FT-") ||
+    asset.tag.startsWith("LT-")
+  ) {
     return [asset.tag];
   }
 
