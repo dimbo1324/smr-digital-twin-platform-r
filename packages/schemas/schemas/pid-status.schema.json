@@ -9,21 +9,11 @@
     },
     "mode": {
       "type": "string",
-      "enum": [
-        "MANUAL",
-        "AUTO",
-        "DISABLED"
-      ]
+      "enum": ["MANUAL", "AUTO", "DISABLED"]
     },
     "authority": {
       "type": "string",
-      "enum": [
-        "USER",
-        "SCENARIO",
-        "PID",
-        "SYSTEM",
-        "NONE"
-      ]
+      "enum": ["USER", "SCENARIO", "PID", "SYSTEM", "NONE"]
     },
     "active": {
       "type": "boolean"

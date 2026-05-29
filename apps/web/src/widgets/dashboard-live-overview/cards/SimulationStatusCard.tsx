@@ -13,10 +13,16 @@ export function SimulationStatusCard({
 }) {
   const connected = systemStatus.state === "connected" && systemStatus.status.simulationConnected;
   const telemetryConnected = telemetry.state === "connected" || telemetry.state === "degraded";
-  const statusLabel = connected ? "Connected" : telemetryConnected ? "Telemetry reachable" : "Unavailable";
+  const statusLabel = connected
+    ? "Connected"
+    : telemetryConnected
+      ? "Telemetry reachable"
+      : "Unavailable";
   const statusVariant = connected ? "success" : telemetryConnected ? "warning" : "offline";
   const simulationHealth =
-    systemStatus.state === "connected" ? systemStatus.status.simulationHealth ?? "UNKNOWN" : "UNKNOWN";
+    systemStatus.state === "connected"
+      ? (systemStatus.status.simulationHealth ?? "UNKNOWN")
+      : "UNKNOWN";
 
   return (
     <Card>
@@ -32,7 +38,11 @@ export function SimulationStatusCard({
         <SummaryRow label="Telemetry mode" value="Synthetic" badge="mock" />
         <SummaryRow label="Transport" value="REST polling" badge="info" />
         <SummaryRow label="MQTT" value="Publish-only bridge" badge="info" />
-        <SummaryRow label="Historian" value="Persistent optional / in-memory fallback" badge="warning" />
+        <SummaryRow
+          label="Historian"
+          value="Persistent optional / in-memory fallback"
+          badge="warning"
+        />
       </CardContent>
     </Card>
   );

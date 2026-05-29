@@ -112,12 +112,16 @@ describe("DashboardPage", () => {
 
     expect(screen.getByTestId("dashboard-page")).toBeInTheDocument();
     expect(screen.getByTestId("dashboard-system-status")).toHaveTextContent("Connected");
-    expect(screen.getByTestId("dashboard-historian-status")).toHaveTextContent("Persistent historian");
+    expect(screen.getByTestId("dashboard-historian-status")).toHaveTextContent(
+      "Persistent historian",
+    );
     expect(screen.getByTestId("dashboard-mqtt-status")).toHaveTextContent("Publish-only connected");
     expect(screen.getByTestId("dashboard-active-alarms-count")).toHaveTextContent("1");
     expect(screen.getByTestId("dashboard-recent-events")).toHaveTextContent("2");
     expect(screen.getByTestId("dashboard-telemetry-summary")).toBeInTheDocument();
-    expect(screen.getByTestId("dashboard-recent-events-feed")).toHaveTextContent(/Synthetic temperature alarm/i);
+    expect(screen.getByTestId("dashboard-recent-events-feed")).toHaveTextContent(
+      /Synthetic temperature alarm/i,
+    );
     expect(screen.getByText(/No real plant control/i)).toBeInTheDocument();
   });
 
@@ -135,7 +139,9 @@ describe("DashboardPage", () => {
 
     renderWithProviders(<DashboardPage />);
 
-    expect(screen.getByTestId("dashboard-historian-status")).toHaveTextContent("In-memory fallback");
+    expect(screen.getByTestId("dashboard-historian-status")).toHaveTextContent(
+      "In-memory fallback",
+    );
     expect(screen.getByTestId("dashboard-mqtt-status")).toHaveTextContent("Degraded");
   });
 });

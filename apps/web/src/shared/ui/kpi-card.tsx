@@ -36,12 +36,19 @@ export function KpiCard({
       data-testid={testId}
     >
       <div className="flex min-w-0 items-start justify-between gap-3">
-        <p className="min-w-0 text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">{label}</p>
+        <p className="min-w-0 text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
+          {label}
+        </p>
         {status ? <StatusBadge tone={status} value={String(value)} /> : null}
       </div>
-      <p className="mt-2 min-w-0 truncate text-2xl font-semibold leading-tight text-foreground" data-visual-mask={mask ? true : undefined}>
+      <p
+        className="mt-2 min-w-0 truncate text-2xl font-semibold leading-tight text-foreground"
+        data-visual-mask={mask ? true : undefined}
+      >
         {shownValue}
-        {unit ? <span className="ml-1 text-sm font-medium text-muted-foreground">{unit}</span> : null}
+        {unit ? (
+          <span className="ml-1 text-sm font-medium text-muted-foreground">{unit}</span>
+        ) : null}
       </p>
       {helperText || source ? (
         <p className="mt-2 min-w-0 truncate text-xs text-muted-foreground">

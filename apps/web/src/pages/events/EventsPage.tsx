@@ -7,14 +7,7 @@ import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { PageShell } from "@/shared/ui/page-shell";
 import { timestampMs } from "@/shared/lib/time";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/shared/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
 
 type SortOrder = "newest" | "oldest";
 
@@ -74,7 +67,9 @@ export function EventsPage() {
         <CardHeader className="flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
           <div>
             <CardTitle>Event Filters</CardTitle>
-            <CardDescription>Filter by severity, type, source, and timestamp order.</CardDescription>
+            <CardDescription>
+              Filter by severity, type, source, and timestamp order.
+            </CardDescription>
           </div>
           <Button variant="outline" onClick={refresh}>
             <Activity className="h-4 w-4" aria-hidden="true" />
@@ -130,9 +125,15 @@ export function EventsPage() {
           {state === "loading" ? (
             <StatePanel title="Loading events" description="Reading recent events from the API." />
           ) : state === "degraded" ? (
-            <StatePanel title="Events unavailable" description="The API could not return the recent event stream." />
+            <StatePanel
+              title="Events unavailable"
+              description="The API could not return the recent event stream."
+            />
           ) : visibleEvents.length === 0 ? (
-            <StatePanel title="No events recorded yet" description="Trigger a command or alarm scenario to populate the event stream." />
+            <StatePanel
+              title="No events recorded yet"
+              description="Trigger a command or alarm scenario to populate the event stream."
+            />
           ) : (
             <EventsTable events={visibleEvents} />
           )}
@@ -165,12 +166,18 @@ function EventsTable({ events }: { events: EventRecord[] }) {
             <TableCell>
               <Badge variant={severityVariant[event.severity] ?? "outline"}>{event.severity}</Badge>
             </TableCell>
-            <TableCell className="whitespace-nowrap font-mono text-xs text-foreground">{event.type}</TableCell>
-            <TableCell className="whitespace-nowrap text-xs text-muted-foreground">{event.source}</TableCell>
+            <TableCell className="whitespace-nowrap font-mono text-xs text-foreground">
+              {event.type}
+            </TableCell>
+            <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
+              {event.source}
+            </TableCell>
             <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
               {event.targetTag ?? event.commandId ?? event.alarmId ?? "system"}
             </TableCell>
-            <TableCell className="min-w-[260px] text-sm text-foreground/80">{event.message}</TableCell>
+            <TableCell className="min-w-[260px] text-sm text-foreground/80">
+              {event.message}
+            </TableCell>
             <TableCell className="min-w-[220px] text-xs text-muted-foreground">
               {event.commandId ? <div>command: {event.commandId}</div> : null}
               {event.alarmId ? <div>alarm: {event.alarmId}</div> : null}

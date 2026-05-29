@@ -1,19 +1,9 @@
 import type { Alarm, AlarmSeverity, AlarmStatus } from "@/entities/alarms/model/types";
 import { Badge } from "@/shared/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/shared/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
 
-const severityVariant: Record<
-  AlarmSeverity,
-  "outline" | "warning" | "destructive"
-> = {
+const severityVariant: Record<AlarmSeverity, "outline" | "warning" | "destructive"> = {
   INFO: "outline",
   WARNING: "warning",
   HIGH: "destructive",
@@ -21,10 +11,7 @@ const severityVariant: Record<
   CRITICAL: "destructive",
 };
 
-const statusVariant: Record<
-  AlarmStatus,
-  "mock" | "secondary" | "success" | "warning"
-> = {
+const statusVariant: Record<AlarmStatus, "mock" | "secondary" | "success" | "warning"> = {
   ACTIVE: "warning",
   ACKNOWLEDGED: "mock",
   CLEARED: "success",
@@ -61,20 +48,14 @@ export function AlarmList({
           <TableBody>
             {alarms.map((alarm) => (
               <TableRow key={alarm.id}>
-                <TableCell className="font-mono text-xs text-foreground">
-                  {alarm.tag}
-                </TableCell>
+                <TableCell className="font-mono text-xs text-foreground">{alarm.tag}</TableCell>
                 <TableCell>
-                  <Badge variant={severityVariant[alarm.severity]}>
-                    {alarm.severity}
-                  </Badge>
+                  <Badge variant={severityVariant[alarm.severity]}>{alarm.severity}</Badge>
                 </TableCell>
                 <TableCell>
                   <Badge variant={statusVariant[alarm.status]}>{alarm.status}</Badge>
                 </TableCell>
-                <TableCell className="min-w-[260px] text-foreground/80">
-                  {alarm.message}
-                </TableCell>
+                <TableCell className="min-w-[260px] text-foreground/80">{alarm.message}</TableCell>
                 <TableCell className="whitespace-nowrap text-muted-foreground">
                   {alarm.createdAt}
                 </TableCell>

@@ -2,7 +2,10 @@ import { EquipmentCard } from "@/entities/equipment/ui/EquipmentCard";
 import { useAssets } from "@/entities/equipment/api/useAssets";
 import { demoFallbackTelemetryPoints } from "@/entities/telemetry/model/demoFallbackTelemetry";
 import { findTelemetryByTag } from "@/entities/telemetry/lib/selectors";
-import { PROCESS_ASSET_TAGS, PROCESS_LOOP_TELEMETRY_TAGS } from "@/entities/telemetry/model/processTags";
+import {
+  PROCESS_ASSET_TAGS,
+  PROCESS_LOOP_TELEMETRY_TAGS,
+} from "@/entities/telemetry/model/processTags";
 import { TelemetryValue } from "@/entities/telemetry/ui/TelemetryValue";
 import { ControlValvePanel } from "@/features/control-valve/ControlValvePanel";
 import { ControlModePanel } from "@/features/control-mode/ControlModePanel";
@@ -32,9 +35,9 @@ export function ProcessPage() {
   const canUpdatePidConfig = hasPermission(auth.session, permissions.updatePidConfig);
   const telemetryPoints =
     liveTelemetry.points.length > 0 ? liveTelemetry.points : demoFallbackTelemetryPoints;
-  const processTelemetryPoints = PROCESS_LOOP_TELEMETRY_TAGS
-    .map(({ tag }) => findTelemetryByTag(telemetryPoints, tag))
-    .filter((point) => point !== undefined);
+  const processTelemetryPoints = PROCESS_LOOP_TELEMETRY_TAGS.map(({ tag }) =>
+    findTelemetryByTag(telemetryPoints, tag),
+  ).filter((point) => point !== undefined);
   const processAssets = assets.assets.filter((asset) =>
     PROCESS_ASSET_TAGS.includes(asset.tag as (typeof PROCESS_ASSET_TAGS)[number]),
   );
@@ -44,21 +47,35 @@ export function ProcessPage() {
       <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="rounded-3xl border border-border/70 bg-card/80 p-6 shadow-panel">
           <Badge variant={liveTelemetry.state === "connected" ? "success" : "mock"}>
-            {liveTelemetry.state === "connected" ? "Live synthetic telemetry" : "Demo fallback process loop"}
+            {liveTelemetry.state === "connected"
+              ? "Live synthetic telemetry"
+              : "Demo fallback process loop"}
           </Badge>
           <h1 className="mt-4 text-3xl font-semibold leading-tight text-foreground">
             Clean process overview for equipment, flow direction, and telemetry quality.
           </h1>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">
-            The mnemonic remains simulation-only, with live synthetic telemetry routed through
-            the backend API when the simulation service is available.
+            The mnemonic remains simulation-only, with live synthetic telemetry routed through the
+            backend API when the simulation service is available.
           </p>
         </div>
 
         <div className="grid gap-3 rounded-3xl border border-border/70 bg-surface-elevated/70 p-5">
           <ProcessFact label="Loop" value="SMR synthetic energy loop" />
-          <ProcessFact label="Command state" value={control.controlStatus?.mode === "AUTO" ? "PID owns V-101 in AUTO" : control.controlStatus?.mode === "MANUAL" ? "Manual valve commands enabled" : "Valve commands gated by TIC-101"} />
-          <ProcessFact label="Telemetry source" value={liveTelemetry.state === "connected" ? "Backend -> Simulation" : "Local fallback"} />
+          <ProcessFact
+            label="Command state"
+            value={
+              control.controlStatus?.mode === "AUTO"
+                ? "PID owns V-101 in AUTO"
+                : control.controlStatus?.mode === "MANUAL"
+                  ? "Manual valve commands enabled"
+                  : "Valve commands gated by TIC-101"
+            }
+          />
+          <ProcessFact
+            label="Telemetry source"
+            value={liveTelemetry.state === "connected" ? "Backend -> Simulation" : "Local fallback"}
+          />
           <ProcessFact label="Asset source" value={assetSourceLabel(assets.state, assets.source)} />
         </div>
       </section>
@@ -70,7 +87,8 @@ export function ProcessPage() {
           <CardHeader>
             <CardTitle>Telemetry Snapshot</CardTitle>
             <CardDescription>
-              Process-loop and unit overview values from the backend API, with demo fallback when unavailable.
+              Process-loop and unit overview values from the backend API, with demo fallback when
+              unavailable.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -124,10 +142,19 @@ export function ProcessPage() {
           <div>
             <CardTitle>Process Assets</CardTitle>
             <CardDescription>
-              Asset cards from <span className="font-mono">/api/v1/assets</span>, filtered to the Thermal Process Loop MVP.
+              Asset cards from <span className="font-mono">/api/v1/assets</span>, filtered to the
+              Thermal Process Loop MVP.
             </CardDescription>
           </div>
-          <Badge variant={assets.state === "connected" ? "success" : assets.state === "loading" ? "warning" : "offline"}>
+          <Badge
+            variant={
+              assets.state === "connected"
+                ? "success"
+                : assets.state === "loading"
+                  ? "warning"
+                  : "offline"
+            }
+          >
             {assetSourceLabel(assets.state, assets.source)}
           </Badge>
         </CardHeader>

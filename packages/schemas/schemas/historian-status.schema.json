@@ -6,7 +6,10 @@
   "properties": {
     "enabled": { "type": "boolean" },
     "mode": { "type": "string", "enum": ["in_memory", "persistent"] },
-    "status": { "type": "string", "enum": ["disabled", "connected", "degraded", "unavailable_fallback"] },
+    "status": {
+      "type": "string",
+      "enum": ["disabled", "connected", "degraded", "unavailable_fallback"]
+    },
     "database": { "type": "string" },
     "writeIntervalMs": { "type": "integer", "minimum": 0 },
     "telemetrySampleMs": { "type": "integer", "minimum": 0 },
@@ -25,6 +28,18 @@
     "simulationOnly": { "type": "boolean" },
     "safetyDisclaimer": { "type": "string" }
   },
-  "required": ["enabled", "mode", "status", "database", "writeIntervalMs", "telemetrySampleMs", "fallbackActive", "retentionEnabled", "downsamplingEnabled", "simulationOnly", "safetyDisclaimer"],
+  "required": [
+    "enabled",
+    "mode",
+    "status",
+    "database",
+    "writeIntervalMs",
+    "telemetrySampleMs",
+    "fallbackActive",
+    "retentionEnabled",
+    "downsamplingEnabled",
+    "simulationOnly",
+    "safetyDisclaimer"
+  ],
   "additionalProperties": false
 }

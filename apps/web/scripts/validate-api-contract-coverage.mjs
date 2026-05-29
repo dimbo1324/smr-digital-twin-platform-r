@@ -85,4 +85,6 @@ if (missingPaths.length > 0 || missingRuntimeSchemas.length > 0) {
   process.exit(1);
 }
 
-console.log(`Contract coverage ok: ${requiredPaths.length} paths, ${requiredRuntimeSchemas.length} runtime schemas.`);
+console.log(
+  `Contract coverage ok: ${requiredPaths.length} paths, ${requiredRuntimeSchemas.length} runtime schemas.`,
+);

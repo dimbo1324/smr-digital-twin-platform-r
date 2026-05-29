@@ -68,9 +68,7 @@ export function StatusSummary() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-sm text-muted-foreground">{item.label}</p>
-                <p className="mt-3 text-2xl font-semibold text-foreground">
-                  {item.value}
-                </p>
+                <p className="mt-3 text-2xl font-semibold text-foreground">{item.value}</p>
               </div>
               <div className="rounded-2xl border border-border/70 bg-surface-elevated p-2.5 text-primary">
                 <item.icon className="h-5 w-5" aria-hidden="true" />

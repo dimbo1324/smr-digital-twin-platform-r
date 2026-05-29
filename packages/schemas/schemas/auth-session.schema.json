@@ -18,6 +18,14 @@
     "simulationOnly": { "type": "boolean", "const": true },
     "disclaimer": { "type": "string" }
   },
-  "required": ["userId", "displayName", "role", "permissions", "source", "simulationOnly", "disclaimer"],
+  "required": [
+    "userId",
+    "displayName",
+    "role",
+    "permissions",
+    "source",
+    "simulationOnly",
+    "disclaimer"
+  ],
   "additionalProperties": false
 }

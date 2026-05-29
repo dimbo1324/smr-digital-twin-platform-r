@@ -45,7 +45,10 @@ const statusClasses: Record<TelemetryStatus, string> = {
   normal: "border-success/25 bg-success/10 text-success",
 };
 
-function pointStatus(point: TelemetryDisplayPoint | undefined, fallback: TelemetryStatus): TelemetryStatus {
+function pointStatus(
+  point: TelemetryDisplayPoint | undefined,
+  fallback: TelemetryStatus,
+): TelemetryStatus {
   return point?.status ?? fallback;
 }
 
@@ -122,9 +125,31 @@ function EquipmentNode({ node }: { node: ProcessNode }) {
       )}
     >
       <div className="flex items-start justify-between gap-3">
-        <IconFrame icon={node.icon} tone={node.status === "normal" ? "success" : node.status === "warning" ? "warning" : node.status === "mock" ? "simulation" : "neutral"} />
+        <IconFrame
+          icon={node.icon}
+          tone={
+            node.status === "normal"
+              ? "success"
+              : node.status === "warning"
+                ? "warning"
+                : node.status === "mock"
+                  ? "simulation"
+                  : "neutral"
+          }
+        />
         <div className="flex flex-col items-end gap-2">
-          <StatusBadge tone={node.status === "normal" ? "healthy" : node.status === "offline" ? "disabled" : node.status === "mock" ? "simulation" : "warning"} value={node.status} />
+          <StatusBadge
+            tone={
+              node.status === "normal"
+                ? "healthy"
+                : node.status === "offline"
+                  ? "disabled"
+                  : node.status === "mock"
+                    ? "simulation"
+                    : "warning"
+            }
+            value={node.status}
+          />
           <SourceBadge source={node.source} />
         </div>
       </div>
@@ -180,7 +205,10 @@ export function ProcessDiagram({ telemetryPoints, dataState }: ProcessDiagramPro
           </CardDescription>
         </div>
         <div className="flex flex-wrap gap-2">
-          <StatusBadge tone={dataState === "connected" ? "connected" : "degraded"} value={sourceLabel} />
+          <StatusBadge
+            tone={dataState === "connected" ? "connected" : "degraded"}
+            value={sourceLabel}
+          />
           <Badge variant="mock">{"Tank -> Pump -> Valve -> HX -> Sensors -> PID"}</Badge>
         </div>
       </CardHeader>
@@ -208,7 +236,12 @@ export function ProcessDiagram({ telemetryPoints, dataState }: ProcessDiagramPro
         <div className="mt-5 grid gap-3 md:grid-cols-3">
           <SensorBadge telemetryPoints={telemetryPoints} tag="TT-101" label="Temperature" />
           <SensorBadge telemetryPoints={telemetryPoints} tag="PT-101" label="Pressure" />
-          <SensorBadge telemetryPoints={telemetryPoints} tag="FT-101" label="Flow" testId="flow-value" />
+          <SensorBadge
+            telemetryPoints={telemetryPoints}
+            tag="FT-101"
+            label="Flow"
+            testId="flow-value"
+          />
         </div>
       </CardContent>
     </Card>

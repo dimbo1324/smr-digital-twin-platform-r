@@ -7,8 +7,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 
 export function SystemStatusCard({ systemStatus }: { systemStatus: SystemStatusState }) {
   const isConnected = systemStatus.state === "connected";
-  const apiStatus = isConnected ? systemStatus.status.backendApi.status : systemStatus.state === "checking" ? "checking" : "offline";
-  const apiVariant = apiStatus === "ok" || apiStatus === "connected" ? "success" : apiStatus === "checking" ? "warning" : "offline";
+  const apiStatus = isConnected
+    ? systemStatus.status.backendApi.status
+    : systemStatus.state === "checking"
+      ? "checking"
+      : "offline";
+  const apiVariant =
+    apiStatus === "ok" || apiStatus === "connected"
+      ? "success"
+      : apiStatus === "checking"
+        ? "warning"
+        : "offline";
 
   return (
     <Card>
@@ -23,7 +32,10 @@ export function SystemStatusCard({ systemStatus }: { systemStatus: SystemStatusS
         {systemStatus.state === "checking" ? (
           <StateNotice label="Checking API status..." />
         ) : systemStatus.state === "offline" ? (
-          <StateNotice label="API unavailable. Dashboard cards will show independent offline states." tone="offline" />
+          <StateNotice
+            label="API unavailable. Dashboard cards will show independent offline states."
+            tone="offline"
+          />
         ) : (
           <>
             <SummaryRow label="Environment" value={systemStatus.status.environment} />

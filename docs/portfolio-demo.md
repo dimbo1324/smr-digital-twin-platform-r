@@ -4,13 +4,13 @@ This guide helps present SMR Digital Twin Platform as a simulation-only industri
 
 ## Audience Angles
 
-| Audience | Emphasize |
-| --- | --- |
-| Recruiter or hiring manager | End-to-end ownership: frontend HMI, Go services, Docker, CI, tests, docs. |
-| Backend engineer | API gateway boundaries, RBAC enforcement, simulation proxying, report aggregation, OpenAPI contracts. |
-| Frontend engineer | HMI workflows, TanStack Query data layer, runtime validation, component/E2E/a11y/visual tests. |
-| Automation or IIoT engineer | Simulation-only command workflow, alarm lifecycle, historian, MQTT publish-only bridge. |
-| Platform or DevOps engineer | Docker Compose, smoke tests, Prometheus/Grafana local observability, CI quality gates. |
+| Audience                    | Emphasize                                                                                             |
+| --------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Recruiter or hiring manager | End-to-end ownership: frontend HMI, Go services, Docker, CI, tests, docs.                             |
+| Backend engineer            | API gateway boundaries, RBAC enforcement, simulation proxying, report aggregation, OpenAPI contracts. |
+| Frontend engineer           | HMI workflows, TanStack Query data layer, runtime validation, component/E2E/a11y/visual tests.        |
+| Automation or IIoT engineer | Simulation-only command workflow, alarm lifecycle, historian, MQTT publish-only bridge.               |
+| Platform or DevOps engineer | Docker Compose, smoke tests, Prometheus/Grafana local observability, CI quality gates.                |
 
 ## 5-Minute Walkthrough
 

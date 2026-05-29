@@ -64,7 +64,9 @@ beforeEach(() => {
 describe("control mode and PID panels", () => {
   it("renders MANUAL authority and calls mode mutation", async () => {
     const user = userEvent.setup();
-    renderWithProviders(<ControlModePanel controlStatus={manualControlStatusFixture} state="connected" />);
+    renderWithProviders(
+      <ControlModePanel controlStatus={manualControlStatusFixture} state="connected" />,
+    );
 
     expect(screen.getByTestId("control-mode-current")).toHaveTextContent("MANUAL");
     expect(screen.getByTestId("control-authority-current")).toHaveTextContent("USER");
@@ -186,7 +188,9 @@ describe("actuator control panels", () => {
     );
 
     expect(screen.getByTestId("valve-apply-position-button")).toBeDisabled();
-    expect(screen.getByTestId("valve-command-disabled-reason")).toHaveTextContent(/Switch TIC-101 to MANUAL/i);
+    expect(screen.getByTestId("valve-command-disabled-reason")).toHaveTextContent(
+      /Switch TIC-101 to MANUAL/i,
+    );
 
     rerender(
       <ControlValvePanel

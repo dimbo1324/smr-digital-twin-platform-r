@@ -34,5 +34,7 @@ export function sortByTimestampDesc<T>(
   items: T[],
   getTimestamp: (item: T) => string | undefined,
 ): T[] {
-  return [...items].sort((left, right) => timestampMs(getTimestamp(right)) - timestampMs(getTimestamp(left)));
+  return [...items].sort(
+    (left, right) => timestampMs(getTimestamp(right)) - timestampMs(getTimestamp(left)),
+  );
 }

@@ -51,10 +51,7 @@ const trendSnapshotFixture: SimulationTelemetrySnapshot = {
 describe("ProcessTrendsPanel", () => {
   it("renders connected source badge and trend chart", () => {
     renderWithProviders(
-      <ProcessTrendsPanel
-        dataState="connected"
-        history={[trendSnapshotFixture]}
-      />,
+      <ProcessTrendsPanel dataState="connected" history={[trendSnapshotFixture]} />,
     );
 
     expect(screen.getByTestId("historian-source-badge")).toHaveTextContent("Simulation history");

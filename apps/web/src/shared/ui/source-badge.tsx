@@ -4,7 +4,11 @@ import { displayLabel } from "@/shared/lib/display-labels";
 function sourceTone(source?: string): StatusTone {
   const normalized = source?.toLowerCase() ?? "";
 
-  if (normalized.includes("persistent") || normalized.includes("backend") || normalized.includes("simulation api")) {
+  if (
+    normalized.includes("persistent") ||
+    normalized.includes("backend") ||
+    normalized.includes("simulation api")
+  ) {
     return "connected";
   }
 
@@ -12,7 +16,11 @@ function sourceTone(source?: string): StatusTone {
     return "fallback";
   }
 
-  if (normalized.includes("mqtt") || normalized.includes("synthetic") || normalized.includes("simulation")) {
+  if (
+    normalized.includes("mqtt") ||
+    normalized.includes("synthetic") ||
+    normalized.includes("simulation")
+  ) {
     return "simulation";
   }
 
@@ -25,6 +33,10 @@ function sourceTone(source?: string): StatusTone {
 
 export function SourceBadge({ source, className }: { source?: string; className?: string }) {
   return (
-    <StatusBadge tone={sourceTone(source)} value={displayLabel(source ?? "Unknown source")} className={className} />
+    <StatusBadge
+      tone={sourceTone(source)}
+      value={displayLabel(source ?? "Unknown source")}
+      className={className}
+    />
   );
 }

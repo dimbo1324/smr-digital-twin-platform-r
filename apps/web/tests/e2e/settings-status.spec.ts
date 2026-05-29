@@ -17,7 +17,9 @@ test("settings capability and status flow", async ({ page, request }) => {
   await test.step("verify truthful simulation and integration copy", async () => {
     await expect(page.getByTestId("settings-mqtt-status")).toContainText(/Publish-only/i);
     await expect(page.getByTestId("settings-mqtt-status")).toContainText(/Not implemented/i);
-    await expect(page.getByTestId("settings-historian-status")).toContainText(/Status|Mode|Storage/i);
+    await expect(page.getByTestId("settings-historian-status")).toContainText(
+      /Status|Mode|Storage/i,
+    );
     await expect(page.getByText(/PID|Manual|Simulation/i).first()).toBeVisible();
     await expectSimulationOnlyBoundary(page);
   });

@@ -44,7 +44,7 @@
     --chart-pressure: 38 90% 48%;
     --chart-flow: 151 60% 38%;
     --radius: 0.75rem;
-    --shadow-panel: 0 22px 70px rgba(30, 41, 59, 0.10);
+    --shadow-panel: 0 22px 70px rgba(30, 41, 59, 0.1);
     --shadow-lift: 0 28px 80px rgba(30, 41, 59, 0.16);
   }
 

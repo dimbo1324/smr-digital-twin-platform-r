@@ -17,9 +17,21 @@ function session(role: AuthSession["role"], granted: AuthSession["permissions"])
 describe("demo RBAC permission helpers", () => {
   it("matches expected role capabilities", () => {
     expect(hasPermission(session("VIEWER", []), permissions.sendCommand)).toBe(false);
-    expect(hasPermission(session("OPERATOR", [permissions.sendCommand]), permissions.sendCommand)).toBe(true);
-    expect(hasPermission(session("ENGINEER", [permissions.updatePidConfig]), permissions.updatePidConfig)).toBe(true);
-    expect(hasPermission(session("SUPERVISOR", [permissions.acknowledgeAlarm]), permissions.acknowledgeAlarm)).toBe(true);
+    expect(
+      hasPermission(session("OPERATOR", [permissions.sendCommand]), permissions.sendCommand),
+    ).toBe(true);
+    expect(
+      hasPermission(
+        session("ENGINEER", [permissions.updatePidConfig]),
+        permissions.updatePidConfig,
+      ),
+    ).toBe(true);
+    expect(
+      hasPermission(
+        session("SUPERVISOR", [permissions.acknowledgeAlarm]),
+        permissions.acknowledgeAlarm,
+      ),
+    ).toBe(true);
     expect(
       hasPermission(
         session("ADMIN", [

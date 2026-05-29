@@ -28,7 +28,7 @@ func (s *Service) Status(_ context.Context) (Status, error) {
 			LatencyMS: &latency,
 		},
 		MQTTBroker: ComponentStatus{
-			Status: "not_implemented",
+			Status: "unavailable",
 		},
 		SimulationService: ComponentStatus{
 			Status: "not_connected",

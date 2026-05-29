@@ -21,21 +21,28 @@ test("reports simulation summary flow", async ({ page, request }) => {
   });
 
   await test.step("verify backend report endpoints", async () => {
-    const jsonResponse = await request.get(`${apiBaseUrl}/api/v1/reports/simulation-summary?window=15m`, {
-      headers: { "X-Demo-User": "demo-viewer" },
-    });
+    const jsonResponse = await request.get(
+      `${apiBaseUrl}/api/v1/reports/simulation-summary?window=15m`,
+      {
+        headers: { "X-Demo-User": "demo-viewer" },
+      },
+    );
     expect(jsonResponse.ok()).toBeTruthy();
     const payload = await jsonResponse.json();
     expect(payload.data.simulationOnly).toBe(true);
     expect(payload.data.disclaimer).toContain("Not a regulatory");
 
-    const csvResponse = await request.get(`${apiBaseUrl}/api/v1/reports/simulation-summary?window=15m&format=csv`);
+    const csvResponse = await request.get(
+      `${apiBaseUrl}/api/v1/reports/simulation-summary?window=15m&format=csv`,
+    );
     expect(csvResponse.ok()).toBeTruthy();
     expect(csvResponse.headers()["content-type"]).toContain("text/csv");
     const csvText = await csvResponse.text();
     expect(csvText).toContain("section,key,value,unit,source");
 
-    const pdfResponse = await request.get(`${apiBaseUrl}/api/v1/reports/simulation-summary?window=15m&format=pdf`);
+    const pdfResponse = await request.get(
+      `${apiBaseUrl}/api/v1/reports/simulation-summary?window=15m&format=pdf`,
+    );
     expect(pdfResponse.ok()).toBeTruthy();
     expect(pdfResponse.headers()["content-type"]).toContain("application/pdf");
     const pdfBytes = await pdfResponse.body();

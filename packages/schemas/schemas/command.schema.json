@@ -7,7 +7,10 @@
     "id": { "type": "string" },
     "targetTag": { "type": "string", "enum": ["V-101", "P-101"] },
     "commandType": { "type": "string", "enum": ["OPEN", "CLOSE", "STOP", "SET_POSITION", "START"] },
-    "source": { "type": "string", "enum": ["frontend", "api", "user", "scenario", "pid", "system"] },
+    "source": {
+      "type": "string",
+      "enum": ["frontend", "api", "user", "scenario", "pid", "system"]
+    },
     "requestedBy": { "type": "string" },
     "payload": {
       "type": "object",
@@ -17,7 +20,10 @@
       },
       "additionalProperties": false
     },
-    "status": { "type": "string", "enum": ["RECEIVED", "ACCEPTED", "REJECTED", "IN_PROGRESS", "COMPLETED", "FAILED"] },
+    "status": {
+      "type": "string",
+      "enum": ["RECEIVED", "ACCEPTED", "REJECTED", "IN_PROGRESS", "COMPLETED", "FAILED"]
+    },
     "requestedAt": { "type": "string", "format": "date-time" },
     "acceptedAt": { "type": "string", "format": "date-time" },
     "completedAt": { "type": "string", "format": "date-time" },
@@ -43,6 +49,15 @@
     "authority": { "type": "string", "enum": ["USER", "SCENARIO", "PID", "SYSTEM", "NONE"] },
     "rejectedBy": { "type": "string" }
   },
-  "required": ["id", "targetTag", "commandType", "source", "requestedBy", "payload", "status", "requestedAt"],
+  "required": [
+    "id",
+    "targetTag",
+    "commandType",
+    "source",
+    "requestedBy",
+    "payload",
+    "status",
+    "requestedAt"
+  ],
   "additionalProperties": false
 }

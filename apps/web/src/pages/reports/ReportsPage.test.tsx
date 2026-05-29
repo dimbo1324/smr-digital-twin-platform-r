@@ -59,7 +59,16 @@ describe("ReportsPage", () => {
         pid: { status: "Manual" },
         latestTelemetry: {},
         telemetryStats: [
-          { tag: "TT-101", label: "Loop Temperature", unit: "C", min: 285, max: 287, avg: 286.1, count: 3, source: "persistent_historian" },
+          {
+            tag: "TT-101",
+            label: "Loop Temperature",
+            unit: "C",
+            min: 285,
+            max: 287,
+            avg: 286.1,
+            count: 3,
+            source: "persistent_historian",
+          },
         ],
         commands: { total: 1 },
         events: { total: 2 },

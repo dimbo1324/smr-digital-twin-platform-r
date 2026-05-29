@@ -19,17 +19,17 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 
 ## What This Project Demonstrates
 
-| Area | Demonstrated implementation | Why it matters |
-| --- | --- | --- |
-| Industrial HMI | Dashboard, Process, Alarms, Events, Trends, Reports, Settings | Shows operator-style workflows rather than a generic CRUD app. |
-| API gateway | Go REST gateway, structured errors, demo RBAC enforcement, report aggregation | Keeps the frontend contract stable and protects write/action endpoints. |
-| Simulation engine | Synthetic process loop, scenarios, `V-101`/`P-101` state machines, `TIC-101` PID | Provides realistic demo dynamics without real plant connectivity. |
-| Command workflow | Manual/auto/disabled arbitration, command status, event records | Demonstrates control authority boundaries in a simulation-only setting. |
-| Historian | Optional PostgreSQL/TimescaleDB persistence, 30-day raw retention metadata, and 1-minute synthetic telemetry aggregates | Demonstrates time-series storage, downsampling, and fallback behavior. |
-| MQTT | Publish-only synthetic telemetry/events/alarms/status bridge | Shows IIoT integration while explicitly avoiding MQTT command ingestion. |
-| Reports | JSON/CSV/PDF simulation summary export | Useful portfolio/demo artifact, clearly not regulatory reporting. |
-| Observability | API/simulation `/metrics`, Prometheus, Grafana dashboard provisioning | Gives local diagnostics for platform health and synthetic process metrics. |
-| Quality gates | Go test/vet/race/coverage, Vitest, Playwright E2E/a11y/visual, smokes, scans | Shows production-style engineering discipline without production claims. |
+| Area              | Demonstrated implementation                                                                                             | Why it matters                                                             |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Industrial HMI    | Dashboard, Process, Alarms, Events, Trends, Reports, Settings                                                           | Shows operator-style workflows rather than a generic CRUD app.             |
+| API gateway       | Go REST gateway, structured errors, demo RBAC enforcement, report aggregation                                           | Keeps the frontend contract stable and protects write/action endpoints.    |
+| Simulation engine | Synthetic process loop, scenarios, `V-101`/`P-101` state machines, `TIC-101` PID                                        | Provides realistic demo dynamics without real plant connectivity.          |
+| Command workflow  | Manual/auto/disabled arbitration, command status, event records                                                         | Demonstrates control authority boundaries in a simulation-only setting.    |
+| Historian         | Optional PostgreSQL/TimescaleDB persistence, 30-day raw retention metadata, and 1-minute synthetic telemetry aggregates | Demonstrates time-series storage, downsampling, and fallback behavior.     |
+| MQTT              | Publish-only synthetic telemetry/events/alarms/status bridge                                                            | Shows IIoT integration while explicitly avoiding MQTT command ingestion.   |
+| Reports           | JSON/CSV/PDF simulation summary export                                                                                  | Useful portfolio/demo artifact, clearly not regulatory reporting.          |
+| Observability     | API/simulation `/metrics`, Prometheus, Grafana dashboard provisioning                                                   | Gives local diagnostics for platform health and synthetic process metrics. |
+| Quality gates     | Go test/vet/race/coverage, Vitest, Playwright E2E/a11y/visual, smokes, scans                                            | Shows production-style engineering discipline without production claims.   |
 
 ## 5-Minute Demo Story
 
@@ -63,14 +63,14 @@ The frontend talks only to `apps/api`. The API gateway enforces demo RBAC for pr
 
 ## Demo-Only, Not Production
 
-| Capability | Demo status | Not production because |
-| --- | --- | --- |
-| Process commands | Mutate `V-101`/`P-101` simulation state only | No PLC, DCS, SCADA, actuator, or plant network connectivity. |
-| Demo RBAC | Static users via `X-Demo-User` and frontend role switcher | No passwords, OAuth/JWT, persistent users, or production identity controls. |
-| Historian | Stores synthetic telemetry/events/commands/alarms, with demo raw retention metadata and 1-minute aggregate history | No immutable audit policy, regulatory retention, or compliance guarantees. |
-| MQTT | Publishes synthetic data only | No MQTT command ingestion, broker ACL/TLS hardening, or real equipment topics. |
-| Reports | JSON/CSV/PDF synthetic simulation summaries | Not regulatory reporting, not a production audit export, not nuclear compliance evidence. |
-| Observability | Local Prometheus/Grafana demo profile | No production alerting, log aggregation, tracing, SLOs, or secure operations setup. |
+| Capability       | Demo status                                                                                                        | Not production because                                                                    |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| Process commands | Mutate `V-101`/`P-101` simulation state only                                                                       | No PLC, DCS, SCADA, actuator, or plant network connectivity.                              |
+| Demo RBAC        | Static users via `X-Demo-User` and frontend role switcher                                                          | No passwords, OAuth/JWT, persistent users, or production identity controls.               |
+| Historian        | Stores synthetic telemetry/events/commands/alarms, with demo raw retention metadata and 1-minute aggregate history | No immutable audit policy, regulatory retention, or compliance guarantees.                |
+| MQTT             | Publishes synthetic data only                                                                                      | No MQTT command ingestion, broker ACL/TLS hardening, or real equipment topics.            |
+| Reports          | JSON/CSV/PDF synthetic simulation summaries                                                                        | Not regulatory reporting, not a production audit export, not nuclear compliance evidence. |
+| Observability    | Local Prometheus/Grafana demo profile                                                                              | No production alerting, log aggregation, tracing, SLOs, or secure operations setup.       |
 
 ## Quickstart
 
@@ -84,7 +84,7 @@ Open:
 
 - HMI: `http://localhost:5173`
 - API: `http://localhost:8080`
-- Simulation: `http://localhost:8081`
+- Simulation: `http://localhost:8081` bound to localhost for local diagnostics; the frontend should call the API gateway, not the simulation service directly.
 - MQTT broker: `tcp://localhost:1883`
 
 Optional local observability:
@@ -103,6 +103,34 @@ cd apps/simulation && go run ./cmd/simulation
 cd apps/api && go run ./cmd/api
 cd apps/web && npm ci && npm run dev
 ```
+
+## Repository Quality Workflow
+
+Install the lightweight local Git hooks once:
+
+```bash
+make hooks-install
+```
+
+Fast pre-commit checks:
+
+```bash
+make precommit
+```
+
+Heavier pre-push checks:
+
+```bash
+make prepush
+```
+
+Repository hygiene checks:
+
+```bash
+make repo-check
+```
+
+These commands run the generated artifact guard, Go formatting checks, frontend Prettier checks, Go module tidy checks, contract checks, and Docker Compose validation. The hooks are advisory local guardrails for this simulation-only demo repository; GitHub Actions remains the source of truth before merge.
 
 ## Implemented Now
 
@@ -243,15 +271,15 @@ See [MVP Domain Model](docs/mvp-domain-model.md) for the current contract and pl
 
 ## Technology Stack
 
-| Area | Current / planned stack |
-| --- | --- |
-| Frontend / HMI | React, TypeScript, Vite, Tailwind CSS, shadcn-style UI primitives, Recharts, TanStack Query |
-| Backend | Go, REST, structured logging, simulation gateway |
-| Simulation | Go synthetic telemetry engine |
-| Messaging | Eclipse Mosquitto local demo broker plus publish-only MQTT bridge for synthetic data |
-| Data | In-memory fallback plus optional PostgreSQL/TimescaleDB historian for synthetic telemetry/events/commands/alarms |
-| DevOps | Docker, Docker Compose, Makefile |
-| Security | Safety boundary, demo-only RBAC for simulation actions, and in-memory/persistent demo command trail |
+| Area           | Current / planned stack                                                                                          |
+| -------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Frontend / HMI | React, TypeScript, Vite, Tailwind CSS, shadcn-style UI primitives, Recharts, TanStack Query                      |
+| Backend        | Go, REST, structured logging, simulation gateway                                                                 |
+| Simulation     | Go synthetic telemetry engine                                                                                    |
+| Messaging      | Eclipse Mosquitto local demo broker plus publish-only MQTT bridge for synthetic data                             |
+| Data           | In-memory fallback plus optional PostgreSQL/TimescaleDB historian for synthetic telemetry/events/commands/alarms |
+| DevOps         | Docker, Docker Compose, Makefile                                                                                 |
+| Security       | Safety boundary, demo-only RBAC for simulation actions, and in-memory/persistent demo command trail              |
 
 ## Repository Layout
 
@@ -435,13 +463,13 @@ The demo RBAC layer restricts simulation-only actions for portfolio and learning
 
 The frontend stores the selected demo user in localStorage and sends it to the API gateway as `X-Demo-User`. If the header is missing or unknown, the API falls back to `demo-operator` so existing local demo flows remain usable. Protected write/action endpoints are enforced in the API gateway and return `403 RBAC_FORBIDDEN` when the selected demo role lacks permission.
 
-| Role | Can view | Commands | PID tuning | Control mode | Alarm acknowledge | Scenario actions |
-| --- | --- | --- | --- | --- | --- | --- |
-| VIEWER | Yes | No | No | No | No | No |
-| ENGINEER | Yes | No | Yes | No | No | No |
-| OPERATOR | Yes | Yes | No | No | No | No |
-| SUPERVISOR | Yes | No | No | Yes | Yes | Yes |
-| ADMIN | Yes | Yes | Yes | Yes | Yes | Yes |
+| Role       | Can view | Commands | PID tuning | Control mode | Alarm acknowledge | Scenario actions |
+| ---------- | -------- | -------- | ---------- | ------------ | ----------------- | ---------------- |
+| VIEWER     | Yes      | No       | No         | No           | No                | No               |
+| ENGINEER   | Yes      | No       | Yes        | No           | No                | No               |
+| OPERATOR   | Yes      | Yes      | No         | No           | No                | No               |
+| SUPERVISOR | Yes      | No       | No         | Yes          | Yes               | Yes              |
+| ADMIN      | Yes      | Yes      | Yes        | Yes          | Yes               | Yes              |
 
 Useful demo endpoints:
 
@@ -637,14 +665,14 @@ This is a dev/test contract-hardening layer, not a production security gateway. 
 
 ## Available Services
 
-| Service | URL |
-| --- | --- |
-| Web HMI | http://localhost:5173 |
-| API | http://localhost:8080 |
+| Service            | URL                   |
+| ------------------ | --------------------- |
+| Web HMI            | http://localhost:5173 |
+| API                | http://localhost:8080 |
 | Simulation service | http://localhost:8081 |
-| MQTT broker | tcp://localhost:1883 |
-| Prometheus | http://localhost:9090 |
-| Grafana | http://localhost:3000 |
+| MQTT broker        | tcp://localhost:1883  |
+| Prometheus         | http://localhost:9090 |
+| Grafana            | http://localhost:3000 |
 
 Current Docker Compose services:
 

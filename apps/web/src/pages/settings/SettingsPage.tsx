@@ -41,8 +41,14 @@ export function SettingsPage() {
           title="Simulation Settings"
           description="Simulation-only runtime controls for synthetic demo scenarios."
           rows={[
-            ["Simulation tick rate", simulation.status ? `${simulation.status.tickMs} ms` : "1000 ms"],
-            ["Connection", simulation.state === "connected" ? "Connected" : "In-memory fallback / unavailable"],
+            [
+              "Simulation tick rate",
+              simulation.status ? `${simulation.status.tickMs} ms` : "1000 ms",
+            ],
+            [
+              "Connection",
+              simulation.state === "connected" ? "Connected" : "In-memory fallback / unavailable",
+            ],
             ["Active scenario", simulation.status?.activeScenario ?? "normal"],
             ["Boundary", "Simulation-only, no live control"],
           ]}
@@ -52,7 +58,8 @@ export function SettingsPage() {
           <CardHeader>
             <CardTitle>Integrations</CardTitle>
             <CardDescription>
-              Local demo connectivity for historian persistence, MQTT publish-only transport, reports, and observability.
+              Local demo connectivity for historian persistence, MQTT publish-only transport,
+              reports, and observability.
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3 md:grid-cols-2">
@@ -60,8 +67,18 @@ export function SettingsPage() {
               title="Historian"
               description="Status, mode, and storage for synthetic telemetry, commands, events, and alarms persistence."
               status={historian.status?.status ?? "checking"}
-              source={historian.status?.fallbackActive ? "in_memory_fallback" : historian.status?.mode ?? "persistent_historian"}
-              tone={historian.status?.status === "connected" ? "connected" : historian.status?.fallbackActive ? "fallback" : "degraded"}
+              source={
+                historian.status?.fallbackActive
+                  ? "in_memory_fallback"
+                  : (historian.status?.mode ?? "persistent_historian")
+              }
+              tone={
+                historian.status?.status === "connected"
+                  ? "connected"
+                  : historian.status?.fallbackActive
+                    ? "fallback"
+                    : "degraded"
+              }
               testId="settings-historian-status"
             />
             <IntegrationStatusCard
@@ -69,7 +86,13 @@ export function SettingsPage() {
               description="Publish-only synthetic payload bridge. Command ingestion: Not implemented."
               status={mqtt.status?.status ?? "checking"}
               source="MQTT publish-only"
-              tone={mqtt.status?.status === "connected" ? "connected" : mqtt.status?.status === "disabled" ? "disabled" : "degraded"}
+              tone={
+                mqtt.status?.status === "connected"
+                  ? "connected"
+                  : mqtt.status?.status === "disabled"
+                    ? "disabled"
+                    : "degraded"
+              }
               testId="settings-mqtt-status"
             />
             <IntegrationStatusCard
@@ -92,9 +115,7 @@ export function SettingsPage() {
         <Card data-testid="settings-capability-matrix">
           <CardHeader>
             <CardTitle>UI Settings</CardTitle>
-            <CardDescription>
-              Display preferences for the engineering cockpit.
-            </CardDescription>
+            <CardDescription>Display preferences for the engineering cockpit.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="rounded-2xl border border-border/70 bg-surface-elevated/60 p-4">
@@ -145,7 +166,11 @@ export function SettingsPage() {
               </label>
             ))}
             <StatusBadge
-              tone={historian.status?.status === "connected" && mqtt.status?.status === "connected" ? "connected" : "degraded"}
+              tone={
+                historian.status?.status === "connected" && mqtt.status?.status === "connected"
+                  ? "connected"
+                  : "degraded"
+              }
               value={`Historian: ${historian.status?.status ?? "checking"} / MQTT: ${mqtt.status?.status ?? "checking"}`}
             />
           </CardContent>
@@ -156,8 +181,8 @@ export function SettingsPage() {
         <CardHeader>
           <CardTitle>Simulation Scenario Controls</CardTitle>
           <CardDescription>
-            Starts synthetic demo scenarios through the backend API. These controls never
-            target real equipment.
+            Starts synthetic demo scenarios through the backend API. These controls never target
+            real equipment.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -176,18 +201,24 @@ export function SettingsPage() {
             ))}
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
-            <Button variant="outline" onClick={() => void simulation.actions.stop()} disabled={!canRunScenario}>
+            <Button
+              variant="outline"
+              onClick={() => void simulation.actions.stop()}
+              disabled={!canRunScenario}
+            >
               Stop scenario
             </Button>
-            <Button variant="outline" onClick={() => void simulation.actions.reset()} disabled={!canRunScenario}>
+            <Button
+              variant="outline"
+              onClick={() => void simulation.actions.reset()}
+              disabled={!canRunScenario}
+            >
               Reset simulation
             </Button>
             <Badge variant="warning">Simulation-only controls</Badge>
           </div>
           {!canRunScenario ? (
-            <PermissionDeniedHint className="mt-3">
-              {scenarioDeniedReason}
-            </PermissionDeniedHint>
+            <PermissionDeniedHint className="mt-3">{scenarioDeniedReason}</PermissionDeniedHint>
           ) : null}
         </CardContent>
       </Card>
@@ -225,7 +256,9 @@ function SettingRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex min-w-0 flex-col gap-2 rounded-2xl border border-border/70 bg-surface-elevated/60 p-4 sm:flex-row sm:items-center sm:justify-between">
       <span className="text-sm text-muted-foreground">{label}</span>
-      <span className="min-w-0 truncate text-sm font-medium text-foreground sm:text-right">{displayLabel(value)}</span>
+      <span className="min-w-0 truncate text-sm font-medium text-foreground sm:text-right">
+        {displayLabel(value)}
+      </span>
     </div>
   );
 }

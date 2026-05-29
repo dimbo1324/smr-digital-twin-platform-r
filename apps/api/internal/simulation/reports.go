@@ -45,7 +45,7 @@ func (g *Gateway) SimulationReport(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		w.Header().Set("Content-Type", "text/csv; charset=utf-8")
-		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s.csv"`, report.ReportID))
+		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s.csv"`, safeReportFilename(report.ReportID)))
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write(payload)
 		return
@@ -57,7 +57,7 @@ func (g *Gateway) SimulationReport(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		w.Header().Set("Content-Type", "application/pdf")
-		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s.pdf"`, report.ReportID))
+		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s.pdf"`, safeReportFilename(report.ReportID)))
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write(payload)
 		return
@@ -71,6 +71,19 @@ func normalizeReportWindow(window string) string {
 		return window
 	}
 	return "1h"
+}
+
+func safeReportFilename(reportID string) string {
+	builder := strings.Builder{}
+	for _, r := range reportID {
+		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '-' || r == '_' {
+			builder.WriteRune(r)
+		}
+	}
+	if builder.Len() == 0 {
+		return "simulation-report"
+	}
+	return builder.String()
 }
 
 func (g *Gateway) buildSimulationReport(r *http.Request, window string) (SimulationReport, error) {

@@ -45,10 +45,9 @@ export function ControlModePanel({
         setFeedback(`TIC-101 switched to ${status.mode}.`);
       })
       .catch((error: unknown) => {
-        const message =
-          isRbacDenied(error)
-            ? "Demo RBAC denied this control mode change for the current role."
-            : error instanceof ApiError
+        const message = isRbacDenied(error)
+          ? "Demo RBAC denied this control mode change for the current role."
+          : error instanceof ApiError
             ? `${error.code ?? "CONTROL_MODE_FAILED"}: ${error.message}`
             : error instanceof Error
               ? error.message
@@ -76,15 +75,24 @@ export function ControlModePanel({
         <div className="grid grid-cols-[repeat(auto-fit,minmax(11rem,1fr))] gap-3">
           <StatusTile label="Controller" value={controlStatus?.controllerTag ?? "TIC-101"} />
           <StatusTile label="Authority" value={authority} testId="control-authority-current" />
-          <StatusTile label="Controlled variable" value={controlStatus?.controlledVariableTag ?? "TT-101"} />
-          <StatusTile label="Manipulated variable" value={controlStatus?.manipulatedVariableTag ?? "V-101.POS"} />
+          <StatusTile
+            label="Controlled variable"
+            value={controlStatus?.controlledVariableTag ?? "TT-101"}
+          />
+          <StatusTile
+            label="Manipulated variable"
+            value={controlStatus?.manipulatedVariableTag ?? "V-101.POS"}
+          />
         </div>
 
         <div className="rounded-2xl border border-border/70 bg-surface-subtle/70 p-4">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-xs text-muted-foreground">Current mode</p>
-              <p className="mt-1 text-2xl font-semibold text-foreground" data-testid="control-mode-current">
+              <p
+                className="mt-1 text-2xl font-semibold text-foreground"
+                data-testid="control-mode-current"
+              >
                 {state === "loading" ? "Loading" : mode}
               </p>
             </div>
@@ -92,7 +100,8 @@ export function ControlModePanel({
           </div>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">{modeCopy[mode]}</p>
           <p className="mt-2 text-xs text-muted-foreground" data-testid="control-mode-pid-status">
-            PID implemented: {controlStatus?.pidImplemented ? "yes" : "no"}. AUTO mode applies only to in-memory simulation state.
+            PID implemented: {controlStatus?.pidImplemented ? "yes" : "no"}. AUTO mode applies only
+            to in-memory simulation state.
           </p>
         </div>
 
@@ -125,9 +134,7 @@ export function ControlModePanel({
         </InlineInfo>
 
         {!canChangeMode && roleDeniedReason ? (
-          <PermissionDeniedHint className="text-xs">
-            {roleDeniedReason}
-          </PermissionDeniedHint>
+          <PermissionDeniedHint className="text-xs">{roleDeniedReason}</PermissionDeniedHint>
         ) : null}
 
         {state === "degraded" ? (

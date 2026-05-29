@@ -1,0 +1,10 @@
+node_modules/
+dist/
+build/
+coverage/
+playwright-report/
+test-results/
+logs/
+apps/web/src/shared/api/generated/schema.ts
+apps/web/tests/visual/__screenshots__/
+packages/schemas/openapi.yaml

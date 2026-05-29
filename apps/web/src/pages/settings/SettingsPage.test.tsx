@@ -76,7 +76,9 @@ describe("SettingsPage", () => {
     expect(screen.getByTestId("settings-mqtt-status")).toHaveTextContent("Publish-only");
     expect(screen.getByTestId("settings-mqtt-status")).toHaveTextContent("Not implemented");
     expect(screen.getByTestId("settings-capability-matrix")).toHaveTextContent("Theme");
-    expect(screen.getByTestId("settings-safety-boundary")).toHaveTextContent(/never\s+target real equipment/i);
+    expect(screen.getByTestId("settings-safety-boundary")).toHaveTextContent(
+      /never\s+target real equipment/i,
+    );
   });
 
   it("disables scenario controls when the demo role lacks RUN_SCENARIO", () => {
@@ -98,6 +100,8 @@ describe("SettingsPage", () => {
     expect(screen.getByRole("button", { name: "Normal" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Stop scenario" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Reset simulation" })).toBeDisabled();
-    expect(screen.getByText(/Your demo role VIEWER cannot run simulation scenarios/i)).toBeVisible();
+    expect(
+      screen.getByText(/Your demo role VIEWER cannot run simulation scenarios/i),
+    ).toBeVisible();
   });
 });

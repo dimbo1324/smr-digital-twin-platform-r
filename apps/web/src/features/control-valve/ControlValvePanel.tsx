@@ -62,7 +62,8 @@ export function ControlValvePanel({
   const valveState = getTextTelemetryValue(telemetryPoints, "V-101.STATE", "UNKNOWN");
   const sourceLabel = telemetrySourceLabel(valvePoint);
   const ageLabel = formatTelemetryAge(getTelemetryAge(telemetryPoints, "V-101.POS"));
-  const sourceVariant = valvePoint?.source === "simulation" ? "success" : dataState === "degraded" ? "warning" : "mock";
+  const sourceVariant =
+    valvePoint?.source === "simulation" ? "success" : dataState === "degraded" ? "warning" : "mock";
   const isPending = feedback.state === "pending" || commandMutation.isPending;
   const disabledReason = valveDisabledReason(controlStatus);
   const canSend = dataState === "connected" && !isPending && !disabledReason && canSendCommand;
@@ -88,14 +89,13 @@ export function ControlValvePanel({
         onCommandComplete?.();
       })
       .catch((error: unknown) => {
-        const message =
-          isRbacDenied(error)
-            ? "Demo RBAC denied this simulation command for the current role."
-            : error instanceof ApiError
-              ? `${error.code ?? "COMMAND_FAILED"}: ${error.message}`
-              : error instanceof Error
-                ? error.message
-                : "Command request failed";
+        const message = isRbacDenied(error)
+          ? "Demo RBAC denied this simulation command for the current role."
+          : error instanceof ApiError
+            ? `${error.code ?? "COMMAND_FAILED"}: ${error.message}`
+            : error instanceof Error
+              ? error.message
+              : "Command request failed";
         setFeedback({ state: "error", message });
       });
   };
@@ -118,7 +118,10 @@ export function ControlValvePanel({
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-sm text-muted-foreground">Current position</p>
-              <p className="mt-1 text-4xl font-semibold text-foreground" data-testid="valve-position">
+              <p
+                className="mt-1 text-4xl font-semibold text-foreground"
+                data-testid="valve-position"
+              >
                 {Math.round(valvePosition * 10) / 10}%
               </p>
             </div>
@@ -148,14 +151,20 @@ export function ControlValvePanel({
           </div>
 
           <div className="mt-4 grid grid-cols-[repeat(auto-fit,minmax(8.75rem,1fr))] gap-2 text-xs text-muted-foreground">
-            <StatusItem label="State" value={valveState ?? "UNKNOWN"} variant="mock" testId="valve-state" />
+            <StatusItem
+              label="State"
+              value={valveState ?? "UNKNOWN"}
+              variant="mock"
+              testId="valve-state"
+            />
             <StatusItem label="Quality" value={valvePoint?.quality ?? "MISSING"} />
             <StatusItem label="Source" value={sourceLabel} variant={sourceVariant} />
             <StatusItem label="Updated" value={ageLabel} />
           </div>
 
           <InlineInfo className="mt-4">
-            Commands affect only the in-memory simulation. No real equipment, plant network, or safety-critical automation is connected.
+            Commands affect only the in-memory simulation. No real equipment, plant network, or
+            safety-critical automation is connected.
           </InlineInfo>
           {disabledReason ? (
             <div
@@ -303,12 +312,27 @@ function StatusItem({
   testId?: string;
 }) {
   return (
-    <div className="min-w-0 rounded-xl border border-border/70 bg-card/50 px-3 py-2" data-testid={testId}>
+    <div
+      className="min-w-0 rounded-xl border border-border/70 bg-card/50 px-3 py-2"
+      data-testid={testId}
+    >
       <div className="flex min-w-0 items-center gap-1.5">
         <Clock3 className="h-3 w-3 shrink-0" aria-hidden="true" />
         <span className="min-w-0 truncate">{label}</span>
       </div>
-      <StatusBadge value={displayLabel(value)} tone={variant === "success" ? "connected" : variant === "warning" ? "degraded" : variant === "mock" ? "simulation" : "neutral"} className="mt-2 max-w-full truncate" />
+      <StatusBadge
+        value={displayLabel(value)}
+        tone={
+          variant === "success"
+            ? "connected"
+            : variant === "warning"
+              ? "degraded"
+              : variant === "mock"
+                ? "simulation"
+                : "neutral"
+        }
+        className="mt-2 max-w-full truncate"
+      />
     </div>
   );
 }

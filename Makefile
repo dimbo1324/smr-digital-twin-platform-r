@@ -1,4 +1,4 @@
-.PHONY: help dev dev-up dev-down down status compose-config logs-dir logs-clean historian-smoke historian-smoke-keep mqtt-smoke mqtt-smoke-keep observability-up observability-down observability-smoke observability-smoke-keep test lint api-dev api-run api-build api-test api-vet simulation-run simulation-build simulation-test simulation-vet web-api-types web-api-types-check web-api-validate-schemas web-build web-lint web-typecheck
+.PHONY: help dev dev-up dev-down down status compose-config logs-dir logs-clean historian-smoke historian-smoke-keep mqtt-smoke mqtt-smoke-keep observability-up observability-down observability-smoke observability-smoke-keep test lint format format-check gofmt-check gomod-tidy-check artifact-guard hooks-install repo-check precommit prepush api-dev api-run api-build api-test api-vet simulation-run simulation-build simulation-test simulation-vet web-api-types web-api-types-check web-api-validate-openapi web-api-validate-contract-coverage web-api-validate-schemas web-build web-lint web-typecheck web-format-check
 
 WEB_RUN = docker compose run --rm --no-deps web sh -c
 WEB_INSTALL = npm ci
@@ -23,6 +23,12 @@ help:
 	@echo "  make observability-smoke-keep - run observability smoke and keep stack running"
 	@echo "  make test             - run API, simulation, and frontend checks"
 	@echo "  make lint             - run go vet and frontend lint"
+	@echo "  make format-check     - run gofmt and frontend Prettier checks"
+	@echo "  make format           - format Go and frontend files"
+	@echo "  make repo-check       - run repository hygiene checks"
+	@echo "  make precommit        - run fast local pre-commit checks"
+	@echo "  make prepush          - run heavier local pre-push checks"
+	@echo "  make hooks-install    - configure Git to use .githooks"
 	@echo "  make api-run          - run the Go API locally"
 	@echo "  make api-build        - build the Go API"
 	@echo "  make api-test         - run Go API tests"
@@ -82,9 +88,36 @@ observability-smoke:
 observability-smoke-keep:
 	node scripts/smoke/observability-smoke.mjs --keep-running
 
-test: api-test simulation-test web-api-types-check web-api-validate-schemas web-typecheck web-lint web-build compose-config
+test: api-test simulation-test web-api-types-check web-api-validate-openapi web-api-validate-contract-coverage web-api-validate-schemas web-typecheck web-lint web-build compose-config
 
 lint: api-vet simulation-vet web-lint
+
+format:
+	node scripts/check-gofmt.mjs --write
+	cd apps/web && npm run format:write
+
+format-check: gofmt-check web-format-check
+
+gofmt-check:
+	node scripts/check-gofmt.mjs
+
+gomod-tidy-check:
+	node scripts/check-go-mod-tidy.mjs
+
+artifact-guard:
+	node scripts/check-generated-artifacts.mjs
+
+hooks-install:
+	node scripts/git-hooks/install.mjs
+
+repo-check:
+	node scripts/run-repo-check.mjs repo
+
+precommit:
+	node scripts/run-repo-check.mjs precommit
+
+prepush:
+	node scripts/run-repo-check.mjs prepush
 
 api-dev: api-run
 
@@ -121,6 +154,12 @@ web-api-types-check:
 web-api-validate-schemas:
 	$(WEB_RUN) "$(WEB_INSTALL) && npm run api:validate-schemas"
 
+web-api-validate-openapi:
+	$(WEB_RUN) "$(WEB_INSTALL) && npm run api:validate-openapi"
+
+web-api-validate-contract-coverage:
+	$(WEB_RUN) "$(WEB_INSTALL) && npm run api:validate-contract-coverage"
+
 web-build:
 	$(WEB_RUN) "$(WEB_INSTALL) && npm run build"
 
@@ -129,3 +168,6 @@ web-lint:
 
 web-typecheck:
 	$(WEB_RUN) "$(WEB_INSTALL) && npm run typecheck"
+
+web-format-check:
+	cd apps/web && npm run format:check

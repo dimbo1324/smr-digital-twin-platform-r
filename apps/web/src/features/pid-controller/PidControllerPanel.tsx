@@ -76,10 +76,9 @@ export function PidControllerPanel({
         setFeedback(`TIC-101 PID settings applied. Setpoint ${status.setpoint} C.`);
       })
       .catch((error: unknown) => {
-        const message =
-          isRbacDenied(error)
-            ? "Demo RBAC denied this PID configuration change for the current role."
-            : error instanceof ApiError
+        const message = isRbacDenied(error)
+          ? "Demo RBAC denied this PID configuration change for the current role."
+          : error instanceof ApiError
             ? `${error.code ?? "PID_CONFIG_FAILED"}: ${error.message}`
             : error instanceof Error
               ? error.message
@@ -102,7 +101,9 @@ export function PidControllerPanel({
             <Badge variant={active ? "success" : "outline"} data-testid="pid-active-badge">
               {active ? "Active" : "Inactive"}
             </Badge>
-            <Badge variant={mode === "AUTO" ? "warning" : mode === "MANUAL" ? "success" : "offline"}>
+            <Badge
+              variant={mode === "AUTO" ? "warning" : mode === "MANUAL" ? "success" : "offline"}
+            >
               {mode}
             </Badge>
           </div>
@@ -112,14 +113,39 @@ export function PidControllerPanel({
         <div className="grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-3">
           <Metric label="PV TT-101" value={formatNumber(pidStatus?.processValue)} unit="C" />
           <Metric label="Setpoint" value={formatNumber(pidStatus?.setpoint)} unit="C" />
-          <Metric label="Error" value={formatNumber(pidStatus?.error)} unit="C" testId="pid-error" />
-          <Metric label="Output" value={formatNumber(pidStatus?.output)} unit="%" testId="pid-output" />
+          <Metric
+            label="Error"
+            value={formatNumber(pidStatus?.error)}
+            unit="C"
+            testId="pid-error"
+          />
+          <Metric
+            label="Output"
+            value={formatNumber(pidStatus?.output)}
+            unit="%"
+            testId="pid-output"
+          />
         </div>
 
         <div className="grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-3">
-          <Metric label="P term" value={formatNumber(pidStatus?.pTerm)} unit="%" testId="pid-p-term" />
-          <Metric label="I term" value={formatNumber(pidStatus?.iTerm)} unit="%" testId="pid-i-term" />
-          <Metric label="D term" value={formatNumber(pidStatus?.dTerm)} unit="%" testId="pid-d-term" />
+          <Metric
+            label="P term"
+            value={formatNumber(pidStatus?.pTerm)}
+            unit="%"
+            testId="pid-p-term"
+          />
+          <Metric
+            label="I term"
+            value={formatNumber(pidStatus?.iTerm)}
+            unit="%"
+            testId="pid-i-term"
+          />
+          <Metric
+            label="D term"
+            value={formatNumber(pidStatus?.dTerm)}
+            unit="%"
+            testId="pid-d-term"
+          />
         </div>
 
         <div className="rounded-2xl border border-border/70 bg-surface-subtle/70 p-4">
@@ -127,7 +153,7 @@ export function PidControllerPanel({
             <div>
               <p className="text-xs text-muted-foreground">PID status</p>
               <p className="mt-1 font-medium text-foreground" data-testid="pid-status">
-                {state === "loading" ? "Loading" : pidStatus?.status ?? "Unavailable"}
+                {state === "loading" ? "Loading" : (pidStatus?.status ?? "Unavailable")}
               </p>
             </div>
             <Gauge className="h-5 w-5 text-primary" aria-hidden="true" />
@@ -140,7 +166,9 @@ export function PidControllerPanel({
                 : "Switch TIC-101 to AUTO to let simulated PID control V-101."}
           </p>
           {pidStatus?.saturated ? (
-            <p className="mt-2 text-xs text-warning">PID output is saturated at a configured limit.</p>
+            <p className="mt-2 text-xs text-warning">
+              PID output is saturated at a configured limit.
+            </p>
           ) : null}
         </div>
 
@@ -175,12 +203,25 @@ export function PidControllerPanel({
           />
         </div>
 
-        {validationError ? <p className="text-xs text-danger" role="alert">{validationError}</p> : null}
-        {state === "degraded" ? <p className="text-sm text-danger" role="alert">PID status is unavailable from the API.</p> : null}
+        {validationError ? (
+          <p className="text-xs text-danger" role="alert">
+            {validationError}
+          </p>
+        ) : null}
+        {state === "degraded" ? (
+          <p className="text-sm text-danger" role="alert">
+            PID status is unavailable from the API.
+          </p>
+        ) : null}
 
         <div className="flex flex-wrap gap-2">
           <Button
-            disabled={state === "loading" || mutation.isPending || Boolean(validationError) || !canUpdateConfig}
+            disabled={
+              state === "loading" ||
+              mutation.isPending ||
+              Boolean(validationError) ||
+              !canUpdateConfig
+            }
             onClick={submit}
             data-testid="pid-apply-settings-button"
           >
@@ -213,19 +254,33 @@ export function PidControllerPanel({
         </InlineInfo>
 
         {!canUpdateConfig && roleDeniedReason ? (
-          <PermissionDeniedHint className="text-xs">
-            {roleDeniedReason}
-          </PermissionDeniedHint>
+          <PermissionDeniedHint className="text-xs">{roleDeniedReason}</PermissionDeniedHint>
         ) : null}
 
-        {feedback ? <p className="text-sm text-muted-foreground" role="status">{feedback}</p> : null}
+        {feedback ? (
+          <p className="text-sm text-muted-foreground" role="status">
+            {feedback}
+          </p>
+        ) : null}
       </CardContent>
     </Card>
   );
 }
 
-function Metric({ label, value, unit, testId }: { label: string; value: string; unit: string; testId?: string }) {
-  return <KpiCard label={label} value={value} unit={unit} testId={testId} className="bg-card/50 p-3" />;
+function Metric({
+  label,
+  value,
+  unit,
+  testId,
+}: {
+  label: string;
+  value: string;
+  unit: string;
+  testId?: string;
+}) {
+  return (
+    <KpiCard label={label} value={value} unit={unit} testId={testId} className="bg-card/50 p-3" />
+  );
 }
 
 function NumberField({

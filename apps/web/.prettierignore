@@ -1,0 +1,8 @@
+node_modules/
+dist/
+coverage/
+playwright-report/
+test-results/
+src/shared/api/generated/schema.ts
+tests/visual/__screenshots__/
+

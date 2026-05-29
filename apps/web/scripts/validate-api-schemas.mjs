@@ -16,7 +16,10 @@ const ajv = new Ajv({
 
 let compiledCount = 0;
 
-for (const fileName of fs.readdirSync(schemaDir).filter((file) => file.endsWith(".schema.json")).sort()) {
+for (const fileName of fs
+  .readdirSync(schemaDir)
+  .filter((file) => file.endsWith(".schema.json"))
+  .sort()) {
   const schemaPath = path.join(schemaDir, fileName);
   const schema = toDraft7Schema(JSON.parse(fs.readFileSync(schemaPath, "utf8")));
   try {

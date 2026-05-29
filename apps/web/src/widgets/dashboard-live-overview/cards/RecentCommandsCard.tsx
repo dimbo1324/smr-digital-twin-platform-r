@@ -37,10 +37,17 @@ export function RecentCommandsCard({
           <>
             <SummaryRow label="Target" value={latestCommand.targetTag} />
             <SummaryRow label="Command" value={latestCommand.commandType} />
-            <SummaryRow label="Requested" value={formatRelativeTime(commandTimestamp(latestCommand))} />
+            <SummaryRow
+              label="Requested"
+              value={formatRelativeTime(commandTimestamp(latestCommand))}
+            />
             <PreviewText
               label="Result"
-              value={latestCommand.resultMessage ?? latestCommand.errorMessage ?? "Command accepted by simulation layer."}
+              value={
+                latestCommand.resultMessage ??
+                latestCommand.errorMessage ??
+                "Command accepted by simulation layer."
+              }
             />
             <Button asChild variant="outline" size="sm" className="w-full">
               <Link to="/process">

@@ -1,5 +1,10 @@
 import { expect, test, type Locator } from "@playwright/test";
-import { prepareManualState, sendValveCommand, updatePidConfig, waitForEventType } from "./helpers/api";
+import {
+  prepareManualState,
+  sendValveCommand,
+  updatePidConfig,
+  waitForEventType,
+} from "./helpers/api";
 import { gotoEvents } from "./helpers/navigation";
 
 test("events filtering and sorting flow", async ({ page, request }) => {
@@ -11,7 +16,9 @@ test("events filtering and sorting flow", async ({ page, request }) => {
   await test.step("open events page with populated event stream", async () => {
     await gotoEvents(page);
     await expect(page.getByTestId("event-row").first()).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByTestId("event-row").first()).toContainText(/INFO|WARNING|COMMAND_|PID_|simulation|command/i);
+    await expect(page.getByTestId("event-row").first()).toContainText(
+      /INFO|WARNING|COMMAND_|PID_|simulation|command/i,
+    );
   });
 
   await test.step("apply available filters", async () => {
@@ -37,9 +44,11 @@ test("events filtering and sorting flow", async ({ page, request }) => {
 });
 
 async function chooseFirstNonAllOption(select: Locator) {
-  const options = await select.locator("option").evaluateAll((nodes) =>
-    nodes.map((node) => (node as HTMLOptionElement).value).filter((value) => value !== "all"),
-  );
+  const options = await select
+    .locator("option")
+    .evaluateAll((nodes) =>
+      nodes.map((node) => (node as HTMLOptionElement).value).filter((value) => value !== "all"),
+    );
   if (options.length > 0) {
     await select.selectOption(options[0]);
   }

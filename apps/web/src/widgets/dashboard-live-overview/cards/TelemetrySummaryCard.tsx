@@ -21,12 +21,21 @@ export function TelemetrySummaryCard({ telemetry }: { telemetry: LiveTelemetrySt
       <CardHeader className="space-y-3">
         <div className="flex items-center justify-between gap-3">
           <CardTitle>Process Telemetry Summary</CardTitle>
-          <Badge variant={telemetry.state === "connected" ? "success" : telemetry.state === "loading" ? "warning" : "offline"}>
+          <Badge
+            variant={
+              telemetry.state === "connected"
+                ? "success"
+                : telemetry.state === "loading"
+                  ? "warning"
+                  : "offline"
+            }
+          >
             {telemetry.state === "connected" ? "Simulation API" : telemetry.state}
           </Badge>
         </div>
         <CardDescription>
-          Live synthetic process-loop values from <span className="font-mono">/api/v1/telemetry/latest</span>.
+          Live synthetic process-loop values from{" "}
+          <span className="font-mono">/api/v1/telemetry/latest</span>.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -77,7 +86,9 @@ function TelemetryMetric({
       </div>
       <p className="mt-4 text-2xl font-semibold text-foreground">{formatTelemetryValue(point)}</p>
       <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-        <Badge variant={point ? "mock" : "offline"}>{point ? telemetrySource(point) : "No data"}</Badge>
+        <Badge variant={point ? "mock" : "offline"}>
+          {point ? telemetrySource(point) : "No data"}
+        </Badge>
         <span>{age}</span>
       </div>
     </div>

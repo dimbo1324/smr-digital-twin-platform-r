@@ -21,7 +21,21 @@
     "version": { "type": "string" },
     "timestamp": { "type": "string", "format": "date-time" }
   },
-  "required": ["platform", "mode", "environment", "controlBoundary", "dataSource", "backendApi", "mqttBroker", "simulationService", "historian", "simulationConnected", "safetyDisclaimer", "version", "timestamp"],
+  "required": [
+    "platform",
+    "mode",
+    "environment",
+    "controlBoundary",
+    "dataSource",
+    "backendApi",
+    "mqttBroker",
+    "simulationService",
+    "historian",
+    "simulationConnected",
+    "safetyDisclaimer",
+    "version",
+    "timestamp"
+  ],
   "additionalProperties": false,
   "$defs": {
     "componentStatus": {

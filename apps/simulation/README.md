@@ -21,6 +21,8 @@ Metrics cover simulation ticks, command counts, active alarms, event counts, his
 
 The repository-level observability smoke (`node scripts/smoke/observability-smoke.mjs`) checks this endpoint, Prometheus target health, domain metric queries, and Grafana health. It validates local/demo observability for synthetic simulation data only and is not safety-critical monitoring.
 
+In Docker Compose, the simulation service remains reachable to the API container by service name and exposes its host diagnostic port on `127.0.0.1:8081`. The frontend should call the API gateway, not the simulation service directly. This is a local/demo boundary only, not production authentication or network hardening.
+
 The current command layer is simulation-only. Commands mutate only in-memory `V-101` and `P-101` state and are recorded in the recent command/event trail. Those records are persisted when the optional historian is enabled and connected.
 
 `TIC-101` owns a simulation-only PID loop for the synthetic `TT-101 -> V-101.POS` process. `MANUAL` allows direct `V-101` commands, `AUTO` lets PID apply an in-memory valve target, and `DISABLED` blocks direct valve commands. This is not real plant control.

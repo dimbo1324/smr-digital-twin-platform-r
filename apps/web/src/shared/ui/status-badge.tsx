@@ -37,11 +37,19 @@ function statusToneFromValue(value?: string): StatusTone {
     return "healthy";
   }
 
-  if (["degraded", "fallback", "checking", "loading", "warning"].some((token) => normalized.includes(token))) {
+  if (
+    ["degraded", "fallback", "checking", "loading", "warning"].some((token) =>
+      normalized.includes(token),
+    )
+  ) {
     return "degraded";
   }
 
-  if (["offline", "disabled", "unavailable", "disconnected", "missing"].some((token) => normalized.includes(token))) {
+  if (
+    ["offline", "disabled", "unavailable", "disconnected", "missing"].some((token) =>
+      normalized.includes(token),
+    )
+  ) {
     return "disabled";
   }
 
