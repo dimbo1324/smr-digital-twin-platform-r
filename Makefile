@@ -1,4 +1,4 @@
-.PHONY: help dev dev-up dev-down down status compose-config logs-dir logs-clean historian-smoke historian-smoke-keep mqtt-smoke mqtt-smoke-keep observability-up observability-down observability-smoke observability-smoke-keep test lint format format-check gofmt-check gomod-tidy-check artifact-guard hooks-install repo-check precommit prepush api-dev api-run api-build api-test api-vet simulation-run simulation-build simulation-test simulation-vet web-api-types web-api-types-check web-api-validate-openapi web-api-validate-contract-coverage web-api-validate-schemas web-build web-lint web-typecheck web-format-check
+.PHONY: help dev dev-up dev-down down status compose-config logs-dir logs-clean historian-smoke historian-smoke-keep mqtt-smoke mqtt-smoke-keep observability-up observability-down observability-smoke observability-smoke-keep load-soak load-soak-short load-soak-keep load-soak-ci test lint format format-check gofmt-check gomod-tidy-check artifact-guard hooks-install repo-check precommit prepush api-dev api-run api-build api-test api-vet simulation-run simulation-build simulation-test simulation-vet web-api-types web-api-types-check web-api-validate-openapi web-api-validate-contract-coverage web-api-validate-schemas web-build web-lint web-typecheck web-format-check
 
 WEB_RUN = docker compose run --rm --no-deps web sh -c
 WEB_INSTALL = npm ci
@@ -21,6 +21,10 @@ help:
 	@echo "  make observability-down - stop the observability profile stack"
 	@echo "  make observability-smoke - run Prometheus/Grafana observability smoke"
 	@echo "  make observability-smoke-keep - run observability smoke and keep stack running"
+	@echo "  make load-soak        - run 10-minute synthetic load-and-soak baseline"
+	@echo "  make load-soak-short  - run 3-minute synthetic load-and-soak baseline"
+	@echo "  make load-soak-keep   - run 10-minute soak and keep stack running"
+	@echo "  make load-soak-ci     - run CI-oriented synthetic load-and-soak baseline"
 	@echo "  make test             - run API, simulation, and frontend checks"
 	@echo "  make lint             - run go vet and frontend lint"
 	@echo "  make format-check     - run gofmt and frontend Prettier checks"
@@ -87,6 +91,18 @@ observability-smoke:
 
 observability-smoke-keep:
 	node scripts/smoke/observability-smoke.mjs --keep-running
+
+load-soak:
+	node scripts/smoke/load-and-soak-baseline.mjs --duration-ms 600000
+
+load-soak-short:
+	node scripts/smoke/load-and-soak-baseline.mjs --duration-ms 180000
+
+load-soak-keep:
+	node scripts/smoke/load-and-soak-baseline.mjs --duration-ms 600000 --keep-running
+
+load-soak-ci:
+	node scripts/smoke/load-and-soak-baseline.mjs --duration-ms 300000 --warmup-ms 30000 --timeout-ms 540000
 
 test: api-test simulation-test web-api-types-check web-api-validate-openapi web-api-validate-contract-coverage web-api-validate-schemas web-typecheck web-lint web-build compose-config
 

@@ -10,7 +10,7 @@ This guide helps present SMR Digital Twin Platform as a simulation-only industri
 | Backend engineer            | API gateway boundaries, RBAC enforcement, simulation proxying, report aggregation, OpenAPI contracts. |
 | Frontend engineer           | HMI workflows, TanStack Query data layer, runtime validation, component/E2E/a11y/visual tests.        |
 | Automation or IIoT engineer | Simulation-only command workflow, alarm lifecycle, historian, MQTT publish-only bridge.               |
-| Platform or DevOps engineer | Docker Compose, smoke tests, Prometheus/Grafana local observability, CI quality gates.                |
+| Platform or DevOps engineer | Docker Compose, smoke/load-soak tests, Prometheus/Grafana local observability, CI quality gates.      |
 
 ## 5-Minute Walkthrough
 
@@ -22,7 +22,7 @@ This guide helps present SMR Digital Twin Platform as a simulation-only industri
 6. Open Reports and export JSON/CSV/PDF. State clearly that these are simulation summaries, not regulatory reports.
 7. Show Prometheus/Grafana if the observability profile is running.
 8. Mention MQTT topics are publish-only synthetic data and do not accept commands.
-9. Finish with GitHub Actions: API, simulation, web, E2E, accessibility, keyboard, visual regression, historian smoke, MQTT smoke, race/coverage, and dependency scans.
+9. Finish with GitHub Actions: API, simulation, web, E2E, accessibility, keyboard, visual regression, historian smoke, MQTT smoke, observability smoke, short load-and-soak baseline, race/coverage, and dependency scans.
 
 ## 15-Minute Technical Walkthrough
 
@@ -35,7 +35,7 @@ This guide helps present SMR Digital Twin Platform as a simulation-only industri
 7. **MQTT:** Show publish-only bridge and smoke script. No MQTT command ingestion exists.
 8. **Reports:** Show API aggregation in `apps/api/internal/simulation/reports.go` and the Reports page.
 9. **Observability:** Show `/metrics`, Prometheus config, and Grafana dashboard provisioning.
-10. **Quality:** Show CI workflow, component tests, Playwright Chromium regression, Chromium/Firefox smoke, a11y, keyboard, visual regression, and smoke tests.
+10. **Quality:** Show CI workflow, component tests, Playwright Chromium regression, Chromium/Firefox smoke, a11y, keyboard, visual regression, smoke tests, and the load-and-soak baseline.
 
 ## UI Talking Points
 
@@ -55,6 +55,7 @@ This guide helps present SMR Digital Twin Platform as a simulation-only industri
 - `packages/schemas` keeps OpenAPI and JSON Schema references aligned with frontend generated types.
 - `apps/simulation/config/scenarios` keeps synthetic scenario definitions declarative and validated.
 - `scripts/smoke` verifies full-stack persistence, MQTT publishing, and local/demo observability using Docker Compose.
+- `scripts/smoke/load-and-soak-baseline.mjs` exercises sustained synthetic commands, scenarios, historian reads, reports, MQTT publishing, and Prometheus/Grafana health.
 - `infra/observability` provisions local Prometheus and Grafana for demo diagnostics.
 
 ## Safety Boundary Script
@@ -87,6 +88,8 @@ npm run test:visual
 
 node scripts/smoke/historian-db-smoke.mjs --timeout-ms 300000 --history-wait-ms 90000
 node scripts/smoke/mqtt-bridge-smoke.mjs --timeout-ms 300000
+node scripts/smoke/observability-smoke.mjs --timeout-ms 300000
+node scripts/smoke/load-and-soak-baseline.mjs --duration-ms 180000
 ```
 
 ## What To Show In GitHub

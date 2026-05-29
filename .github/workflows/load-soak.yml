@@ -1,0 +1,66 @@
+name: Long Load and Soak
+
+on:
+  workflow_dispatch:
+    inputs:
+      duration_minutes:
+        description: "Synthetic soak duration in minutes"
+        required: true
+        default: "10"
+      command_rate_ms:
+        description: "Command loop interval in milliseconds"
+        required: true
+        default: "5000"
+      scenario_rate_ms:
+        description: "Scenario loop interval in milliseconds"
+        required: true
+        default: "60000"
+
+permissions:
+  contents: read
+
+jobs:
+  long-load-soak:
+    name: Long Load and Soak
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Show Docker versions
+        run: |
+          docker --version
+          docker compose version
+
+      - name: Run manual long load-and-soak baseline
+        env:
+          DURATION_MINUTES: ${{ inputs.duration_minutes }}
+          COMMAND_RATE_MS: ${{ inputs.command_rate_ms }}
+          SCENARIO_RATE_MS: ${{ inputs.scenario_rate_ms }}
+        run: |
+          duration_ms=$((DURATION_MINUTES * 60000))
+          timeout_ms=$((duration_ms + 300000))
+          node scripts/smoke/load-and-soak-baseline.mjs \
+            --duration-ms "$duration_ms" \
+            --timeout-ms "$timeout_ms" \
+            --command-rate-ms "$COMMAND_RATE_MS" \
+            --scenario-rate-ms "$SCENARIO_RATE_MS"
+
+      - name: Upload load-and-soak logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: long-load-soak-logs
+          path: logs/smoke/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Cleanup load-and-soak stack
+        if: always()
+        run: docker compose -p smr-twin-load-soak --profile observability down -v --remove-orphans
