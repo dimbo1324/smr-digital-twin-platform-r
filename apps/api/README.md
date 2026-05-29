@@ -12,6 +12,7 @@ Current milestone:
 - simulation-backed latest telemetry and clearly labelled in-memory fallback telemetry
 - optional simulation service gateway integration
 - telemetry history, alarms, and scenario proxy endpoints
+- raw and 1-minute aggregated synthetic telemetry history proxy endpoints
 - simulation-only command proxy endpoints for `V-101` and `P-101`
 - simulation-only control mode and PID endpoints for `TIC-101`
 - alarm lifecycle proxy endpoints for active, history, and acknowledge workflows
@@ -87,7 +88,7 @@ The implemented gateway endpoints are documented in the repository contract:
 - `packages/schemas/openapi.yaml`
 - `packages/schemas/schemas/*.schema.json`
 
-The OpenAPI contract is currently used for documentation, generated frontend TypeScript types, and frontend dev/test runtime validation. This service does not yet use generated Go server stubs or Go runtime validation from JSON Schema.
+The OpenAPI contract is currently used for documentation, generated frontend TypeScript types, frontend dev/test runtime validation, and CI drift checks. This service does not yet use generated Go server stubs or Go runtime validation from JSON Schema.
 
 ```bash
 curl http://localhost:8080/health
@@ -98,6 +99,7 @@ curl http://localhost:8080/api/v1/auth/users
 curl http://localhost:8080/api/v1/assets
 curl http://localhost:8080/api/v1/telemetry/latest
 curl "http://localhost:8080/api/v1/telemetry/history?window=15m"
+curl "http://localhost:8080/api/v1/telemetry/history?window=24h&resolution=1m"
 curl http://localhost:8080/api/v1/control/status
 curl -X POST http://localhost:8080/api/v1/control/mode \
   -H "Content-Type: application/json" \
@@ -197,6 +199,17 @@ Returns simulation telemetry when `apps/simulation` is reachable. If the simulat
 
 The current telemetry contract includes both unit overview tags such as `SMR-POWER`, `TT-PRIMARY`, and `FT-COOLANT`, and process-loop tags such as `TT-101`, `PT-101`, `FT-101`, `LT-101`, `V-101.POS`, `V-101.STATE`, `P-101.STATE`, `P-101.RPM`, `HX-101.STATE`, and `TIC-101.MODE`.
 
+### `GET /api/v1/telemetry/history`
+
+Returns synthetic telemetry history from the simulation service. Without a `resolution` query parameter, the endpoint preserves the raw history behavior:
+
+```bash
+curl "http://localhost:8080/api/v1/telemetry/history?window=1h"
+curl "http://localhost:8080/api/v1/telemetry/history?window=24h&resolution=1m"
+```
+
+Supported windows are `15m`, `1h`, `6h`, and `24h`. Supported resolutions are `raw` and `1m`. The `1m` resolution reads the demo TimescaleDB aggregate path when the historian is connected and falls back/degrades according to the simulation historian state. This downsampling applies only to synthetic simulation telemetry and is not production historian compliance.
+
 ### Alarm Lifecycle Endpoints
 
 - `GET /api/v1/alarms/active` returns active and acknowledged synthetic alarm instances that are not cleared.
@@ -229,6 +242,8 @@ Acknowledgement affects only in-memory simulation state. Unknown alarms return `
 ### `GET /api/v1/historian/status`
 
 Returns the current simulation historian status. The historian stores synthetic telemetry, command, event, and alarm history records for demo and portfolio workflows only.
+
+Connected historian status includes demo retention/downsampling metadata such as `retentionEnabled`, `rawRetention`, `downsamplingEnabled`, `supportedResolutions`, and `aggregateStatus`.
 
 Possible statuses include:
 
@@ -295,6 +310,7 @@ Returns recent command, alarm, equipment, scenario, PID, control, and simulation
 The frontend still calls only `apps/api`. The API proxies simulation state through:
 
 - `GET /api/v1/telemetry/history?window=15m`
+- `GET /api/v1/telemetry/history?window=24h&resolution=1m`
 - `GET /api/v1/alarms/active`
 - `GET /api/v1/simulation/scenarios`
 - `POST /api/v1/simulation/scenarios/{scenarioName}/start`

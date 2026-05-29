@@ -2,6 +2,8 @@ module github.com/dimbo1324/smr-digital-twin-platform-r/apps/api
 
 go 1.25
 
+toolchain go1.25.10
+
 require github.com/prometheus/client_golang v1.23.2
 
 require (

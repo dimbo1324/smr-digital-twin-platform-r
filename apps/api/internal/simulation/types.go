@@ -268,6 +268,11 @@ type HistorianStatus struct {
 	LastErrorAt           *time.Time `json:"lastErrorAt,omitempty"`
 	LastErrorMessage      string     `json:"lastErrorMessage,omitempty"`
 	FallbackActive        bool       `json:"fallbackActive"`
+	RetentionEnabled      bool       `json:"retentionEnabled"`
+	RawRetention          string     `json:"rawRetention,omitempty"`
+	DownsamplingEnabled   bool       `json:"downsamplingEnabled"`
+	SupportedResolutions  []string   `json:"supportedResolutions,omitempty"`
+	AggregateStatus       string     `json:"aggregateStatus,omitempty"`
 	SimulationOnly        bool       `json:"simulationOnly"`
 	SafetyDisclaimer      string     `json:"safetyDisclaimer"`
 }

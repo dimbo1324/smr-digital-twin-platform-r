@@ -163,9 +163,27 @@ type HistoryResult struct {
 }
 
 func (e *Engine) HistoryWithSource(window time.Duration) HistoryResult {
+	return e.HistoryWithResolution(window, "raw")
+}
+
+func (e *Engine) HistoryWithResolution(window time.Duration, resolution string) HistoryResult {
+	if resolution == "" {
+		resolution = "raw"
+	}
 	if e.historian != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), e.historianOperationTimeout)
 		defer cancel()
+		if resolution == "1m" {
+			values, err := e.historian.QueryAggregatedTelemetryHistory(ctx, window, resolution, time.Now().UTC())
+			if err == nil && len(values) > 0 {
+				return HistoryResult{Values: values, Source: "persistent_historian_1m"}
+			}
+			memoryValues := e.memoryHistory(window)
+			if err == nil {
+				return HistoryResult{Values: memoryValues, Source: "persistent_aggregate_empty_memory_fallback"}
+			}
+			return HistoryResult{Values: memoryValues, Source: "persistent_aggregate_failed_in_memory_fallback", Degraded: true}
+		}
 		values, err := e.historian.QueryTelemetryHistory(ctx, window, time.Now().UTC())
 		if err == nil && len(values) > 0 {
 			return HistoryResult{Values: values, Source: "persistent_historian"}

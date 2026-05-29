@@ -25,7 +25,7 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 | API gateway | Go REST gateway, structured errors, demo RBAC enforcement, report aggregation | Keeps the frontend contract stable and protects write/action endpoints. |
 | Simulation engine | Synthetic process loop, scenarios, `V-101`/`P-101` state machines, `TIC-101` PID | Provides realistic demo dynamics without real plant connectivity. |
 | Command workflow | Manual/auto/disabled arbitration, command status, event records | Demonstrates control authority boundaries in a simulation-only setting. |
-| Historian | Optional PostgreSQL/TimescaleDB persistence for telemetry, commands, events, alarms | Demonstrates time-series storage and fallback behavior. |
+| Historian | Optional PostgreSQL/TimescaleDB persistence, 30-day raw retention metadata, and 1-minute synthetic telemetry aggregates | Demonstrates time-series storage, downsampling, and fallback behavior. |
 | MQTT | Publish-only synthetic telemetry/events/alarms/status bridge | Shows IIoT integration while explicitly avoiding MQTT command ingestion. |
 | Reports | JSON/CSV simulation summary export | Useful portfolio/demo artifact, clearly not regulatory reporting. |
 | Observability | API/simulation `/metrics`, Prometheus, Grafana dashboard provisioning | Gives local diagnostics for platform health and synthetic process metrics. |
@@ -37,7 +37,7 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 2. Go to Process as the demo operator and send a `V-101` valve position command or `P-101` pump command.
 3. Switch to a supervisor or admin role and change `TIC-101` to `AUTO`; show that the simulation-only PID owns the valve output.
 4. Trigger a synthetic scenario, then open Alarms and Events to show alarm activation, acknowledgement, clearing, and the unified event trail.
-5. Open Trends to show live or historian-backed telemetry source labels.
+5. Open Trends to show live, raw historian, or 1-minute aggregated historian source labels.
 6. Open Reports and export a JSON or CSV simulation summary. Emphasize that it is not a regulatory or production audit report.
 7. Start the optional observability profile and show Prometheus/Grafana local metrics for API and simulation health.
 8. Mention that MQTT publishes synthetic data only and has no command ingestion topics.
@@ -67,7 +67,7 @@ The frontend talks only to `apps/api`. The API gateway enforces demo RBAC for pr
 | --- | --- | --- |
 | Process commands | Mutate `V-101`/`P-101` simulation state only | No PLC, DCS, SCADA, actuator, or plant network connectivity. |
 | Demo RBAC | Static users via `X-Demo-User` and frontend role switcher | No passwords, OAuth/JWT, persistent users, or production identity controls. |
-| Historian | Stores synthetic telemetry/events/commands/alarms | No immutable audit policy, regulatory retention, or compliance guarantees. |
+| Historian | Stores synthetic telemetry/events/commands/alarms, with demo raw retention metadata and 1-minute aggregate history | No immutable audit policy, regulatory retention, or compliance guarantees. |
 | MQTT | Publishes synthetic data only | No MQTT command ingestion, broker ACL/TLS hardening, or real equipment topics. |
 | Reports | JSON/CSV synthetic simulation summaries | Not regulatory reporting, not a production audit export, not nuclear compliance evidence. |
 | Observability | Local Prometheus/Grafana demo profile | No production alerting, log aggregation, tracing, SLOs, or secure operations setup. |
@@ -120,7 +120,7 @@ cd apps/web && npm ci && npm run dev
 - Unified recent event stream for command, alarm, equipment, and simulation events.
 - In-memory telemetry history for trend charts.
 - Process asset cards backed by the API assets endpoint, with labelled fallback states.
-- Trends summary cards backed by latest API telemetry and chart history backed by persistent historian data when available, with in-memory fallback.
+- Trends summary cards backed by latest API telemetry and chart history backed by raw or 1-minute aggregated persistent historian data when available, with in-memory fallback.
 - Simulation-only command layer for `V-101` and `P-101` through the API gateway.
 - Simulation-only `TIC-101` control modes for command arbitration: `MANUAL`, `AUTO`, and `DISABLED`.
 - Command arbitration for direct `V-101` commands, with `AUTO` assigning authority to the simulation-only `TIC-101` PID controller.
@@ -138,7 +138,7 @@ cd apps/web && npm ci && npm run dev
 - Expanded Playwright Chromium E2E suite for Dashboard, Process commands, PID/manual-auto arbitration, Alarms, Events, Trends, Settings, MQTT status, and historian status.
 - Playwright visual regression baseline for Dashboard, Process, Alarms, Events, Trends, Reports, and Settings across deterministic themes and responsive widths.
 - Local log artifact folder and smoke diagnostic reports under `logs/`.
-- OpenAPI 3.1 contract and JSON Schema reference files under `packages/schemas`.
+- OpenAPI 3.1 contract and JSON Schema reference files under `packages/schemas`, with CI checks for OpenAPI parsing, JSON Schema compilation, generated TypeScript drift, and runtime validation coverage.
 - Generated frontend API schema types committed under `apps/web/src/shared/api/generated`.
 - TanStack Query frontend data layer with typed REST hooks, query keys, polling intervals, and mutation invalidation.
 - Runtime API validation in the frontend HTTP client for dev/test contract drift detection, including control mode payloads.
@@ -148,12 +148,12 @@ cd apps/web && npm ci && npm run dev
 ## Partially Implemented
 
 - **Alarms**: active, acknowledged, and cleared alarm workflow exists in memory. Shelving, persistent audit, and production operator workflow are planned.
-- **Trends**: PostgreSQL/TimescaleDB-backed telemetry history exists when the historian is enabled. In-memory history remains the fallback. Downsampling APIs and long-range query controls are planned.
+- **Trends**: PostgreSQL/TimescaleDB-backed raw telemetry history and 1-minute aggregate history exist when the historian is enabled. In-memory history remains the fallback, and the current UI exposes raw vs 1-minute resolution controls.
 - **Events**: command, alarm, control, PID, scenario, and simulation events are captured in memory and persisted when the historian is connected. This is still not a production audit archive.
 - **Process UI**: process-loop values are bound to live API telemetry when available. Valve and pump controls call simulation-only command endpoints; `TIC-101` mode controls whether direct valve commands are allowed.
 - **Scenario controls**: predefined synthetic scenarios can be started/stopped through the API. Declarative YAML/JSON scenario definitions are planned.
 - **Assets**: API exposes current simulation assets and fallback process-loop assets. Persistent asset registry is planned.
-- **API contract layer**: OpenAPI and generated TypeScript types exist for core DTOs. Frontend runtime validation exists for selected dev/test request and response payloads; Go server code generation is not implemented yet.
+- **API contract layer**: OpenAPI, JSON Schema references, generated TypeScript types, runtime validation mappings, and CI drift checks exist for core DTOs. Go server code generation is not implemented yet.
 - **Report export**: JSON and CSV simulation summaries are implemented for demo use. PDF/Excel export and regulatory reporting are not implemented.
 - **Observability**: local Prometheus/Grafana demo stack and service metrics are implemented. Production logging/tracing/alerting is not implemented.
 
@@ -322,13 +322,13 @@ Automated CI jobs:
 - **Race/Coverage**: `go test -race ./...` and `go test -cover ./...` for API and simulation.
 - **Web**: `npm ci`, `npm run typecheck`, `npm run lint`, `npm run test`, and `npm run build` in `apps/web`.
 - **API types**: `npm run api:types` regenerates frontend contract types before frontend checks.
-- **API schemas**: `npm run api:validate-schemas` compiles JSON Schema contract files.
+- **API schemas/contracts**: `npm run api:validate-openapi`, `npm run api:validate-schemas`, and `npm run api:validate-contract-coverage` validate the OpenAPI document, JSON Schema files, and frontend runtime validation coverage.
 - **Frontend component tests**: `npm run test` runs Vitest/React Testing Library rendering and interaction checks.
 - **Compose**: `docker compose config --quiet` from the repository root.
 - **E2E Browser**: starts the Go simulation and API services, launches the Vite frontend through Playwright, and runs the expanded Chromium browser regression suite.
 - **Visual Regression**: starts the Go simulation and API services, launches the Vite frontend through Playwright, and compares committed screenshot baselines for core HMI pages.
 - **Security / Dependencies**: runs `govulncheck` for Go services and `npm audit --audit-level=high` for the frontend dependency tree.
-- **Historian DB Smoke**: verifies Docker Compose persistence through PostgreSQL/TimescaleDB.
+- **Historian DB Smoke**: verifies Docker Compose raw and 1-minute aggregate persistence through PostgreSQL/TimescaleDB.
 - **MQTT Bridge Smoke**: verifies the Docker Compose MQTT broker receives publish-only synthetic telemetry and command/event status messages.
 
 ## Frontend Data Layer
@@ -511,11 +511,11 @@ The smoke test:
 
 - starts the isolated Docker Compose project `smr-twin-historian-smoke`;
 - waits for API health and connected persistent historian status;
-- waits for direct `telemetry_history` rows in PostgreSQL/TimescaleDB and API telemetry history records;
+- waits for direct `telemetry_history` rows in PostgreSQL/TimescaleDB, API raw telemetry history records, and API 1-minute aggregate telemetry history records;
 - sends a simulation-only `V-101` `SET_POSITION` command;
 - verifies command and event records;
 - restarts the `simulation` service;
-- verifies telemetry, command, and event records still exist after restart.
+- verifies raw telemetry, aggregated telemetry, command, and event records still exist after restart.
 
 It requires a running Docker daemon. By default it removes the isolated Compose project and volumes after completion. Use `--keep-running` for debugging. On failure, the script writes diagnostics under `historian-smoke-logs/`, including Compose logs, DB counts, the last telemetry history response shape, historian status, and latest telemetry.
 
@@ -587,9 +587,34 @@ Verify that committed frontend API types are still current:
 
 ```bash
 npm run api:types:check
+npm run api:validate-openapi
+npm run api:validate-schemas
+npm run api:validate-contract-coverage
 ```
 
-This contract layer is documentation and frontend type source for the current API gateway. Frontend dev/test runtime validation is implemented for selected request and response payloads. Generated Go server stubs and Go runtime validation from JSON Schema are not implemented yet.
+This contract layer is documentation and frontend type source for the current API gateway. CI fails if generated TypeScript types drift from `packages/schemas/openapi.yaml`, if JSON Schema files fail to compile, or if the explicit runtime validation coverage list loses a core API payload. Frontend dev/test runtime validation is implemented for selected request and response payloads. Generated Go server stubs and Go runtime validation from JSON Schema are not implemented yet.
+
+Contract workflow:
+
+1. Update `packages/schemas/openapi.yaml`.
+2. Update the matching `packages/schemas/schemas/*.schema.json` reference schema.
+3. Run `cd apps/web && npm run api:types`.
+4. Run `npm run api:types:check`, `npm run api:validate-openapi`, `npm run api:validate-schemas`, and `npm run api:validate-contract-coverage`.
+5. Keep `apps/web/src/shared/api/validation/schemas.ts` aligned with API payloads that should be checked in dev/test.
+
+## Historian Retention And Downsampling
+
+When the optional TimescaleDB historian is enabled, the simulation service stores synthetic telemetry in `telemetry_history` and writes a 1-minute aggregate table, `telemetry_history_1m`, for trend views. The baseline retention metadata is 30 days for raw synthetic telemetry and 180 days for 1-minute aggregate rows. These policies apply only to demo synthetic data and do not provide production audit immutability or regulatory retention.
+
+Useful examples:
+
+```bash
+curl "http://localhost:8080/api/v1/telemetry/history?window=1h"
+curl "http://localhost:8080/api/v1/telemetry/history?window=24h&resolution=1m"
+curl http://localhost:8080/api/v1/historian/status
+```
+
+Supported history windows are `15m`, `1h`, `6h`, and `24h`. Supported resolutions are `raw` and `1m`; requests without a `resolution` parameter keep the previous raw-history behavior.
 
 ## Runtime API Validation
 
@@ -651,6 +676,7 @@ curl http://localhost:8080/metrics
 curl http://localhost:8080/api/v1/assets
 curl http://localhost:8080/api/v1/telemetry/latest
 curl "http://localhost:8080/api/v1/telemetry/history?window=15m"
+curl "http://localhost:8080/api/v1/telemetry/history?window=24h&resolution=1m"
 curl http://localhost:8080/api/v1/control/status
 curl -X POST http://localhost:8080/api/v1/control/mode \
   -H "Content-Type: application/json" \
@@ -714,7 +740,7 @@ curl "http://localhost:8081/api/v1/simulation/events/recent?limit=50"
 ## Known Limitations
 
 - Live UI transport is polling, not WebSocket/SSE.
-- Telemetry history can persist to PostgreSQL/TimescaleDB when the historian is enabled; otherwise the simulation service uses in-memory fallback history.
+- Telemetry history can persist to PostgreSQL/TimescaleDB when the historian is enabled, with a 1-minute aggregate path for longer trend windows; otherwise the simulation service uses in-memory fallback history.
 - Command history, event records, and alarm history can persist to the local demo historian when connected, but this is not a production compliance archive.
 - Alarm active state remains simulation-owned and synthetic; persisted alarm history stores demo lifecycle records only.
 - Command support is limited to simulated `V-101` valve and `P-101` pump assets.
@@ -729,7 +755,7 @@ curl "http://localhost:8081/api/v1/simulation/events/recent?limit=50"
 - Frontend uses route-level code splitting; deeper vendor/chart chunk tuning can be added later if needed.
 - Dashboard data is live for the local simulator, but it still uses REST polling and synthetic simulation sources.
 - Runtime validation is dev/test focused and currently lives in the frontend HTTP client; Go runtime validation from JSON Schema is not implemented yet.
-- Go server/client code generation is not implemented yet.
+- Go server/client code generation is not implemented yet; Go DTOs are still kept aligned with OpenAPI manually plus CI contract checks.
 - The simulation is synthetic and intentionally not a real reactor physics model.
 
 ## Roadmap
@@ -740,8 +766,8 @@ curl "http://localhost:8081/api/v1/simulation/events/recent?limit=50"
 4. Harden API contract tooling, simulation domain boundaries, and quality gates.
 5. Add persistent historian storage for telemetry, events, commands, and alarm history.
 6. Add publish-only MQTT bridge for simulated telemetry and integration smoke coverage.
-7. Add retention/downsampling and richer trend query controls.
-8. Add production-style auth hardening, retention/downsampling, deployment hardening, and extended CI checks.
+7. Add richer historian query UX and optional longer-range aggregate resolutions if they remain clearly simulation-only.
+8. Add production-style auth hardening, deployment hardening, and extended CI checks.
 9. Add PDF/Excel report export only if it remains clearly simulation-only and non-regulatory.
 
 ## Documentation

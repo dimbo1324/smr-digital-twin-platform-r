@@ -43,12 +43,12 @@ export function useLatestTelemetry(refreshMs = 1000): LiveTelemetryState {
   };
 }
 
-export function useTelemetryHistory(windowValue: string, refreshMs = 5000) {
+export function useTelemetryHistory(windowValue: string, resolution = "raw", refreshMs = 5000) {
   const query = useQuery({
-    queryKey: queryKeys.telemetry.history(windowValue),
+    queryKey: queryKeys.telemetry.history(windowValue, resolution),
     queryFn: ({ signal }) =>
       apiGet<SimulationTelemetrySnapshot[]>(
-        `/api/v1/telemetry/history?window=${encodeURIComponent(windowValue)}`,
+        `/api/v1/telemetry/history?window=${encodeURIComponent(windowValue)}&resolution=${encodeURIComponent(resolution)}`,
         { signal, responseSchema: "TelemetrySnapshotList" },
       ),
     refetchInterval: refreshMs,
@@ -62,6 +62,8 @@ export function useTelemetryHistory(windowValue: string, refreshMs = 5000) {
 
   return {
     history: query.data?.data ?? [],
+    source: query.data?.meta.source ?? "unknown",
+    degraded: query.data?.meta.degraded ?? false,
     state,
     refresh: () => void query.refetch(),
   };

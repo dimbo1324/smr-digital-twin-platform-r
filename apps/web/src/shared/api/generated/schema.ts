@@ -351,6 +351,11 @@ export interface components {
       "lastErrorAt"?: string;
       "lastErrorMessage"?: string;
       "fallbackActive": boolean;
+      "retentionEnabled": boolean;
+      "rawRetention"?: string;
+      "downsamplingEnabled": boolean;
+      "supportedResolutions"?: ("raw" | "1m")[];
+      "aggregateStatus"?: string;
       "simulationOnly": boolean;
       "safetyDisclaimer": string;
     };

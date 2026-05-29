@@ -14,9 +14,17 @@
     "lastErrorAt": { "type": "string", "format": "date-time" },
     "lastErrorMessage": { "type": "string" },
     "fallbackActive": { "type": "boolean" },
+    "retentionEnabled": { "type": "boolean" },
+    "rawRetention": { "type": "string" },
+    "downsamplingEnabled": { "type": "boolean" },
+    "supportedResolutions": {
+      "type": "array",
+      "items": { "type": "string", "enum": ["raw", "1m"] }
+    },
+    "aggregateStatus": { "type": "string" },
     "simulationOnly": { "type": "boolean" },
     "safetyDisclaimer": { "type": "string" }
   },
-  "required": ["enabled", "mode", "status", "database", "writeIntervalMs", "telemetrySampleMs", "fallbackActive", "simulationOnly", "safetyDisclaimer"],
+  "required": ["enabled", "mode", "status", "database", "writeIntervalMs", "telemetrySampleMs", "fallbackActive", "retentionEnabled", "downsamplingEnabled", "simulationOnly", "safetyDisclaimer"],
   "additionalProperties": false
 }

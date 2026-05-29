@@ -86,13 +86,17 @@ func (g *Gateway) buildSimulationReport(r *http.Request, window string) (Simulat
 	historian, historianErr := g.client.HistorianStatus(ctx)
 	if historianErr != nil {
 		historian = HistorianStatus{
-			Enabled:          false,
-			Mode:             "in_memory",
-			Status:           "unavailable_fallback",
-			Database:         "in_memory",
-			FallbackActive:   true,
-			SimulationOnly:   true,
-			SafetyDisclaimer: "The historian stores synthetic simulation data for demo, learning and portfolio purposes only.",
+			Enabled:              false,
+			Mode:                 "in_memory",
+			Status:               "unavailable_fallback",
+			Database:             "in_memory",
+			FallbackActive:       true,
+			RetentionEnabled:     false,
+			DownsamplingEnabled:  false,
+			SupportedResolutions: []string{"raw"},
+			AggregateStatus:      "unavailable",
+			SimulationOnly:       true,
+			SafetyDisclaimer:     "The historian stores synthetic simulation data for demo, learning and portfolio purposes only.",
 		}
 	}
 	mqtt, mqttErr := g.client.MQTTStatus(ctx)
@@ -106,7 +110,7 @@ func (g *Gateway) buildSimulationReport(r *http.Request, window string) (Simulat
 		}
 	}
 
-	history, historyErr := g.client.TelemetryHistory(ctx, window)
+	history, historyErr := g.client.TelemetryHistory(ctx, window, "raw")
 	historySource := history.Meta.Source
 	if historySource == "" {
 		historySource = "unavailable"

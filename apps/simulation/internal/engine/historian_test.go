@@ -150,6 +150,28 @@ func TestHistoryWithSourceDistinguishesPersistentEmptyAndReadFailure(t *testing.
 	}
 }
 
+func TestHistoryWithResolutionUsesPersistentAggregate(t *testing.T) {
+	aggregateTimestamp := time.Date(2026, 5, 28, 10, 0, 0, 0, time.UTC)
+	repo := &fakeHistorianRepository{
+		status: model.HistorianStatus{Enabled: true, Mode: model.HistorianModePersistent, Status: model.HistorianStatusConnected},
+		aggregateValues: []model.TelemetrySnapshot{{
+			Timestamp:        aggregateTimestamp,
+			LoopTemperatureC: 286.5,
+			SimulationOnly:   true,
+		}},
+	}
+	engine := New(Config{Historian: repo, HistorianOperationTimeout: time.Second}, slog.Default())
+	defer engine.Stop(context.Background())
+
+	result := engine.HistoryWithResolution(time.Hour, "1m")
+	if result.Source != "persistent_historian_1m" || result.Degraded {
+		t.Fatalf("expected aggregate historian source without degraded flag, got source=%s degraded=%t", result.Source, result.Degraded)
+	}
+	if len(result.Values) != 1 || result.Values[0].LoopTemperatureC != 286.5 {
+		t.Fatalf("unexpected aggregate values: %+v", result.Values)
+	}
+}
+
 func TestHistorianWriterDropsWritesWhenQueueIsFull(t *testing.T) {
 	block := make(chan struct{})
 	repo := &fakeHistorianRepository{
@@ -172,6 +194,7 @@ func TestHistorianWriterDropsWritesWhenQueueIsFull(t *testing.T) {
 type fakeHistorianRepository struct {
 	status           model.HistorianStatus
 	queryErr         error
+	aggregateValues  []model.TelemetrySnapshot
 	saveCommandBlock <-chan struct{}
 	mu               sync.Mutex
 	commands         []model.Command
@@ -189,6 +212,13 @@ func (f *fakeHistorianRepository) QueryTelemetryHistory(context.Context, time.Du
 		return nil, f.queryErr
 	}
 	return nil, nil
+}
+
+func (f *fakeHistorianRepository) QueryAggregatedTelemetryHistory(context.Context, time.Duration, string, time.Time) ([]model.TelemetrySnapshot, error) {
+	if f.queryErr != nil {
+		return nil, f.queryErr
+	}
+	return f.aggregateValues, nil
 }
 
 func (f *fakeHistorianRepository) SaveCommand(_ context.Context, command model.Command) error {

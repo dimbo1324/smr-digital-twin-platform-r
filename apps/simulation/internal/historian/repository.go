@@ -10,6 +10,7 @@ import (
 type Repository interface {
 	AppendTelemetrySnapshot(ctx context.Context, snapshot model.TelemetrySnapshot) error
 	QueryTelemetryHistory(ctx context.Context, window time.Duration, fallbackNow time.Time) ([]model.TelemetrySnapshot, error)
+	QueryAggregatedTelemetryHistory(ctx context.Context, window time.Duration, resolution string, fallbackNow time.Time) ([]model.TelemetrySnapshot, error)
 	SaveCommand(ctx context.Context, command model.Command) error
 	ListRecentCommands(ctx context.Context, limit int) ([]model.Command, error)
 	SaveEvent(ctx context.Context, event model.Event) error

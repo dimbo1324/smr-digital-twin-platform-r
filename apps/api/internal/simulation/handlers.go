@@ -86,8 +86,20 @@ func (g *Gateway) LatestTelemetry(w http.ResponseWriter, r *http.Request) {
 
 func (g *Gateway) TelemetryHistory(w http.ResponseWriter, r *http.Request) {
 	window := r.URL.Query().Get("window")
-	history, err := g.client.TelemetryHistory(r.Context(), window)
+	resolution := r.URL.Query().Get("resolution")
+	if resolution == "" {
+		resolution = "raw"
+	}
+	if resolution != "raw" && resolution != "1m" {
+		httpapi.WriteError(w, r, http.StatusBadRequest, "INVALID_RESOLUTION", "Supported telemetry history resolutions are raw and 1m")
+		return
+	}
+	history, err := g.client.TelemetryHistory(r.Context(), window, resolution)
 	if err != nil {
+		if responseErr, ok := IsResponseError(err); ok && responseErr.StatusCode == http.StatusBadRequest {
+			httpapi.WriteError(w, r, http.StatusBadRequest, responseErr.Code, responseErr.Message)
+			return
+		}
 		httpapi.WriteError(w, r, http.StatusServiceUnavailable, "SIMULATION_UNAVAILABLE", "Simulation history is unavailable")
 		return
 	}
@@ -140,13 +152,17 @@ func (g *Gateway) HistorianStatus(w http.ResponseWriter, r *http.Request) {
 	status, err := g.client.HistorianStatus(r.Context())
 	if err != nil {
 		httpapi.WriteData(w, r, http.StatusOK, HistorianStatus{
-			Enabled:          false,
-			Mode:             "in_memory",
-			Status:           "unavailable_fallback",
-			Database:         "in_memory",
-			FallbackActive:   true,
-			SimulationOnly:   true,
-			SafetyDisclaimer: "The historian stores synthetic simulation data for demo, learning and portfolio purposes only.",
+			Enabled:              false,
+			Mode:                 "in_memory",
+			Status:               "unavailable_fallback",
+			Database:             "in_memory",
+			FallbackActive:       true,
+			RetentionEnabled:     false,
+			DownsamplingEnabled:  false,
+			SupportedResolutions: []string{"raw"},
+			AggregateStatus:      "unavailable",
+			SimulationOnly:       true,
+			SafetyDisclaimer:     "The historian stores synthetic simulation data for demo, learning and portfolio purposes only.",
 		}, httpapi.MetaOptions{Source: "memory", Degraded: true})
 		return
 	}

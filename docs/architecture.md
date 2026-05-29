@@ -34,7 +34,7 @@ flowchart LR
 
 `packages/schemas/openapi.yaml` documents implemented REST endpoints only. The frontend generated types reduce drift for core DTOs such as `Asset`, `TelemetryPoint`, `Command`, `AlarmInstance`, `Event`, `SystemStatus`, `Scenario`, and API envelopes.
 
-This is not an OpenAPI-first backend rewrite. Go server stubs, generated Go clients, and Go runtime validation from JSON Schema are not implemented yet. Frontend dev/test runtime validation is implemented in the typed HTTP client for selected request and response payloads. The API gateway remains the runtime contract boundary for the frontend.
+CI now checks contract health in four layers: generated TypeScript output must be clean after `npm run api:types`, the OpenAPI document must parse, JSON Schema reference files must compile, and an explicit runtime-validation coverage script must still include the core API payloads. This is not an OpenAPI-first backend rewrite. Go server stubs, generated Go clients, and Go runtime validation from JSON Schema are not implemented yet. Frontend dev/test runtime validation is implemented in the typed HTTP client for selected request and response payloads. The API gateway remains the runtime contract boundary for the frontend.
 
 ## Frontend Data Layer
 
@@ -75,7 +75,7 @@ The desktop HMI layout keeps the primary sidebar as a sticky, semantic navigatio
 
 Vitest and React Testing Library cover component-level rendering and interaction checks for HMI status cards, MQTT/historian labels, control mode/PID panels, valve/pump controls, alarms, event filters, Trends source badges, and Settings capability copy. These tests mock frontend hooks and fixtures; they do not perform real plant control or external integration.
 
-The historian DB smoke runs `docker compose up --build -d` in an isolated Compose project, waits for the PostgreSQL/TimescaleDB historian to report `connected`, writes telemetry plus a simulation-only `V-101` command, restarts the simulation service, and verifies history/command/event records survive the restart. It verifies demo persistence of synthetic data only, not production audit compliance.
+The historian DB smoke runs `docker compose up --build -d` in an isolated Compose project, waits for the PostgreSQL/TimescaleDB historian to report `connected`, verifies raw telemetry and 1-minute aggregate telemetry through the API, writes a simulation-only `V-101` command, restarts the simulation service, and verifies history/command/event records survive the restart. It verifies demo persistence and downsampling of synthetic data only, not production audit compliance.
 
 The MQTT bridge smoke runs the full Docker Compose stack with the local Mosquitto broker, waits for `GET /api/v1/mqtt/status` to report `connected`, subscribes to synthetic telemetry and command/event topics, and verifies publish-only messages. It does not create MQTT command input topics and does not control the simulator through MQTT.
 
@@ -171,7 +171,7 @@ It reads independent live API sources through REST polling:
 
 Each dashboard section handles loading, empty, and unavailable states independently. Remaining non-production boundaries are labelled explicitly as synthetic telemetry, optional historian/in-memory fallback storage, REST polling, and no real plant control.
 
-The Process page reads process-loop assets through `GET /api/v1/assets` and process telemetry through `GET /api/v1/telemetry/latest`. The Trends page uses latest telemetry for summary cards and `GET /api/v1/telemetry/history` for chart data. If history is unavailable, the chart explicitly labels its static fallback curve as demo data.
+The Process page reads process-loop assets through `GET /api/v1/assets` and process telemetry through `GET /api/v1/telemetry/latest`. The Trends page uses latest telemetry for summary cards and `GET /api/v1/telemetry/history` for chart data. Longer windows can request `resolution=1m` to read synthetic 1-minute aggregate history when the historian is connected. If history is unavailable, the chart explicitly labels its static fallback curve as demo data.
 
 ## Persistent Historian Layer
 
@@ -186,12 +186,12 @@ flowchart LR
     SIM --> Repo
 ```
 
-When `HISTORIAN_ENABLED=true` and `DATABASE_URL` is reachable, migrations run on simulation startup and the repository writes telemetry, command, event, and alarm history records. If the database is disabled or unavailable, simulation continues with the existing in-memory history and exposes degraded historian status through:
+When `HISTORIAN_ENABLED=true` and `DATABASE_URL` is reachable, migrations run on simulation startup and the repository writes telemetry, command, event, and alarm history records. Telemetry writes also maintain a `telemetry_history_1m` aggregate table for synthetic trend downsampling, while `historian/status` exposes demo retention/downsampling metadata such as supported resolutions. If the database is disabled or unavailable, simulation continues with the existing in-memory history and exposes degraded historian status through:
 
 - `GET /api/v1/historian/status`
 - `GET /api/v1/simulation/historian/status`
 
-The historian is not a compliance audit system. It has no immutability, retention policy, production auth/RBAC, or regulatory guarantees.
+The historian is not a compliance audit system. The 30-day raw retention metadata and 1-minute aggregate path apply only to synthetic simulation telemetry; they do not provide immutability, production auth/RBAC, regulatory retention, or audit guarantees.
 
 ## MQTT Bridge
 
@@ -267,7 +267,7 @@ Alarm and event state is owned by `apps/simulation`. Recent records remain avail
 ## Current Limitations
 
 - Live UI updates use polling, not WebSocket or SSE.
-- Telemetry, command, event, and alarm history are persistent only when the optional PostgreSQL/TimescaleDB historian is enabled and connected; otherwise they fall back to in-memory storage.
+- Telemetry, command, event, and alarm history are persistent only when the optional PostgreSQL/TimescaleDB historian is enabled and connected; otherwise they fall back to in-memory storage. The 1-minute aggregate trend path is available only when persistent historian data exists.
 - Process commands are implemented only for simulated `V-101` and `P-101` assets.
 - Command/event history is not an immutable audit store.
 - MQTT command ingestion, production auth/RBAC, production observability, and Kubernetes are not part of the current milestone.

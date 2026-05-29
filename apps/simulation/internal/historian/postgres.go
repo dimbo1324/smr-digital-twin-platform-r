@@ -44,15 +44,20 @@ func NewPostgresRepository(ctx context.Context, cfg Config, logger *slog.Logger)
 		cfg:    cfg,
 		logger: logger,
 		status: model.HistorianStatus{
-			Enabled:           true,
-			Mode:              model.HistorianModePersistent,
-			Status:            model.HistorianStatusConnected,
-			Database:          model.HistorianStoragePostgresTimescale,
-			WriteIntervalMS:   cfg.WriteIntervalMS(),
-			TelemetrySampleMS: cfg.TelemetrySampleMS(),
-			FallbackActive:    false,
-			SimulationOnly:    true,
-			SafetyDisclaimer:  model.HistorianSimulationOnlyDataStatement,
+			Enabled:              true,
+			Mode:                 model.HistorianModePersistent,
+			Status:               model.HistorianStatusConnected,
+			Database:             model.HistorianStoragePostgresTimescale,
+			WriteIntervalMS:      cfg.WriteIntervalMS(),
+			TelemetrySampleMS:    cfg.TelemetrySampleMS(),
+			FallbackActive:       false,
+			RetentionEnabled:     true,
+			RawRetention:         "30 days",
+			DownsamplingEnabled:  true,
+			SupportedResolutions: []string{"raw", "1m"},
+			AggregateStatus:      "telemetry_history_1m",
+			SimulationOnly:       true,
+			SafetyDisclaimer:     model.HistorianSimulationOnlyDataStatement,
 		},
 	}
 	if err := repo.migrate(ctx); err != nil {
@@ -152,10 +157,31 @@ func (r *PostgresRepository) AppendTelemetrySnapshot(ctx context.Context, snapsh
 			 VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
 			snapshot.Timestamp, point.Tag, point.Name, point.NumericValue, point.TextValue, point.Unit, point.Quality, point.Source, point.Area, point.AssetTag, metadata,
 		)
+		if point.NumericValue != nil && !math.IsNaN(*point.NumericValue) {
+			bucket := snapshot.Timestamp.UTC().Truncate(time.Minute)
+			batch.Queue(
+				`INSERT INTO telemetry_history_1m(bucket, tag, name, avg_value, min_value, max_value, sample_count, unit, quality, source, area, asset_tag, metadata)
+				 VALUES($1,$2,$3,$4,$4,$4,1,$5,$6,$7,$8,$9,$10)
+				 ON CONFLICT(bucket, tag) DO UPDATE SET
+				   name=EXCLUDED.name,
+				   avg_value=((telemetry_history_1m.avg_value * telemetry_history_1m.sample_count) + EXCLUDED.avg_value) / (telemetry_history_1m.sample_count + 1),
+				   min_value=LEAST(telemetry_history_1m.min_value, EXCLUDED.min_value),
+				   max_value=GREATEST(telemetry_history_1m.max_value, EXCLUDED.max_value),
+				   sample_count=telemetry_history_1m.sample_count + 1,
+				   unit=EXCLUDED.unit,
+				   quality=EXCLUDED.quality,
+				   source=EXCLUDED.source,
+				   area=EXCLUDED.area,
+				   asset_tag=EXCLUDED.asset_tag,
+				   metadata=EXCLUDED.metadata,
+				   updated_at=now()`,
+				bucket, point.Tag, point.Name, *point.NumericValue, point.Unit, point.Quality, point.Source, point.Area, point.AssetTag, metadata,
+			)
+		}
 	}
 	results := r.pool.SendBatch(ctx, batch)
 	defer results.Close()
-	for range points {
+	for i := 0; i < batch.Len(); i++ {
 		if _, err := results.Exec(); err != nil {
 			r.markError(err)
 			return err
@@ -194,6 +220,54 @@ func (r *PostgresRepository) QueryTelemetryHistory(ctx context.Context, window t
 			snapshot = &value
 		}
 		applyTelemetryValue(snapshot, tag, numeric, text)
+	}
+	if err := rows.Err(); err != nil {
+		r.markError(err)
+		return nil, err
+	}
+	timestamps := make([]time.Time, 0, len(grouped))
+	for ts := range grouped {
+		timestamps = append(timestamps, ts)
+	}
+	sort.Slice(timestamps, func(i, j int) bool { return timestamps[i].Before(timestamps[j]) })
+	result := make([]model.TelemetrySnapshot, 0, len(timestamps))
+	for _, ts := range timestamps {
+		result = append(result, *grouped[ts])
+	}
+	return result, nil
+}
+
+func (r *PostgresRepository) QueryAggregatedTelemetryHistory(ctx context.Context, window time.Duration, resolution string, fallbackNow time.Time) ([]model.TelemetrySnapshot, error) {
+	if window <= 0 {
+		window = 15 * time.Minute
+	}
+	if resolution != "1m" {
+		return nil, fmt.Errorf("unsupported aggregate resolution %q", resolution)
+	}
+	from := fallbackNow.Add(-window)
+	rows, err := r.pool.Query(ctx, `SELECT bucket, tag, avg_value FROM telemetry_history_1m WHERE bucket >= $1 ORDER BY bucket ASC, tag ASC`, from)
+	if err != nil {
+		r.markError(err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	grouped := map[time.Time]*model.TelemetrySnapshot{}
+	for rows.Next() {
+		var ts time.Time
+		var tag string
+		var avg float64
+		if err := rows.Scan(&ts, &tag, &avg); err != nil {
+			r.markError(err)
+			return nil, err
+		}
+		snapshot := grouped[ts]
+		if snapshot == nil {
+			value := model.TelemetrySnapshot{Timestamp: ts, SimulationOnly: true}
+			grouped[ts] = &value
+			snapshot = &value
+		}
+		applyTelemetryValue(snapshot, tag, &avg, nil)
 	}
 	if err := rows.Err(); err != nil {
 		r.markError(err)
