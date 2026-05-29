@@ -37,7 +37,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version-file: apps/api/go.mod
+          go-version: "1.25.10"
           cache-dependency-path: apps/api/go.sum
 
       - name: Run API tests
@@ -65,7 +65,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version-file: apps/simulation/go.mod
+          go-version: "1.25.10"
           cache-dependency-path: apps/simulation/go.sum
 
       - name: Run simulation tests
@@ -107,8 +107,14 @@ jobs:
         working-directory: .
         run: git diff --exit-code apps/web/src/shared/api/generated/schema.ts
 
+      - name: Validate OpenAPI document
+        run: npm run api:validate-openapi
+
       - name: Validate API JSON schemas
         run: npm run api:validate-schemas
+
+      - name: Validate runtime contract coverage
+        run: npm run api:validate-contract-coverage
 
       - name: Run frontend typecheck
         run: npm run typecheck
@@ -185,7 +191,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version-file: apps/api/go.mod
+          go-version: "1.25.10"
           cache-dependency-path: |
             apps/api/go.sum
             apps/simulation/go.sum
@@ -281,7 +287,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version-file: apps/api/go.mod
+          go-version: "1.25.10"
           cache-dependency-path: |
             apps/api/go.sum
             apps/simulation/go.sum

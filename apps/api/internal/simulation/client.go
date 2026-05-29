@@ -43,12 +43,16 @@ func (c *Client) LatestTelemetry(ctx context.Context) (TelemetrySnapshot, error)
 	return get[TelemetrySnapshot](ctx, c, "/api/v1/simulation/telemetry/latest")
 }
 
-func (c *Client) TelemetryHistory(ctx context.Context, window string) (TelemetryHistoryResult, error) {
+func (c *Client) TelemetryHistory(ctx context.Context, window string, resolution string) (TelemetryHistoryResult, error) {
 	if window == "" {
 		window = "15m"
 	}
+	if resolution == "" {
+		resolution = "raw"
+	}
 	query := url.Values{}
 	query.Set("window", window)
+	query.Set("resolution", resolution)
 	payload, err := getEnvelope[[]TelemetrySnapshot](ctx, c, "/api/v1/simulation/telemetry/history?"+query.Encode())
 	if err != nil {
 		return TelemetryHistoryResult{}, err

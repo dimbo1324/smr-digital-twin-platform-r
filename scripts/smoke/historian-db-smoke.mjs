@@ -43,6 +43,9 @@ const diagnostics = {
   lastTelemetryHistoryResponse: null,
   lastTelemetryHistoryShape: null,
   lastTelemetryHistoryUrl: "",
+  lastTelemetryAggregateResponse: null,
+  lastTelemetryAggregateShape: null,
+  lastTelemetryAggregateUrl: "",
   simulationTelemetryHistoryResponse: null,
   simulationTelemetryHistoryShape: null,
 };
@@ -93,7 +96,9 @@ async function main() {
   log(`Database telemetry_history ready with ${dbRowsBefore} row(s).`);
 
   const initialHistory = await waitForTelemetryHistory();
+  const initialAggregate = await waitForTelemetryAggregate();
   const initialHistoryCount = initialHistory.items.length;
+  const initialAggregateCount = initialAggregate.items.length;
   const telemetryMarker = selectTelemetryMarker(initialHistory.items);
   log(`Telemetry history API ready with ${initialHistoryCount} item(s) from ${initialHistory.shape.path}.`);
   if (telemetryMarker) {
@@ -120,7 +125,9 @@ async function main() {
   const historyAfterRestart = await waitForTelemetryHistory("after simulation restart", {
     requiredTimestamp: telemetryMarker,
   });
+  const aggregateAfterRestart = await waitForTelemetryAggregate("after simulation restart");
   const historyAfterRestartCount = historyAfterRestart.items.length;
+  const aggregateAfterRestartCount = aggregateAfterRestart.items.length;
   if (historyAfterRestartCount < 1) {
     throw new Error("Telemetry history was empty after simulation restart.");
   }
@@ -139,7 +146,9 @@ async function main() {
     eventBeforeRestart,
     historianStatusAfter,
     historianStatusBefore,
+    aggregateAfterRestart,
     historyAfterRestart,
+    initialAggregate,
     initialHistory,
     psAfterSuccess,
     telemetryMarker,
@@ -149,13 +158,40 @@ async function main() {
   log("- Historian status: connected/persistent");
   log(`- telemetry_history DB rows before restart: ${dbRowsBefore}`);
   log(`- Telemetry history items before restart: ${initialHistoryCount}`);
+  log(`- Aggregated telemetry items before restart: ${initialAggregateCount}`);
   log(`- Telemetry history items after restart: ${historyAfterRestartCount}`);
+  log(`- Aggregated telemetry items after restart: ${aggregateAfterRestartCount}`);
   log(`- Command correlationId persisted: ${correlationId}`);
   if (commandId) {
     log(`- Command id persisted: ${commandId}`);
   }
 
   await writeSuccessArtifacts(successArtifacts);
+}
+
+async function waitForTelemetryAggregate(labelSuffix = "") {
+  const label = `1m aggregate telemetry history${labelSuffix ? ` ${labelSuffix}` : ""}`;
+  log(`Waiting for ${label}...`);
+  const waitDeadline = Date.now() + Math.min(options.historyWaitMs, timeLeft());
+  let lastResult = null;
+
+  while (Date.now() < waitDeadline && Date.now() < deadline) {
+    const url = `${options.apiUrl}/api/v1/telemetry/history?window=15m&resolution=1m`;
+    const response = await getJson(url, { allowFailure: true });
+    const shape = describeTelemetryHistoryResponse(response);
+    diagnostics.lastTelemetryAggregateResponse = response;
+    diagnostics.lastTelemetryAggregateShape = shape;
+    diagnostics.lastTelemetryAggregateUrl = url;
+    lastResult = { response, shape, url };
+
+    if (hasUsefulTelemetryHistory(shape.items, shape.kind)) {
+      log(`${label} ready (${shape.count} item(s), source=${response?.meta?.source ?? "unknown"}).`);
+      return { response, items: shape.items, shape, url };
+    }
+    await sleep(2_000);
+  }
+
+  throw new Error(`Timed out waiting for ${label}. Last response shape: ${JSON.stringify(sanitizeShapeForLog(lastResult?.shape))}`);
 }
 
 function parseArgs(args) {
@@ -732,6 +768,13 @@ async function collectHttpDiagnostics() {
   diagnostics.lastTelemetryHistoryShape = describeTelemetryHistoryResponse(history);
   diagnostics.lastTelemetryHistoryUrl = `${options.apiUrl}/api/v1/telemetry/history?window=15m&limit=500`;
 
+  const aggregate = await getJson(`${options.apiUrl}/api/v1/telemetry/history?window=15m&resolution=1m`, {
+    allowFailure: true,
+  });
+  diagnostics.lastTelemetryAggregateResponse = aggregate;
+  diagnostics.lastTelemetryAggregateShape = describeTelemetryHistoryResponse(aggregate);
+  diagnostics.lastTelemetryAggregateUrl = `${options.apiUrl}/api/v1/telemetry/history?window=15m&resolution=1m`;
+
   const simulationHistory = await getJson(
     `${options.simulationUrl}/api/v1/simulation/telemetry/history?window=15m`,
     { allowFailure: true },
@@ -743,6 +786,7 @@ async function collectHttpDiagnostics() {
 async function collectDatabaseDiagnostics() {
   const sql = `
 SELECT 'telemetry_count=' || count(*) FROM telemetry_history;
+SELECT 'telemetry_1m_count=' || count(*) FROM telemetry_history_1m;
 SELECT 'telemetry_range=' || COALESCE(min(time)::text, '') || ' .. ' || COALESCE(max(time)::text, '') FROM telemetry_history;
 SELECT 'tag_count=' || tag || '=' || count(*) FROM telemetry_history GROUP BY tag ORDER BY count(*) DESC, tag ASC LIMIT 10;
 SELECT 'command_count=' || count(*) FROM command_history;
@@ -763,6 +807,11 @@ function telemetryDebugPayload() {
       url: diagnostics.lastTelemetryHistoryUrl,
       response: diagnostics.lastTelemetryHistoryResponse,
       shape: sanitizeShapeForLog(diagnostics.lastTelemetryHistoryShape),
+    },
+    telemetryAggregate: {
+      url: diagnostics.lastTelemetryAggregateUrl,
+      response: diagnostics.lastTelemetryAggregateResponse,
+      shape: sanitizeShapeForLog(diagnostics.lastTelemetryAggregateShape),
     },
     directSimulationTelemetryHistory: {
       response: diagnostics.simulationTelemetryHistoryResponse,
@@ -827,6 +876,14 @@ async function writeSuccessArtifacts(artifacts) {
     artifacts.historyAfterRestart.response,
   );
   await writeJsonArtifact(
+    path.join(artifactRun.absolutePath, "telemetry-aggregate-before-restart.json"),
+    artifacts.initialAggregate.response,
+  );
+  await writeJsonArtifact(
+    path.join(artifactRun.absolutePath, "telemetry-aggregate-after-restart.json"),
+    artifacts.aggregateAfterRestart.response,
+  );
+  await writeJsonArtifact(
     path.join(artifactRun.absolutePath, "commands-recent-before-restart.json"),
     artifacts.commandBeforeRestart.response,
   );
@@ -862,6 +919,7 @@ function buildSummaryJson(status, artifacts = {}) {
     safety: "Synthetic simulation diagnostics only. No real plant data.",
     status,
     telemetryHistoryShape: sanitizeShapeForLog(diagnostics.lastTelemetryHistoryShape),
+    telemetryAggregateShape: sanitizeShapeForLog(diagnostics.lastTelemetryAggregateShape),
   };
 }
 

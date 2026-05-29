@@ -51,7 +51,7 @@ The MVP includes:
 - Go backend skeleton with REST endpoints and structured module boundaries.
 - Go simulation service for synthetic process and unit overview behaviour.
 - Polling-based live telemetry through the backend API.
-- In-memory fallback telemetry history for local trend views, with optional PostgreSQL/TimescaleDB historian persistence.
+- In-memory fallback telemetry history for local trend views, with optional PostgreSQL/TimescaleDB historian persistence and 1-minute synthetic telemetry aggregates.
 - Synthetic alarm lifecycle for `ACTIVE`, `ACKNOWLEDGED`, and `CLEARED` instances.
 - Unified event stream for commands, alarms, PID/control, scenarios, and simulation events.
 - Scenario controls for predefined synthetic scenarios.
@@ -61,7 +61,7 @@ The MVP includes:
 - Docker Compose environment for local development.
 - Basic backend, simulation, and frontend checks.
 
-The following are planned extensions rather than current implementation: MQTT command ingestion/control, production-grade audit retention, alarm shelving, declarative scenario definitions, PDF/Excel or regulatory report export, production auth/RBAC beyond the demo layer, production observability, and WebSocket/SSE transport.
+The following are planned extensions rather than current implementation: MQTT command ingestion/control, production-grade audit retention, alarm shelving, declarative scenario definitions, richer historian query UX beyond raw/1-minute synthetic aggregates, PDF/Excel or regulatory report export, production auth/RBAC beyond the demo layer, production observability, and WebSocket/SSE transport.
 
 ## Out of Scope
 

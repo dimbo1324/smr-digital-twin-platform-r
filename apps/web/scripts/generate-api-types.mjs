@@ -65,7 +65,7 @@ function toType(schema, indentLevel = 0) {
     case "object":
       return objectType(schema, indentLevel);
     case "array":
-      return `${toType(schema.items, indentLevel)}[]`;
+      return `${arrayItemType(schema.items, indentLevel)}[]`;
     case "string":
     case "number":
     case "integer":
@@ -75,6 +75,11 @@ function toType(schema, indentLevel = 0) {
     default:
       return "unknown";
   }
+}
+
+function arrayItemType(schema, indentLevel) {
+  const itemType = toType(schema, indentLevel);
+  return itemType.includes(" | ") ? `(${itemType})` : itemType;
 }
 
 function objectType(schema, indentLevel) {

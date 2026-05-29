@@ -2,6 +2,8 @@ module github.com/dimbo1324/smr-digital-twin-platform-r/apps/simulation
 
 go 1.25
 
+toolchain go1.25.10
+
 require (
 	github.com/eclipse/paho.mqtt.golang v1.5.1
 	github.com/jackc/pgx/v5 v5.7.6

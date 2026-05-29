@@ -44,6 +44,9 @@
     },
     {
       "name": "Reports"
+    },
+    {
+      "name": "Metrics"
     }
   ],
   "paths": {
@@ -60,6 +63,27 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/metrics": {
+      "get": {
+        "tags": [
+          "Metrics"
+        ],
+        "summary": "Read Prometheus text metrics",
+        "description": "Prometheus text exposition for local/demo observability of synthetic simulation platform services. This is not production monitoring.",
+        "responses": {
+          "200": {
+            "description": "Prometheus metrics in text exposition format",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
                 }
               }
             }
@@ -141,7 +165,7 @@
         "tags": [
           "Telemetry"
         ],
-        "summary": "Read in-memory telemetry history snapshots",
+        "summary": "Read raw or downsampled telemetry history snapshots",
         "parameters": [
           {
             "name": "window",
@@ -154,15 +178,31 @@
                 "5m",
                 "15m",
                 "30m",
-                "1h"
+                "1h",
+                "6h",
+                "24h"
               ],
               "default": "15m"
+            }
+          },
+          {
+            "name": "resolution",
+            "in": "query",
+            "required": false,
+            "description": "Telemetry history resolution. raw returns source samples; 1m returns synthetic historian downsampling buckets when available.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "raw",
+                "1m"
+              ],
+              "default": "raw"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "In-memory telemetry snapshots",
+            "description": "Raw or downsampled telemetry snapshots for synthetic simulation data",
             "content": {
               "application/json": {
                 "schema": {
@@ -2360,6 +2400,28 @@
           "fallbackActive": {
             "type": "boolean"
           },
+          "retentionEnabled": {
+            "type": "boolean"
+          },
+          "rawRetention": {
+            "type": "string"
+          },
+          "downsamplingEnabled": {
+            "type": "boolean"
+          },
+          "supportedResolutions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "raw",
+                "1m"
+              ]
+            }
+          },
+          "aggregateStatus": {
+            "type": "string"
+          },
           "simulationOnly": {
             "type": "boolean"
           },
@@ -2375,6 +2437,8 @@
           "writeIntervalMs",
           "telemetrySampleMs",
           "fallbackActive",
+          "retentionEnabled",
+          "downsamplingEnabled",
           "simulationOnly",
           "safetyDisclaimer"
         ]

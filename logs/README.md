@@ -25,4 +25,6 @@ node scripts/logs/clean-logs.mjs
 
 The observability smoke writes artifacts under `logs/smoke/<timestamp>_observability-smoke/`, including Compose status/logs, API and simulation metrics samples, Prometheus target/query responses, Grafana health, and a summary. These files are generated diagnostics and must not be committed.
 
+The historian DB smoke writes artifacts under `logs/smoke/<timestamp>_historian-db-smoke/`, including raw telemetry history, 1-minute aggregate telemetry history, command/event persistence checks, Compose status/logs, and a summary. These files describe synthetic simulation data only and must not be committed.
+
 Playwright browser, accessibility, and visual regression artifacts are generated separately by the web app tooling under `apps/web/playwright-report/` and `apps/web/test-results/` when enabled. Those generated reports are also ignored by Git. Visual baseline screenshots live with the web tests and are committed intentionally when updated.

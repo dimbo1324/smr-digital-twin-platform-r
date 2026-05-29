@@ -11,7 +11,7 @@ export const queryKeys = {
   },
   telemetry: {
     latest: ["telemetry", "latest"] as const,
-    history: (windowValue: string) => ["telemetry", "history", windowValue] as const,
+    history: (windowValue: string, resolution = "raw") => ["telemetry", "history", windowValue, resolution] as const,
     histories: ["telemetry", "history"] as const,
   },
   control: {

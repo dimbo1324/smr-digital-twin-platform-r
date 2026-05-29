@@ -74,6 +74,7 @@ curl http://localhost:8081/api/v1/simulation/status
 curl http://localhost:8081/api/v1/simulation/assets
 curl http://localhost:8081/api/v1/simulation/telemetry/latest
 curl "http://localhost:8081/api/v1/simulation/telemetry/history?window=15m"
+curl "http://localhost:8081/api/v1/simulation/telemetry/history?window=24h&resolution=1m"
 curl http://localhost:8081/api/v1/simulation/control/status
 curl -X POST http://localhost:8081/api/v1/simulation/control/mode \
   -H "Content-Type: application/json" \
@@ -138,7 +139,7 @@ This is an operator workflow simulator only. It is not a real plant alarm system
 
 ## Persistent Historian
 
-When `HISTORIAN_ENABLED=true` and `DATABASE_URL` is reachable, the simulation service runs SQL migrations from `HISTORIAN_MIGRATIONS_PATH` and writes synthetic telemetry, command, event, and alarm history records to PostgreSQL/TimescaleDB. Docker Compose uses local demo credentials and mounts the migrations into the container at `/migrations`.
+When `HISTORIAN_ENABLED=true` and `DATABASE_URL` is reachable, the simulation service runs SQL migrations from `HISTORIAN_MIGRATIONS_PATH` and writes synthetic telemetry, command, event, and alarm history records to PostgreSQL/TimescaleDB. Telemetry writes also maintain a 1-minute aggregate table (`telemetry_history_1m`) for synthetic trend downsampling. Docker Compose uses local demo credentials and mounts the migrations into the container at `/migrations`.
 
 If the database is disabled or unavailable, the service continues with in-memory fallback state unless `HISTORIAN_REQUIRED=true`.
 
@@ -146,7 +147,16 @@ Historian status is exposed through:
 
 - `GET /api/v1/simulation/historian/status`
 
-The historian stores synthetic simulation data only. It is not a production audit store and has no compliance retention guarantees.
+History can be queried as raw samples or 1-minute aggregate samples:
+
+```bash
+curl "http://localhost:8081/api/v1/simulation/telemetry/history?window=1h"
+curl "http://localhost:8081/api/v1/simulation/telemetry/history?window=24h&resolution=1m"
+```
+
+Supported windows are `15m`, `1h`, `6h`, and `24h`. Supported resolutions are `raw` and `1m`; unsupported resolutions return a structured `400` response. Historian status reports demo retention/downsampling fields including `rawRetention`, `supportedResolutions`, and `aggregateStatus`.
+
+The historian stores synthetic simulation data only. The 30-day raw retention metadata and 1-minute aggregate path are demo historian features, not production audit storage or compliance retention guarantees.
 
 The full Docker Compose persistence path can be verified from the repository root:
 
@@ -154,7 +164,7 @@ The full Docker Compose persistence path can be verified from the repository roo
 node scripts/smoke/historian-db-smoke.mjs
 ```
 
-The smoke uses an isolated Compose project, checks connected historian status, writes synthetic telemetry plus a `V-101` command, restarts the simulation service, and confirms records remain available through the API.
+The smoke uses an isolated Compose project, checks connected historian status, verifies raw and 1-minute aggregate telemetry history, writes synthetic telemetry plus a `V-101` command, restarts the simulation service, and confirms records remain available through the API.
 
 Each run writes a sanitized local report under `logs/smoke/<timestamp>_historian-db-smoke/`. These artifacts contain synthetic simulation diagnostics only and can be removed with `node scripts/logs/clean-logs.mjs`.
 

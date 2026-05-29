@@ -12,7 +12,7 @@ Core API DTOs are also represented in the machine-readable contract layer:
 - `packages/schemas/schemas/*.schema.json`
 - `apps/web/src/shared/api/generated/schema.ts`
 
-The generated frontend types are used for core API shapes such as `Asset`, `TelemetryPoint`, `Command`, `AlarmInstance`, `Event`, `SystemStatus`, `Scenario`, and response metadata. Runtime schema validation is implemented in the frontend HTTP client for selected dev/test API boundaries. Generated Go server code and Go runtime validation from JSON Schema are not implemented yet.
+The generated frontend types are used for core API shapes such as `Asset`, `TelemetryPoint`, telemetry history responses, `Command`, `AlarmInstance`, `Event`, `SystemStatus`, `Scenario`, and response metadata. Runtime schema validation is implemented in the frontend HTTP client for selected dev/test API boundaries, and CI checks OpenAPI parsing, JSON Schema compilation, generated TypeScript drift, and runtime validation coverage. Generated Go server code and Go runtime validation from JSON Schema are not implemented yet.
 
 The MQTT bridge exposes synthetic simulation data through publish-only JSON envelopes. MQTT status is part of the API contract, but MQTT command ingestion is intentionally not implemented.
 
@@ -347,8 +347,10 @@ The optional historian stores synthetic simulation records when PostgreSQL/Times
 - `EventLogRecord`: unified event stream records for commands, alarms, scenarios, control mode, PID, and simulation activity.
 - `AlarmHistoryRecord`: synthetic alarm lifecycle state, severity, timestamps, acknowledgement metadata, last value, threshold, and metadata.
 - `HistorianStatus`: enabled mode, connected/degraded/unavailable state, fallback flag, timing settings, and last write/error metadata.
+- `TelemetryHistoryAggregate`: 1-minute synthetic telemetry buckets used by Trends when PostgreSQL/TimescaleDB is connected.
+- `HistorianRetentionStatus`: demo retention/downsampling metadata such as raw retention, supported resolutions, and aggregate status.
 
-When the historian is disabled or unavailable, the simulation service keeps the existing in-memory fallback behavior. The historian is for demo and portfolio data only, not regulated plant audit storage.
+When the historian is disabled or unavailable, the simulation service keeps the existing in-memory fallback behavior. The historian is for demo and portfolio data only, not regulated plant audit storage. The 30-day raw retention metadata and 1-minute downsampling path apply only to synthetic telemetry and do not provide production audit immutability or regulatory retention.
 
 ## Command Model
 
@@ -499,6 +501,7 @@ Implemented now:
 - API gateway to simulation service.
 - Active alarm generation and display.
 - Persistent historian-backed history for trends when enabled, with in-memory fallback.
+- 1-minute aggregated historian telemetry for longer Trends windows when the persistent historian is connected.
 - Scenario start/stop/reset endpoints.
 - Manual/auto/disabled `TIC-101` mode and `V-101` command arbitration.
 - Simulation-only `TIC-101` PID controller.
@@ -512,7 +515,7 @@ Partial:
 - Alarm shelving.
 - Events, because persistence exists but compliance-grade audit retention, pagination, and policy are not implemented.
 - Assets.
-- Trends, because long-range query controls and downsampling are still limited.
+- Trends, because only raw and 1-minute aggregate resolutions are implemented; richer query UX and additional aggregate windows remain future work.
 - Process UI controls, because only `V-101` and `P-101` simulation commands are implemented.
 
 Not implemented:

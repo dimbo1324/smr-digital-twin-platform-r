@@ -89,6 +89,25 @@ func TestTelemetryHistoryPropagatesSimulationSourceMeta(t *testing.T) {
 	}
 }
 
+func TestTelemetryHistoryRejectsUnsupportedResolution(t *testing.T) {
+	server := fakeSimulationServer()
+	defer server.Close()
+	gateway := newTestGateway(server.URL, true)
+
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/api/v1/telemetry/history?window=15m&resolution=10s", nil)
+	gateway.TelemetryHistory(recorder, request)
+
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("expected status 400, got %d", recorder.Code)
+	}
+	payload := decodeMap(t, recorder.Body.Bytes())
+	errPayload := payload["error"].(map[string]any)
+	if errPayload["code"] != "INVALID_RESOLUTION" {
+		t.Fatalf("expected INVALID_RESOLUTION, got %v", errPayload["code"])
+	}
+}
+
 func TestSystemStatusIncludesSimulationConnected(t *testing.T) {
 	server := fakeSimulationServer()
 	defer server.Close()

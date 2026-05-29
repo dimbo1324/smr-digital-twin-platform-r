@@ -72,10 +72,18 @@ func (h *Handler) LatestTelemetry(w http.ResponseWriter, _ *http.Request) {
 func (h *Handler) History(w http.ResponseWriter, r *http.Request) {
 	window, err := parseWindow(r.URL.Query().Get("window"))
 	if err != nil {
-		writeError(w, http.StatusBadRequest, "INVALID_WINDOW", "Supported windows are 5m, 15m, 30m, and 1h")
+		writeError(w, http.StatusBadRequest, "INVALID_WINDOW", "Supported windows are 5m, 15m, 30m, 1h, 6h, and 24h")
 		return
 	}
-	result := h.engine.HistoryWithSource(window)
+	resolution := r.URL.Query().Get("resolution")
+	if resolution == "" {
+		resolution = "raw"
+	}
+	if resolution != "raw" && resolution != "1m" {
+		writeError(w, http.StatusBadRequest, "INVALID_RESOLUTION", "Supported telemetry history resolutions are raw and 1m")
+		return
+	}
+	result := h.engine.HistoryWithResolution(window, resolution)
 	writeDataWithMeta(w, result.Values, len(result.Values), result.Source, result.Degraded)
 }
 
@@ -258,6 +266,10 @@ func parseWindow(raw string) (time.Duration, error) {
 		return 30 * time.Minute, nil
 	case "1h":
 		return time.Hour, nil
+	case "6h":
+		return 6 * time.Hour, nil
+	case "24h":
+		return 24 * time.Hour, nil
 	default:
 		return 0, errors.New("invalid window")
 	}

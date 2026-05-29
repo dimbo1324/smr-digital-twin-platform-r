@@ -13,9 +13,15 @@ import { PageShell } from "@/shared/ui/page-shell";
 
 export function TrendsPage() {
   const [windowValue, setWindowValue] = useState("15m");
-  const { history, state } = useTelemetryHistory(windowValue);
   const latestTelemetry = useLatestTelemetry(2000);
   const historian = useHistorianStatus();
+  const supportedResolutions = historian.status?.supportedResolutions?.length
+    ? historian.status.supportedResolutions
+    : ["raw"];
+  const defaultResolution = ["6h", "24h"].includes(windowValue) && supportedResolutions.includes("1m") ? "1m" : "raw";
+  const [resolution, setResolution] = useState("raw");
+  const effectiveResolution = supportedResolutions.includes(resolution) ? resolution : defaultResolution;
+  const { history, state, source } = useTelemetryHistory(windowValue, effectiveResolution);
   const trendPoints = TREND_TELEMETRY_TAGS
     .map(({ tag }) => findTelemetryByTag(latestTelemetry.points, tag) ?? getDemoFallbackTelemetryPoint(tag))
     .filter((point) => point !== undefined);
@@ -47,29 +53,50 @@ export function TrendsPage() {
           <div>
             <CardTitle>History Window</CardTitle>
             <CardDescription>
-              Synthetic telemetry history from backend API. Static fallback is labelled on the chart when history is unavailable.
+              Synthetic telemetry history from backend API. Longer windows can use historian downsampling when available.
             </CardDescription>
           </div>
           <Badge variant={state === "connected" ? "success" : "warning"} data-testid="trends-source-badge">
-            {historian.status?.status === "connected"
-              ? "persistent historian"
-              : state === "connected"
-                ? "in-memory simulation history"
-                : "fallback"}
+            {sourceLabel(source, state, historian.status?.status)}
           </Badge>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
-            {["5m", "15m", "30m", "1h"].map((windowOption) => (
+            {["5m", "15m", "30m", "1h", "6h", "24h"].map((windowOption) => (
               <Button
                 key={windowOption}
                 size="sm"
                 variant={windowOption === windowValue ? "default" : "outline"}
-                onClick={() => setWindowValue(windowOption)}
+                onClick={() => {
+                  setWindowValue(windowOption);
+                  if (["6h", "24h"].includes(windowOption) && supportedResolutions.includes("1m")) {
+                    setResolution("1m");
+                  }
+                }}
               >
                 {windowOption}
               </Button>
             ))}
+          </div>
+          <div className="mt-4 flex flex-wrap items-center gap-2" aria-label="Telemetry history resolution">
+            {["raw", "1m"].map((resolutionOption) => {
+              const disabled = !supportedResolutions.includes(resolutionOption);
+              return (
+                <Button
+                  key={resolutionOption}
+                  size="sm"
+                  variant={resolutionOption === effectiveResolution ? "default" : "outline"}
+                  disabled={disabled}
+                  onClick={() => setResolution(resolutionOption)}
+                  data-testid={`trends-resolution-${resolutionOption}`}
+                >
+                  {resolutionOption === "raw" ? "Raw samples" : "1 minute aggregate"}
+                </Button>
+              );
+            })}
+            {effectiveResolution !== "raw" ? (
+              <Badge variant="mock">Downsampled synthetic historian data</Badge>
+            ) : null}
           </div>
         </CardContent>
       </Card>
@@ -81,10 +108,10 @@ export function TrendsPage() {
           <div>
             <CardTitle>Tag Selector</CardTitle>
             <CardDescription>
-              Current process-loop trend tags. Multi-tag queries and downsampling controls are planned.
+              Current process-loop trend tags. Resolution controls request raw or downsampled synthetic historian data.
             </CardDescription>
           </div>
-          <Badge variant="outline">raw / 1s / 10s / 1m later</Badge>
+          <Badge variant="outline">{effectiveResolution === "raw" ? "raw samples" : "1m aggregate"}</Badge>
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-3">
@@ -107,4 +134,17 @@ export function TrendsPage() {
       </Card>
     </PageShell>
   );
+}
+
+function sourceLabel(source: string, state: string, historianStatus?: string) {
+  if (source === "persistent_historian_1m") {
+    return "aggregated historian";
+  }
+  if (source === "persistent_historian") {
+    return "persistent historian";
+  }
+  if (historianStatus === "connected" && state === "connected") {
+    return "persistent historian";
+  }
+  return state === "connected" ? "in-memory simulation history" : "fallback";
 }

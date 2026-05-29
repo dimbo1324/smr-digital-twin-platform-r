@@ -21,7 +21,7 @@ Process controls for assets such as `V-101` and `P-101` use a simulation-only co
 - include explicit command source and requester metadata;
 - are recorded in a demo command/event trail that can be persisted by the optional historian.
 
-The current command trail is not a compliance audit store. The optional PostgreSQL/TimescaleDB historian stores only synthetic demo data and does not provide immutability, regulatory retention, or production audit guarantees.
+The current command trail is not a compliance audit store. The optional PostgreSQL/TimescaleDB historian stores only synthetic demo data. Its raw retention metadata and 1-minute telemetry downsampling path are demo time-series features only and do not provide immutability, regulatory retention, or production audit guarantees.
 
 Simulation report export is for portfolio/demo summaries of synthetic data only. JSON and CSV reports are not regulatory reports, not production audit exports, and not nuclear compliance artifacts.
 

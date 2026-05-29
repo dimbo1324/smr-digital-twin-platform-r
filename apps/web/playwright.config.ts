@@ -31,6 +31,7 @@ export default defineConfig({
     timeout: 120_000,
     env: {
       VITE_API_BASE_URL: process.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8080",
+      VITE_API_RUNTIME_VALIDATION: process.env.VITE_API_RUNTIME_VALIDATION ?? "strict",
     },
   },
 });
