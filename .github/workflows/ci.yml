@@ -12,6 +12,7 @@ on:
       - "test/**"
       - "epic/**"
       - "hardening/**"
+      - "docs/**"
       - "codex/**"
   pull_request:
     branches:

@@ -10,6 +10,8 @@ This demo baseline presents SMR Digital Twin Platform as a simulation-only IIoT 
 
 It is not a real plant system, not a production SCADA platform, not production authentication, not a production audit archive, and not regulatory nuclear reporting.
 
+For a concise hiring/interview-oriented overview, see the [Recruiter Case Study](recruiter-case-study.md).
+
 ## Implemented Capabilities
 
 - Dashboard, Process, Alarms, Events, Trends, Reports, Settings, and Scenario Authoring pages.

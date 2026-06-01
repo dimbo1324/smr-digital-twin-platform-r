@@ -1,5 +1,7 @@
 # Architecture Notes
 
+See also: [Recruiter Case Study](recruiter-case-study.md) for a concise project overview aimed at hiring and interview review.
+
 Current MVP runtime path:
 
 ```mermaid
