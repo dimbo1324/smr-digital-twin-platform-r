@@ -4,6 +4,7 @@ import {
   FileText,
   Gauge,
   LayoutDashboard,
+  PenLine,
   ScrollText,
   Settings,
   type LucideIcon,
@@ -45,6 +46,11 @@ export const navigationItems: NavigationItem[] = [
     title: "Reports",
     path: "/reports",
     icon: FileText,
+  },
+  {
+    title: "Scenario Authoring",
+    path: "/scenario-authoring",
+    icon: PenLine,
   },
   {
     title: "Settings",

@@ -467,6 +467,8 @@ Current scenarios are predefined as embedded YAML configuration and synthetic:
 
 The YAML registry lives under `apps/simulation/config/scenarios/` and validates IDs, metadata, duration strings, severity, expected alarms, report tags, safety notes, enabled state, version, duplicate IDs, and constrained synthetic effects. It is not a scripting language or real operating procedure system.
 
+Scenario Authoring in the frontend creates local YAML drafts for this source-controlled registry. A draft has the same core metadata, but it is not a runtime entity: it is not persisted by the API, not executed by the simulator, not deployed to equipment, and not a real operating procedure. Exported drafts require developer review before any manual YAML commit.
+
 ## Tag Naming Convention
 
 Process-loop tags use industrial-style identifiers:

@@ -19,17 +19,18 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 
 ## What This Project Demonstrates
 
-| Area              | Demonstrated implementation                                                                                             | Why it matters                                                             |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| Industrial HMI    | Dashboard, Process, Alarms, Events, Trends, Reports, Settings                                                           | Shows operator-style workflows rather than a generic CRUD app.             |
-| API gateway       | Go REST gateway, structured errors, demo RBAC enforcement, report aggregation                                           | Keeps the frontend contract stable and protects write/action endpoints.    |
-| Simulation engine | Synthetic process loop, scenarios, `V-101`/`P-101` state machines, `TIC-101` PID                                        | Provides realistic demo dynamics without real plant connectivity.          |
-| Command workflow  | Manual/auto/disabled arbitration, command status, event records                                                         | Demonstrates control authority boundaries in a simulation-only setting.    |
-| Historian         | Optional PostgreSQL/TimescaleDB persistence, 30-day raw retention metadata, and 1-minute synthetic telemetry aggregates | Demonstrates time-series storage, downsampling, and fallback behavior.     |
-| MQTT              | Publish-only synthetic telemetry/events/alarms/status bridge                                                            | Shows IIoT integration while explicitly avoiding MQTT command ingestion.   |
-| Reports           | JSON/CSV/PDF simulation summary export                                                                                  | Useful portfolio/demo artifact, clearly not regulatory reporting.          |
-| Observability     | API/simulation `/metrics`, Prometheus, Grafana dashboard provisioning                                                   | Gives local diagnostics for platform health and synthetic process metrics. |
-| Quality gates     | Go test/vet/race/coverage, Vitest, Playwright E2E/a11y/visual, smokes, scans                                            | Shows production-style engineering discipline without production claims.   |
+| Area               | Demonstrated implementation                                                                                             | Why it matters                                                             |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Industrial HMI     | Dashboard, Process, Alarms, Events, Trends, Reports, Settings                                                           | Shows operator-style workflows rather than a generic CRUD app.             |
+| API gateway        | Go REST gateway, structured errors, demo RBAC enforcement, report aggregation                                           | Keeps the frontend contract stable and protects write/action endpoints.    |
+| Simulation engine  | Synthetic process loop, scenarios, `V-101`/`P-101` state machines, `TIC-101` PID                                        | Provides realistic demo dynamics without real plant connectivity.          |
+| Command workflow   | Manual/auto/disabled arbitration, command status, event records                                                         | Demonstrates control authority boundaries in a simulation-only setting.    |
+| Historian          | Optional PostgreSQL/TimescaleDB persistence, 30-day raw retention metadata, and 1-minute synthetic telemetry aggregates | Demonstrates time-series storage, downsampling, and fallback behavior.     |
+| MQTT               | Publish-only synthetic telemetry/events/alarms/status bridge                                                            | Shows IIoT integration while explicitly avoiding MQTT command ingestion.   |
+| Reports            | JSON/CSV/PDF simulation summary export                                                                                  | Useful portfolio/demo artifact, clearly not regulatory reporting.          |
+| Scenario authoring | UI workspace for simulation-only YAML scenario drafts, preview, validation, copy, and download                          | Helps explain declarative scenarios without runtime deployment semantics.  |
+| Observability      | API/simulation `/metrics`, Prometheus, Grafana dashboard provisioning                                                   | Gives local diagnostics for platform health and synthetic process metrics. |
+| Quality gates      | Go test/vet/race/coverage, Vitest, Playwright E2E/a11y/visual, smokes, scans                                            | Shows production-style engineering discipline without production claims.   |
 
 ## 5-Minute Demo Story
 
@@ -39,9 +40,10 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 4. Trigger a synthetic scenario, then open Alarms and Events to show alarm activation, acknowledgement, clearing, and the unified event trail.
 5. Open Trends to show live, raw historian, or 1-minute aggregated historian source labels.
 6. Open Reports and export a JSON, CSV, or PDF simulation summary. Emphasize that it is not a regulatory or production audit report.
-7. Start the optional observability profile and show Prometheus/Grafana local metrics for API and simulation health.
-8. Mention that MQTT publishes synthetic data only and has no command ingestion topics.
-9. Close with the CI page: API, simulation, web, E2E, a11y, visual regression, Docker smokes, race/coverage, and dependency scans.
+7. Open Scenario Authoring, choose a template, validate the YAML draft, and download it. Explain that it is draft/export only and does not deploy to real equipment.
+8. Start the optional observability profile and show Prometheus/Grafana local metrics for API and simulation health.
+9. Mention that MQTT publishes synthetic data only and has no command ingestion topics.
+10. Close with the CI page: API, simulation, web, E2E, a11y, visual regression, Docker smokes, race/coverage, and dependency scans.
 
 ## Architecture Overview
 
@@ -60,6 +62,25 @@ flowchart LR
 ```
 
 The frontend talks only to `apps/api`. The API gateway enforces demo RBAC for protected actions, proxies read/write requests to the simulation service, and aggregates read-only reports. The simulation service owns synthetic process state, historian writes, MQTT publishing, scenarios, alarms, commands, PID/control state, and simulation metrics.
+
+## Demo Screenshots
+
+Final portfolio screenshots live under `docs/assets/screenshots/` and are captured from the simulation-only HMI. They are visual demo assets, not evidence of real plant operation or certified HMI behavior.
+
+| View               | Screenshot                                                                |
+| ------------------ | ------------------------------------------------------------------------- |
+| Dashboard          | [Dashboard](docs/assets/screenshots/dashboard-dark.png)                   |
+| Process            | [Process](docs/assets/screenshots/process-dark.png)                       |
+| Trends             | [Trends](docs/assets/screenshots/trends-dark.png)                         |
+| Reports            | [Reports](docs/assets/screenshots/reports-dark.png)                       |
+| Scenario Authoring | [Scenario Authoring](docs/assets/screenshots/scenario-authoring-dark.png) |
+| Settings           | [Settings](docs/assets/screenshots/settings-dark.png)                     |
+
+To refresh them from a running local app:
+
+```bash
+make demo-assets-update
+```
 
 ## Demo-Only, Not Production
 
@@ -160,6 +181,7 @@ These commands run the generated artifact guard, Go formatting checks, frontend 
 - MQTT bridge status endpoint and minimal Dashboard/Settings status labels.
 - Demo Auth/RBAC layer with static simulation-only users, a role switcher, `X-Demo-User` header, and backend enforcement for protected write/action endpoints.
 - Simulation-only JSON/CSV/PDF report export through the API gateway and Reports page. These reports are not regulatory, compliance, or production audit reports.
+- Scenario Authoring workspace for simulation-only YAML drafts with template selection, local validation, preview, copy, and download. It does not persist, deploy, execute, or mutate runtime scenarios.
 - Local demo observability baseline with API/simulation `/metrics`, Prometheus scraping, and Grafana dashboard provisioning.
 - Frontend valve and pump control panels with pending, success, and error states.
 - GitHub Actions CI quality gates for Go API, Go simulation, frontend, Docker Compose config validation, visual regression, smoke tests, race/coverage checks, and dependency/security scans.
