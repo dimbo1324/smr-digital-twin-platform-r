@@ -21,6 +21,11 @@ const TrendsPage = lazy(() =>
 const ReportsPage = lazy(() =>
   import("@/pages/reports/ReportsPage").then((module) => ({ default: module.ReportsPage })),
 );
+const ScenarioAuthoringPage = lazy(() =>
+  import("@/pages/scenario-authoring/ScenarioAuthoringPage").then((module) => ({
+    default: module.ScenarioAuthoringPage,
+  })),
+);
 const SettingsPage = lazy(() =>
   import("@/pages/settings/SettingsPage").then((module) => ({ default: module.SettingsPage })),
 );
@@ -76,6 +81,14 @@ export function AppRouter() {
             element={
               <LazyPage>
                 <ReportsPage />
+              </LazyPage>
+            }
+          />
+          <Route
+            path="/scenario-authoring"
+            element={
+              <LazyPage>
+                <ScenarioAuthoringPage />
               </LazyPage>
             }
           />

@@ -65,6 +65,13 @@ const desktopDarkPages: VisualScenario[] = [
     viewport: "desktop",
   },
   {
+    route: "/scenario-authoring",
+    pageTestId: "scenario-authoring-page",
+    name: "scenario-authoring",
+    theme: "dark",
+    viewport: "desktop",
+  },
+  {
     route: "/settings",
     pageTestId: "settings-page",
     name: "settings",

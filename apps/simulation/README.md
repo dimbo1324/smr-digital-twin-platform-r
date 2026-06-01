@@ -125,6 +125,12 @@ Each YAML scenario includes an ID, name, description, category, severity, durati
 
 This registry is not a scripting language and not a real operating procedure system. Effects are interpreted by the synthetic simulation engine only.
 
+The frontend Scenario Authoring workspace can export YAML drafts for this registry, but it does not
+write to this directory at runtime and does not deploy scenarios. To add a draft, a developer must
+review the exported YAML, place it under `apps/simulation/config/scenarios/`, run the simulation
+tests, and commit it through the normal source-controlled workflow. This remains simulation-only and
+does not create a real plant procedure.
+
 ## Alarm Lifecycle
 
 The simulation service keeps active alarm state in memory and persists alarm lifecycle records when the optional historian is connected:

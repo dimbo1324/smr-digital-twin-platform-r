@@ -30,6 +30,11 @@ export async function gotoReports(page: Page) {
   await expect(page.getByTestId("reports-page")).toBeVisible();
 }
 
+export async function gotoScenarioAuthoring(page: Page) {
+  await page.goto("/scenario-authoring");
+  await expect(page.getByTestId("scenario-authoring-page")).toBeVisible();
+}
+
 export async function gotoSettings(page: Page) {
   await page.goto("/settings");
   await expect(page.getByTestId("settings-page")).toBeVisible();

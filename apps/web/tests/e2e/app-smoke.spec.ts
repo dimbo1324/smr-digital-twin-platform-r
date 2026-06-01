@@ -7,6 +7,7 @@ const pages = [
   ["alarms", "alarms-page"],
   ["events", "events-page"],
   ["trends", "trends-page"],
+  ["scenario-authoring", "scenario-authoring-page"],
   ["settings", "settings-page"],
 ] as const;
 

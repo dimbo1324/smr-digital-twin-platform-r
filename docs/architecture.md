@@ -190,6 +190,24 @@ flowchart LR
 
 The scenario registry is declarative metadata plus a small set of supported effect behaviors. It is not a scripting runtime, not an operating procedure engine, and not a real plant scenario system.
 
+## Scenario Authoring Draft Flow
+
+The Scenario Authoring page is a frontend draft workspace for synthetic YAML scenarios. It helps reviewers create, preview, validate, copy, and download YAML that can be manually reviewed and committed by a developer. It does not persist drafts on the backend, mutate the embedded scenario registry, execute scenarios, deploy scenarios, or control any real plant.
+
+```mermaid
+flowchart LR
+    UI["Scenario Authoring UI"] --> Form["Template + form editor"]
+    Form --> YAMLDraft["Generated YAML draft"]
+    YAMLDraft --> Validate["Local validation<br/>required fields + supported effects"]
+    Validate --> Preview["Preview + warnings"]
+    Preview --> Export["Copy / download YAML"]
+    Export --> Review["Developer review"]
+    Review --> Commit["Optional source-controlled commit"]
+    Commit --> Registry["Simulation scenario registry<br/>next build/runtime load"]
+```
+
+This flow is simulation-only. Exported YAML is not a production procedure, not a regulatory artifact, and not a real plant control plan.
+
 ## Manual / Auto Command Arbitration
 
 `TIC-101` currently owns the simulation-only control mode for the `TT-101 -> V-101.POS` loop:

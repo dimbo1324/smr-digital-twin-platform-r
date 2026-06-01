@@ -7,6 +7,7 @@ import {
   gotoEvents,
   gotoProcess,
   gotoReports,
+  gotoScenarioAuthoring,
   gotoSettings,
   gotoTrends,
 } from "./helpers/navigation";
@@ -18,6 +19,7 @@ const pages = [
   { name: "events", goto: gotoEvents },
   { name: "trends", goto: gotoTrends, setup: prepareManualState },
   { name: "reports", goto: gotoReports },
+  { name: "scenario-authoring", goto: gotoScenarioAuthoring },
   { name: "settings", goto: gotoSettings },
 ] as const;
 

@@ -64,7 +64,7 @@ export function AppSidebar() {
               key={item.path}
               to={item.path}
               aria-label={`Go to ${item.title}`}
-              data-testid={`nav-${item.title.toLowerCase()}`}
+              data-testid={`nav-${item.path.replace("/", "")}`}
               className={({ isActive }) =>
                 cn(
                   "group relative flex items-center gap-3 rounded-2xl px-3 py-3 text-sm text-muted-foreground transition-[background-color,color,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-muted/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",

@@ -10,6 +10,7 @@
     "api:validate-contract-coverage": "node scripts/validate-api-contract-coverage.mjs",
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
+    "demo:assets": "node scripts/capture-demo-assets.mjs",
     "format:check": "prettier --check . \"../../README.md\" \"../../docs/**/*.md\" \"../../packages/schemas/**/*.json\" \"../../.github/**/*.yml\" \"../../*.{json,md,yml,yaml}\"",
     "format:write": "prettier --write . \"../../README.md\" \"../../docs/**/*.md\" \"../../packages/schemas/**/*.json\" \"../../.github/**/*.yml\" \"../../*.{json,md,yml,yaml}\"",
     "preview": "vite preview",
