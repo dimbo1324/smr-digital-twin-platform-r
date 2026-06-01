@@ -42,22 +42,22 @@ flowchart LR
 
 ## 5. Key engineering highlights
 
-| Area                       | What was built                                                                                 | Why it matters                                                                                        |
-| -------------------------- | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Frontend HMI               | React HMI with dashboard, process mnemonic, trends, reports, settings, and scenario authoring  | Shows user-facing industrial workflow and responsive UI discipline.                                   |
-| API Gateway                | Go REST gateway with demo RBAC, report aggregation, contracts, and simulation proxying         | Separates frontend concerns from simulation internals and enforces protected actions at one boundary. |
-| Simulation Engine          | Synthetic thermal process loop with telemetry, commands, scenarios, alarms, and events         | Demonstrates state-machine thinking without controlling real equipment.                               |
-| Manual/Auto/PID Control    | `MANUAL`, `AUTO`, `DISABLED`, and `TIC-101` PID arbitration for simulation-only valve behavior | Shows control workflow modeling and authority separation.                                             |
-| Alarm Lifecycle            | Active/history alarms with acknowledge and clear paths                                         | Demonstrates operator response flows and event traceability.                                          |
-| Event Stream               | Unified synthetic events and command history                                                   | Helps reviewers see cause/effect across commands, scenarios, and alarms.                              |
-| Historian                  | Raw synthetic telemetry plus 1-minute aggregate history                                        | Demonstrates time-series persistence and trend querying.                                              |
-| MQTT Bridge                | Publish-only synthetic telemetry/events/status bridge                                          | Shows IIoT integration while explicitly avoiding MQTT command ingestion.                              |
-| Reports                    | JSON/CSV/PDF simulation summary exports                                                        | Provides demo artifacts without claiming regulatory reporting.                                        |
-| Scenario Authoring         | UI for YAML draft creation, preview, validation, copy, and download                            | Demonstrates productivity tooling while avoiding runtime deployment from the UI.                      |
-| Observability              | API/simulation metrics, Prometheus scrape, Grafana dashboard, smoke validation                 | Shows operational awareness for a local/demo stack.                                                   |
-| Contracts                  | OpenAPI, JSON Schema, generated TypeScript, runtime validation, drift checks                   | Reduces API/frontend mismatch risk.                                                                   |
-| Testing/CI                 | Unit/component/E2E/a11y/visual/smoke/load/security/repo hygiene checks                         | Makes the demo continuously verifiable rather than screenshot-only.                                   |
-| Security / Safety Boundary | Demo RBAC and explicit simulation-only disclaimers                                             | Keeps the project honest about what it does and does not prove.                                       |
+| Area                       | What was built                                                                                                               | Why it matters                                                                                           |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Frontend HMI               | React HMI with dashboard, process mnemonic, trends, reports, settings, and scenario authoring                                | Shows user-facing industrial workflow and responsive UI discipline.                                      |
+| API Gateway                | Go REST gateway with demo RBAC, report aggregation, contracts, and simulation proxying                                       | Separates frontend concerns from simulation internals and enforces protected actions at one boundary.    |
+| Simulation Engine          | Synthetic thermal process loop with telemetry, commands, scenarios, alarms, and events                                       | Demonstrates state-machine thinking without controlling real equipment.                                  |
+| Manual/Auto/PID Control    | `MANUAL`, `AUTO`, `DISABLED`, and `TIC-101` PID arbitration for simulation-only valve behavior                               | Shows control workflow modeling and authority separation.                                                |
+| Alarm Lifecycle            | Active/history alarms with acknowledge and clear paths                                                                       | Demonstrates operator response flows and event traceability.                                             |
+| Event Stream               | Unified synthetic events and command history                                                                                 | Helps reviewers see cause/effect across commands, scenarios, and alarms.                                 |
+| Historian                  | Raw synthetic telemetry plus 1-minute aggregate history                                                                      | Demonstrates time-series persistence and trend querying.                                                 |
+| MQTT Bridge                | Publish-only synthetic telemetry/events/status bridge                                                                        | Shows IIoT integration while explicitly avoiding MQTT command ingestion.                                 |
+| Reports                    | JSON/CSV/PDF simulation summary exports                                                                                      | Provides demo artifacts without claiming regulatory reporting.                                           |
+| Scenario Authoring         | UI for YAML draft creation, browser-local save/load/rename/duplicate/delete, import, preview, validation, copy, and download | Demonstrates productivity tooling while avoiding backend persistence and runtime deployment from the UI. |
+| Observability              | API/simulation metrics, Prometheus scrape, Grafana dashboard, smoke validation                                               | Shows operational awareness for a local/demo stack.                                                      |
+| Contracts                  | OpenAPI, JSON Schema, generated TypeScript, runtime validation, drift checks                                                 | Reduces API/frontend mismatch risk.                                                                      |
+| Testing/CI                 | Unit/component/E2E/a11y/visual/smoke/load/security/repo hygiene checks                                                       | Makes the demo continuously verifiable rather than screenshot-only.                                      |
+| Security / Safety Boundary | Demo RBAC and explicit simulation-only disclaimers                                                                           | Keeps the project honest about what it does and does not prove.                                          |
 
 ## 6. Operator workflow demo
 
@@ -72,7 +72,7 @@ flowchart LR
 9. Review Events.
 10. Review Trends with raw and 1-minute historian data.
 11. Export JSON/CSV/PDF simulation reports.
-12. Open Scenario Authoring and export a YAML draft.
+12. Open Scenario Authoring, save a browser-local draft, import/export YAML, and explain that exported YAML requires developer review before any manual source-controlled config change.
 
 This flow is suitable for a 3-5 minute interview walkthrough because it touches frontend, backend, simulation, historian, reports, safety boundaries, and CI evidence.
 
@@ -180,12 +180,11 @@ Contracts / quality:
 - No production audit immutability.
 - No MQTT command ingestion.
 - No regulatory reports or nuclear compliance reports.
-- Scenario Authoring exports YAML drafts only and does not deploy runtime scenarios.
+- Scenario Authoring stores drafts in browser localStorage, exports YAML drafts only, and does not deploy runtime scenarios.
 - Observability is local/demo only.
 
 ## 13. Next improvements
 
-- Scenario Authoring save workspace for local drafts only.
 - Report template customization for simulation-only, non-regulatory summaries.
 - OpenAPI-generated Go client to reduce API contract drift.
 - Recruiter case study assets for easier hiring-manager review.
@@ -202,3 +201,4 @@ Contracts / quality:
 - "How MQTT is publish-only."
 - "How CI catches regressions."
 - "How Scenario Authoring avoids unsafe runtime deployment."
+- "Why Scenario Authoring uses browser-local storage instead of backend persistence."

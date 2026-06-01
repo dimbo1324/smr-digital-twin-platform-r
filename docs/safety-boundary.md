@@ -13,7 +13,7 @@ The simulation engine:
 
 Scenario controls in the UI start and stop demonstration states inside `apps/simulation`. They are not real control commands and must not be interpreted as operating instructions.
 
-Scenario Authoring creates simulation-only YAML drafts for synthetic demo scenarios. It does not deploy scenarios to real equipment, does not write runtime scenario files, does not control any real plant, and does not create operational or nuclear procedures. Exported YAML must be reviewed by a developer before it is manually added to the source-controlled simulation registry.
+Scenario Authoring creates simulation-only YAML drafts for synthetic demo scenarios. Its workspace stores drafts in browser localStorage only, so clearing browser data removes them. It does not persist drafts to the backend, does not deploy scenarios to the simulation runtime, does not write runtime scenario files, does not control any real plant, and does not create operational or nuclear procedures. Exported YAML must be reviewed by a developer before it is manually added to the source-controlled simulation registry.
 
 Process controls for assets such as `V-101` and `P-101` use a simulation-only command layer. These commands:
 

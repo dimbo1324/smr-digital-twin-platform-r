@@ -55,6 +55,7 @@ The MVP includes:
 - Synthetic alarm lifecycle for `ACTIVE`, `ACKNOWLEDGED`, and `CLEARED` instances.
 - Unified event stream for commands, alarms, PID/control, scenarios, and simulation events.
 - Scenario controls for predefined synthetic scenarios loaded from validated YAML configuration.
+- Scenario Authoring workspace for browser-local synthetic YAML drafts with import/export and no backend persistence or runtime deployment.
 - Publish-only MQTT bridge for synthetic telemetry, events, alarms, commands, PID/control, historian, and system status.
 - Simulation-only JSON/CSV/PDF report export for portfolio/demo summaries.
 - Local Prometheus/Grafana observability baseline for development diagnostics.
