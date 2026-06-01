@@ -6,6 +6,8 @@ Simulation-only industrial digital twin / IIoT demo platform for synthetic SMR-s
 
 SMR Digital Twin Platform is a portfolio-grade engineering project, not a nuclear operations product. It demonstrates a full-stack industrial software architecture: React HMI, Go API gateway, Go simulation service, PostgreSQL/TimescaleDB historian, publish-only MQTT bridge, demo Auth/RBAC, OpenAPI/JSON Schema contracts, report export, Prometheus/Grafana local observability, and a broad CI test suite.
 
+For a concise hiring/interview-oriented overview, see the [Recruiter / Engineering Case Study](docs/recruiter-case-study.md).
+
 The current MVP has two explicit domain levels:
 
 - **SMR Unit Overview**: high-level synthetic unit metrics such as power, primary temperature, coolant flow, turbine speed, and generator load.
@@ -868,4 +870,5 @@ curl "http://localhost:8081/api/v1/simulation/events/recent?limit=50"
 - [Architecture Notes](docs/architecture.md)
 - [Safety Boundary](docs/safety-boundary.md)
 - [Portfolio Demo Guide](docs/portfolio-demo.md)
+- [Recruiter / Engineering Case Study](docs/recruiter-case-study.md)
 - [Demo Release Notes](docs/release-notes.md)

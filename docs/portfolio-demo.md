@@ -2,6 +2,8 @@
 
 This guide helps present SMR Digital Twin Platform as a simulation-only industrial software portfolio project. It is not a real plant system, not production authentication, not a production audit archive, and not regulatory nuclear reporting.
 
+If you need a concise recruiter/interviewer overview, start with the [Recruiter Case Study](recruiter-case-study.md).
+
 ## Audience Angles
 
 | Audience                    | Emphasize                                                                                             |
