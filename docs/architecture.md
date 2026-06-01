@@ -109,6 +109,27 @@ The observability smoke test (`scripts/smoke/observability-smoke.mjs`) validates
 
 This stack is for local demo diagnostics only. Grafana uses local demo credentials, no TLS, no production alerting, no log aggregation, and no SRE-grade retention policy.
 
+## Load and Soak Baseline
+
+The load-and-soak baseline extends the smoke-test layer from "can the stack start?" to "can the synthetic platform keep operating under sustained demo activity?" It runs the full Docker Compose stack with the observability profile, then loops through simulation-only commands, YAML scenarios, telemetry history reads, report exports, Prometheus metric queries, and Grafana health checks.
+
+```mermaid
+flowchart LR
+    Soak["Load-and-soak script"] --> Compose["Docker Compose<br/>observability profile"]
+    Soak --> Commands["API command loop<br/>V-101 SET_POSITION"]
+    Soak --> Scenarios["Scenario loop<br/>YAML registry"]
+    Soak --> Reads["Telemetry / historian / MQTT reads"]
+    Soak --> Reports["JSON / CSV / PDF reports"]
+    Soak --> Prom["Prometheus queries"]
+    Prom --> Metrics["API + simulation metrics"]
+    Soak --> Grafana["Grafana health"]
+    Soak --> Artifacts["logs/smoke summary artifacts"]
+```
+
+The script validates API error rate, p95 latency, accepted command count, scenario activity, raw and 1-minute aggregate history availability, MQTT publish progress, simulation tick progress, historian write-failure stability, memory growth, and goroutine growth. The normal CI workflow runs a short blocking baseline, while `.github/workflows/load-soak.yml` provides manual longer runs.
+
+This is still a demo reliability baseline for synthetic telemetry only. It is not production load testing, not safety-critical validation, and not evidence of regulatory performance.
+
 ## Domain Layers
 
 The current MVP separates domain concerns into two layers:

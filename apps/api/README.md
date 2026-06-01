@@ -70,18 +70,18 @@ make api-build
 
 ## Environment Variables
 
-| Variable | Default |
-| --- | --- |
-| `API_APP_NAME` | `smr-twin-api` |
-| `API_ENV` | `development` |
-| `API_HTTP_HOST` | `0.0.0.0` |
-| `API_HTTP_PORT` | `8080` |
-| `API_LOG_LEVEL` | `info` |
-| `API_ALLOWED_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` |
-| `API_VERSION` | `0.1.0` |
-| `SIMULATION_ENABLED` | `true` |
-| `SIMULATION_BASE_URL` | `http://localhost:8081` |
-| `SIMULATION_TIMEOUT_MS` | `1500` |
+| Variable                | Default                                       |
+| ----------------------- | --------------------------------------------- |
+| `API_APP_NAME`          | `smr-twin-api`                                |
+| `API_ENV`               | `development`                                 |
+| `API_HTTP_HOST`         | `0.0.0.0`                                     |
+| `API_HTTP_PORT`         | `8080`                                        |
+| `API_LOG_LEVEL`         | `info`                                        |
+| `API_ALLOWED_ORIGINS`   | `http://localhost:5173,http://127.0.0.1:5173` |
+| `API_VERSION`           | `0.1.0`                                       |
+| `SIMULATION_ENABLED`    | `true`                                        |
+| `SIMULATION_BASE_URL`   | `http://localhost:8081`                       |
+| `SIMULATION_TIMEOUT_MS` | `1500`                                        |
 
 ## Endpoints
 
@@ -181,6 +181,8 @@ Denied actions return HTTP `403` with `RBAC_FORBIDDEN`, the required permission,
 Exposes Prometheus text metrics for local demo observability, including HTTP request counts/duration, requests in flight, RBAC forbidden counts, and simulation proxy errors. This endpoint is for local portfolio diagnostics and is not a production monitoring contract.
 
 The repository-level observability smoke (`node scripts/smoke/observability-smoke.mjs`) verifies this endpoint directly and through Prometheus scraping. It is local/demo validation only, not production monitoring.
+
+The repository-level load-and-soak baseline (`node scripts/smoke/load-and-soak-baseline.mjs`) also uses API metrics to track synthetic workload request latency, error rate, goroutine growth, and memory growth while exercising commands, scenarios, telemetry history, reports, historian status, and MQTT status. It is a demo platform reliability check only, not production load testing or safety-critical validation.
 
 ### `GET /api/v1/assets`
 

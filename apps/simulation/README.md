@@ -37,35 +37,35 @@ Default port: `8081`.
 
 ## Environment
 
-| Variable | Default |
-| --- | --- |
-| `SIM_APP_NAME` | `smr-twin-simulation` |
-| `SIM_ENV` | `development` |
-| `SIM_HOST` | `0.0.0.0` |
-| `SIM_PORT` | `8081` |
-| `SIM_LOG_LEVEL` | `info` |
-| `SIM_TICK_MS` | `1000` |
-| `SIM_HISTORY_SIZE` | `3600` |
-| `SIM_SEED` | `42` |
-| `SIM_VERSION` | `0.1.0` |
-| `HISTORIAN_ENABLED` | `false` when `DATABASE_URL` is absent |
-| `DATABASE_URL` | unset |
-| `HISTORIAN_REQUIRED` | `false` |
-| `HISTORIAN_MIGRATIONS_PATH` | `../../infra/db/migrations` |
-| `HISTORIAN_WRITE_INTERVAL_MS` | `1000` |
-| `HISTORIAN_TELEMETRY_SAMPLE_MS` | `1000` |
-| `HISTORIAN_MAX_BATCH_SIZE` | `500` |
-| `HISTORIAN_OPERATION_TIMEOUT_MS` | `500` |
-| `MQTT_ENABLED` | `false` |
-| `MQTT_REQUIRED` | `false` |
-| `MQTT_BROKER_URL` | `tcp://mqtt:1883` |
-| `MQTT_CLIENT_ID` | `smr-simulation-publisher` |
-| `MQTT_TOPIC_PREFIX` | `smr/site-001/unit-001` |
-| `MQTT_QOS` | `0` |
-| `MQTT_RETAIN` | `false` |
-| `MQTT_PUBLISH_INTERVAL_MS` | `1000` |
-| `MQTT_CONNECT_TIMEOUT_MS` | `5000` |
-| `MQTT_WRITE_TIMEOUT_MS` | `3000` |
+| Variable                         | Default                               |
+| -------------------------------- | ------------------------------------- |
+| `SIM_APP_NAME`                   | `smr-twin-simulation`                 |
+| `SIM_ENV`                        | `development`                         |
+| `SIM_HOST`                       | `0.0.0.0`                             |
+| `SIM_PORT`                       | `8081`                                |
+| `SIM_LOG_LEVEL`                  | `info`                                |
+| `SIM_TICK_MS`                    | `1000`                                |
+| `SIM_HISTORY_SIZE`               | `3600`                                |
+| `SIM_SEED`                       | `42`                                  |
+| `SIM_VERSION`                    | `0.1.0`                               |
+| `HISTORIAN_ENABLED`              | `false` when `DATABASE_URL` is absent |
+| `DATABASE_URL`                   | unset                                 |
+| `HISTORIAN_REQUIRED`             | `false`                               |
+| `HISTORIAN_MIGRATIONS_PATH`      | `../../infra/db/migrations`           |
+| `HISTORIAN_WRITE_INTERVAL_MS`    | `1000`                                |
+| `HISTORIAN_TELEMETRY_SAMPLE_MS`  | `1000`                                |
+| `HISTORIAN_MAX_BATCH_SIZE`       | `500`                                 |
+| `HISTORIAN_OPERATION_TIMEOUT_MS` | `500`                                 |
+| `MQTT_ENABLED`                   | `false`                               |
+| `MQTT_REQUIRED`                  | `false`                               |
+| `MQTT_BROKER_URL`                | `tcp://mqtt:1883`                     |
+| `MQTT_CLIENT_ID`                 | `smr-simulation-publisher`            |
+| `MQTT_TOPIC_PREFIX`              | `smr/site-001/unit-001`               |
+| `MQTT_QOS`                       | `0`                                   |
+| `MQTT_RETAIN`                    | `false`                               |
+| `MQTT_PUBLISH_INTERVAL_MS`       | `1000`                                |
+| `MQTT_CONNECT_TIMEOUT_MS`        | `5000`                                |
+| `MQTT_WRITE_TIMEOUT_MS`          | `3000`                                |
 
 ## Endpoints
 
@@ -215,6 +215,14 @@ node scripts/smoke/mqtt-bridge-smoke.mjs
 ```
 
 Each run writes a sanitized local report under `logs/smoke/<timestamp>_mqtt-bridge-smoke/`.
+
+The repository-level load-and-soak baseline also exercises the simulation service through the API gateway while Prometheus scrapes simulation metrics. It verifies synthetic tick progress, command activity, scenario activity, historian queue/write health, MQTT publish progress, memory growth, and goroutine growth over a sustained demo workload:
+
+```bash
+node scripts/smoke/load-and-soak-baseline.mjs --duration-ms 600000
+```
+
+This is a synthetic simulation reliability baseline only. It does not validate real plant control, production monitoring, or safety-critical performance.
 
 ## Simulation Commands
 

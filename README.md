@@ -358,6 +358,7 @@ Automated CI jobs:
 - **Security / Dependencies**: runs `govulncheck` for Go services and `npm audit --audit-level=high` for the frontend dependency tree.
 - **Historian DB Smoke**: verifies Docker Compose raw and 1-minute aggregate persistence through PostgreSQL/TimescaleDB.
 - **MQTT Bridge Smoke**: verifies the Docker Compose MQTT broker receives publish-only synthetic telemetry and command/event status messages.
+- **Load and Soak Baseline**: runs a short CI synthetic workload across commands, scenarios, historian raw/aggregate reads, report export, MQTT publishing, Prometheus, Grafana, API latency, error rate, memory, and goroutine growth.
 
 ## Frontend Data Layer
 
@@ -519,6 +520,41 @@ make observability-smoke
 
 The smoke starts Docker Compose with the `observability` profile, checks API and simulation `/metrics`, waits for Prometheus `/-/ready`, verifies Prometheus sees the API and simulation targets as `up`, queries key API/simulation/domain metrics, and checks Grafana `/api/health`. It writes sanitized artifacts under `logs/smoke/<timestamp>_observability-smoke/`. This validates local/demo monitoring of synthetic telemetry only; it is not production monitoring, nuclear safety monitoring, or production alerting.
 
+## Load and Soak Baseline
+
+The load-and-soak baseline proves the simulation-only platform can run under sustained synthetic activity for longer than a short smoke test. It starts the full Docker Compose stack with the observability profile and exercises:
+
+- `V-101` command loop through the API gateway and demo RBAC;
+- YAML scenario start loop;
+- telemetry latest, raw history, and 1-minute aggregate history reads;
+- JSON/CSV/PDF simulation report export;
+- historian and MQTT status reads;
+- Prometheus target/metric queries and Grafana health;
+- API latency/error-rate tracking plus memory and goroutine growth checks.
+
+Run a short local soak:
+
+```bash
+make load-soak-short
+```
+
+Run the 10-minute default baseline:
+
+```bash
+make load-soak
+node scripts/smoke/load-and-soak-baseline.mjs --duration-ms 600000
+```
+
+Keep the stack running for inspection:
+
+```bash
+make load-soak-keep
+```
+
+GitHub Actions runs a shorter blocking soak and also provides a manual `Long Load and Soak` workflow for 10-30 minute runs. Artifacts are written under `logs/smoke/<timestamp>_load-and-soak-baseline/`, including latency, error, command, scenario, report, metric, Compose, and debug summaries.
+
+Load-and-soak checks apply only to the synthetic simulation platform. They do not validate real plant control, safety-critical behavior, production monitoring, production load capacity, or regulatory performance.
+
 ## Historian DB Smoke Test
 
 The historian DB smoke verifies persistence of synthetic simulation data in the demo TimescaleDB historian through the full Docker Compose stack.
@@ -562,7 +598,9 @@ make historian-smoke
 make logs-clean
 node scripts/smoke/mqtt-bridge-smoke.mjs
 node scripts/smoke/observability-smoke.mjs
+node scripts/smoke/load-and-soak-baseline.mjs --duration-ms 180000
 make observability-smoke
+make load-soak-short
 ```
 
 The scripts use Node.js standard library APIs compatible with Node 22+ in CI and the local system Node v24.15.0. Generated logs contain synthetic simulation diagnostics only, can be safely deleted, and are not a production observability stack or certified audit trail.
