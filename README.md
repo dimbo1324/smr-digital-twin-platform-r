@@ -9,7 +9,7 @@ SMR Digital Twin Platform is a portfolio-grade engineering project, not a nuclea
 The current MVP has two explicit domain levels:
 
 - **SMR Unit Overview**: high-level synthetic unit metrics such as power, primary temperature, coolant flow, turbine speed, and generator load.
-- **Thermal Process Loop MVP**: lower-level training loop used as the base for future valve, pump, PID, command, telemetry, and alarm work.
+- **Thermal Process Loop MVP**: lower-level training loop used for valve, pump, PID, command, telemetry, trend, and alarm workflows.
 
 ```text
 Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> HMI
@@ -84,14 +84,15 @@ make demo-assets-update
 
 ## Demo-Only, Not Production
 
-| Capability       | Demo status                                                                                                        | Not production because                                                                    |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
-| Process commands | Mutate `V-101`/`P-101` simulation state only                                                                       | No PLC, DCS, SCADA, actuator, or plant network connectivity.                              |
-| Demo RBAC        | Static users via `X-Demo-User` and frontend role switcher                                                          | No passwords, OAuth/JWT, persistent users, or production identity controls.               |
-| Historian        | Stores synthetic telemetry/events/commands/alarms, with demo raw retention metadata and 1-minute aggregate history | No immutable audit policy, regulatory retention, or compliance guarantees.                |
-| MQTT             | Publishes synthetic data only                                                                                      | No MQTT command ingestion, broker ACL/TLS hardening, or real equipment topics.            |
-| Reports          | JSON/CSV/PDF synthetic simulation summaries                                                                        | Not regulatory reporting, not a production audit export, not nuclear compliance evidence. |
-| Observability    | Local Prometheus/Grafana demo profile                                                                              | No production alerting, log aggregation, tracing, SLOs, or secure operations setup.       |
+| Capability         | Demo status                                                                                                        | Not production because                                                                    |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| Process commands   | Mutate `V-101`/`P-101` simulation state only                                                                       | No PLC, DCS, SCADA, actuator, or plant network connectivity.                              |
+| Demo RBAC          | Static users via `X-Demo-User` and frontend role switcher                                                          | No passwords, OAuth/JWT, persistent users, or production identity controls.               |
+| Historian          | Stores synthetic telemetry/events/commands/alarms, with demo raw retention metadata and 1-minute aggregate history | No immutable audit policy, regulatory retention, or compliance guarantees.                |
+| MQTT               | Publishes synthetic data only                                                                                      | No MQTT command ingestion, broker ACL/TLS hardening, or real equipment topics.            |
+| Reports            | JSON/CSV/PDF synthetic simulation summaries                                                                        | Not regulatory reporting, not a production audit export, not nuclear compliance evidence. |
+| Scenario Authoring | YAML draft preview, validation, copy, and download                                                                 | Draft/export only; no runtime deployment, persistence, or real equipment scenario path.   |
+| Observability      | Local Prometheus/Grafana demo profile                                                                              | No production alerting, log aggregation, tracing, SLOs, or secure operations setup.       |
 
 ## Quickstart
 
@@ -207,13 +208,13 @@ These commands run the generated artifact guard, Go formatting checks, frontend 
 - **Report export**: JSON, CSV, and PDF simulation summaries are implemented for demo use. Excel export and regulatory reporting are not implemented.
 - **Observability**: local Prometheus/Grafana demo stack and service metrics are implemented. Production logging/tracing/alerting is not implemented.
 
-## Planned Next
+## Recommended Next Milestones
 
-- Alarm shelving and richer operator workflow.
-- MQTT command ingestion and broker production hardening.
-- WebSocket or SSE real-time transport.
-- Production authentication and production RBAC.
-- Production observability hardening and tracing.
+- `feat/scenario-authoring-save-workspace`: local draft storage only, still no runtime deployment.
+- `feat/report-template-customization`: simulation-only report layout/template options, still non-regulatory.
+- `refactor/openapi-generated-go-client`: reduce Go/API contract drift without changing public behavior.
+- `docs/recruiter-case-study-page`: concise portfolio narrative and screenshots for review.
+- `test/load-profile-thresholds-hardening`: tune synthetic load profile thresholds from repeated CI runs.
 
 ## Not Implemented Yet
 
@@ -857,8 +858,8 @@ curl "http://localhost:8081/api/v1/simulation/events/recent?limit=50"
 5. Add persistent historian storage for telemetry, events, commands, and alarm history.
 6. Add publish-only MQTT bridge for simulated telemetry and integration smoke coverage.
 7. Add optional longer-range aggregate resolutions if they remain clearly simulation-only.
-8. Add production-style auth hardening, deployment hardening, and extended CI checks.
-9. Add Excel report export only if it remains clearly simulation-only and non-regulatory.
+8. Add optional local draft workspace for Scenario Authoring while preserving no runtime deployment from the UI.
+9. Add report template customization only if it remains clearly simulation-only and non-regulatory.
 
 ## Documentation
 
@@ -867,3 +868,4 @@ curl "http://localhost:8081/api/v1/simulation/events/recent?limit=50"
 - [Architecture Notes](docs/architecture.md)
 - [Safety Boundary](docs/safety-boundary.md)
 - [Portfolio Demo Guide](docs/portfolio-demo.md)
+- [Demo Release Notes](docs/release-notes.md)

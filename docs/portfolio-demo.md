@@ -50,6 +50,17 @@ This guide helps present SMR Digital Twin Platform as a simulation-only industri
 - Settings communicates implemented capabilities and non-production boundaries.
 - Scenario Authoring creates YAML drafts for synthetic demo scenarios; it does not save to the runtime registry, deploy to equipment, or create operating procedures.
 
+## Screenshot References
+
+Final demo screenshots are committed under `docs/assets/screenshots/`:
+
+- [Dashboard](assets/screenshots/dashboard-dark.png)
+- [Process](assets/screenshots/process-dark.png)
+- [Trends](assets/screenshots/trends-dark.png)
+- [Reports](assets/screenshots/reports-dark.png)
+- [Scenario Authoring](assets/screenshots/scenario-authoring-dark.png)
+- [Settings](assets/screenshots/settings-dark.png)
+
 ## Code Talking Points
 
 - `apps/api` is the frontend boundary and enforces protected write/action permissions.
@@ -78,6 +89,15 @@ Use this wording in demos:
 - Observability is local/demo Prometheus/Grafana only.
 - Live UI transport is REST polling, not WebSocket/SSE.
 - No Kubernetes/Helm production deployment.
+
+## What Not To Claim
+
+- Do not claim real plant, PLC, DCS, SCADA, or physical actuator connectivity.
+- Do not claim production authentication, certified access control, or production audit immutability.
+- Do not call JSON/CSV/PDF reports regulatory, safety, compliance, or nuclear compliance reports.
+- Do not describe Scenario Authoring as deployment, operations procedure generation, runtime mutation, or real equipment scenario management.
+- Do not imply MQTT command ingestion exists; MQTT is publish-only synthetic data.
+- Do not present local Prometheus/Grafana as production monitoring or safety-critical observability.
 
 ## Useful Commands
 

@@ -61,7 +61,7 @@ The MVP includes:
 - Docker Compose environment for local development.
 - Basic backend, simulation, and frontend checks.
 
-The following are planned extensions rather than current implementation: MQTT command ingestion/control, production-grade audit retention, alarm shelving, additional historian aggregate windows beyond raw/1-minute synthetic aggregates, Excel or regulatory report export, production auth/RBAC beyond the demo layer, production observability, and WebSocket/SSE transport.
+The following are not part of the current demo baseline: production-grade audit retention, alarm shelving, additional historian aggregate windows beyond raw/1-minute synthetic aggregates, Excel export, production auth/RBAC beyond the demo layer, production observability, and WebSocket/SSE transport. MQTT command ingestion/control, regulatory report export, and real plant connectivity remain explicitly out of scope for this simulation-only portfolio project.
 
 ## Out of Scope
 
