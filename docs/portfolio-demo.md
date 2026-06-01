@@ -22,7 +22,7 @@ If you need a concise recruiter/interviewer overview, start with the [Recruiter 
 4. Trigger a synthetic scenario and show Alarms plus Events. Acknowledge an alarm and watch lifecycle/event records update.
 5. Open Trends and explain persistent historian vs in-memory fallback source labels.
 6. Open Reports and export JSON/CSV/PDF. State clearly that these are simulation summaries, not regulatory reports.
-7. Open Scenario Authoring, select a synthetic template, validate the YAML draft, and download it. State clearly that the UI creates drafts only; it does not deploy scenarios or control equipment.
+7. Open Scenario Authoring, select a synthetic template, save it in the browser-local workspace, import/export YAML, and state clearly that the UI creates local drafts only; it does not deploy scenarios or control equipment.
 8. Show Prometheus/Grafana if the observability profile is running.
 9. Mention MQTT topics are publish-only synthetic data and do not accept commands.
 10. Finish with GitHub Actions: API, simulation, web, E2E, accessibility, keyboard, visual regression, historian smoke, MQTT smoke, observability smoke, short load-and-soak baseline, race/coverage, and dependency scans.
@@ -34,7 +34,7 @@ If you need a concise recruiter/interviewer overview, start with the [Recruiter 
 3. **RBAC:** Show `apps/api/internal/auth` and frontend role-aware disabled states. Explain it is demo RBAC only.
 4. **Simulation:** Show domain helpers in `apps/simulation/internal/process`, `actuators`, and `pidcontrol`, then the engine coordinator.
 5. **Scenarios:** Show `apps/simulation/config/scenarios/*.yaml` and explain declarative synthetic scenario metadata/effects.
-6. **Scenario Authoring:** Show `/scenario-authoring`, create a YAML draft, and explain that a developer must review and commit exported YAML before the simulator can load it.
+6. **Scenario Authoring:** Show `/scenario-authoring`, create a YAML draft, save it locally, import/export YAML, and explain that a developer must review and commit exported YAML before the simulator can load it.
 7. **Historian:** Show migrations and smoke test. Explain raw synthetic telemetry, 1-minute aggregate history, and non-audit limitations.
 8. **MQTT:** Show publish-only bridge and smoke script. No MQTT command ingestion exists.
 9. **Reports:** Show API aggregation in `apps/api/internal/simulation/reports.go` and the Reports page.
@@ -50,7 +50,7 @@ If you need a concise recruiter/interviewer overview, start with the [Recruiter 
 - Trends show historian data when available and clearly labelled fallback when not.
 - Reports are JSON/CSV/PDF summaries for demo and portfolio review only.
 - Settings communicates implemented capabilities and non-production boundaries.
-- Scenario Authoring creates YAML drafts for synthetic demo scenarios; it does not save to the runtime registry, deploy to equipment, or create operating procedures.
+- Scenario Authoring creates browser-local YAML drafts for synthetic demo scenarios; it does not save to the backend, mutate the runtime registry, deploy to equipment, or create operating procedures.
 
 ## Screenshot References
 
@@ -70,7 +70,7 @@ Final demo screenshots are committed under `docs/assets/screenshots/`:
 - `apps/web` uses generated TypeScript contract types, runtime validation, TanStack Query hooks, and tested UI components.
 - `packages/schemas` keeps OpenAPI and JSON Schema references aligned with frontend generated types.
 - `apps/simulation/config/scenarios` keeps synthetic scenario definitions declarative and validated.
-- `apps/web/src/pages/scenario-authoring` demonstrates safe draft generation, local validation, and YAML export for source-controlled review.
+- `apps/web/src/pages/scenario-authoring` demonstrates safe draft generation, browser-local workspace persistence, YAML import/export, local validation, and source-controlled review.
 - `scripts/smoke` verifies full-stack persistence, MQTT publishing, and local/demo observability using Docker Compose.
 - `scripts/smoke/load-and-soak-baseline.mjs` exercises sustained synthetic commands, scenarios, historian reads, reports, MQTT publishing, and Prometheus/Grafana health.
 - `infra/observability` provisions local Prometheus and Grafana for demo diagnostics.

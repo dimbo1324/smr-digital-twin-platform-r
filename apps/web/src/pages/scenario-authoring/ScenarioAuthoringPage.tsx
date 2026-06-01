@@ -1,5 +1,17 @@
-import { useMemo, useState } from "react";
-import { Clipboard, Download, FileCode2, RotateCcw, ShieldCheck } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Clipboard,
+  Copy,
+  Download,
+  FileCode2,
+  FileInput,
+  FolderOpen,
+  Pencil,
+  RotateCcw,
+  Save,
+  ShieldCheck,
+  Trash2,
+} from "lucide-react";
 import { useScenarios } from "@/entities/scenarios/api/useScenarios";
 import {
   listInputValue,
@@ -12,7 +24,28 @@ import {
   type ScenarioDraft,
   type ScenarioSeverity,
 } from "@/features/scenario-authoring/lib/scenarioDraft";
+import {
+  cloneScenarioDraft,
+  createWorkspaceItem,
+  deleteWorkspaceDraft,
+  duplicateWorkspaceDraft,
+  importScenarioYamlToWorkspace,
+  renameWorkspaceDraft,
+  saveDraftToWorkspace,
+  updateWorkspaceItemFromDraft,
+} from "@/features/scenario-authoring/lib/workspace";
+import {
+  loadScenarioWorkspace,
+  saveScenarioWorkspace,
+} from "@/features/scenario-authoring/model/workspaceStorage";
+import {
+  SCENARIO_WORKSPACE_MAX_DRAFTS,
+  SCENARIO_WORKSPACE_MAX_YAML_BYTES,
+  type ScenarioDraftWorkspaceItem,
+  type ScenarioWorkspaceState,
+} from "@/features/scenario-authoring/model/workspaceTypes";
 import { cn } from "@/shared/lib/cn";
+import { formatRelativeTime } from "@/shared/lib/time";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { CommandButton } from "@/shared/ui/command-button";
@@ -37,8 +70,16 @@ const numericEffectFields = [
 export function ScenarioAuthoringPage() {
   const scenarios = useScenarios();
   const [templateId, setTemplateId] = useState("high_temperature");
-  const [draft, setDraft] = useState<ScenarioDraft>(() => cloneDraft("high_temperature"));
+  const [draft, setDraft] = useState<ScenarioDraft>(() => cloneTemplateDraft("high_temperature"));
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
+  const [workspace, setWorkspace] = useState<ScenarioWorkspaceState>(() => loadScenarioWorkspace());
+  const [activeDraftId, setActiveDraftId] = useState<string | undefined>(
+    () => workspace.activeDraftId,
+  );
+  const [isModifiedSinceSave, setIsModifiedSinceSave] = useState(false);
+  const [workspaceMessage, setWorkspaceMessage] = useState(
+    "Scenario Workspace stores YAML drafts locally in this browser only.",
+  );
 
   const existingIds = useMemo(
     () => scenarios.scenarios.map((scenario) => scenario.name),
@@ -46,15 +87,23 @@ export function ScenarioAuthoringPage() {
   );
   const validation = useMemo(() => validateScenarioDraft(draft, existingIds), [draft, existingIds]);
   const yaml = useMemo(() => scenarioDraftToYaml(draft), [draft]);
+  const activeItem = workspace.items.find((item) => item.draftId === activeDraftId);
+
+  useEffect(() => {
+    saveScenarioWorkspace({ ...workspace, activeDraftId });
+  }, [activeDraftId, workspace]);
 
   const selectTemplate = (nextTemplateId: string) => {
     setTemplateId(nextTemplateId);
-    setDraft(cloneDraft(nextTemplateId));
+    setDraft(cloneTemplateDraft(nextTemplateId));
     setCopyState("idle");
+    setIsModifiedSinceSave(true);
+    setWorkspaceMessage("Template loaded into the editor. Save it to keep it in this browser.");
   };
 
   const updateDraft = <Key extends keyof ScenarioDraft>(key: Key, value: ScenarioDraft[Key]) => {
     setDraft((current) => ({ ...current, [key]: value }));
+    setIsModifiedSinceSave(true);
   };
 
   const updateEffect = (key: keyof ScenarioDraft["effects"], value: string) => {
@@ -70,6 +119,83 @@ export function ScenarioAuthoringPage() {
               : Number(value),
       },
     }));
+    setIsModifiedSinceSave(true);
+  };
+
+  const saveCurrentDraft = () => {
+    const current = workspace.items.find((item) => item.draftId === activeDraftId);
+    const nextItem = current
+      ? updateWorkspaceItemFromDraft({ item: current, draft, yaml, validation })
+      : createWorkspaceItem({ draft, yaml, validation, source: "manual" });
+    setWorkspace((state) => saveDraftToWorkspace(state, nextItem));
+    setActiveDraftId(nextItem.draftId);
+    setIsModifiedSinceSave(false);
+    setWorkspaceMessage(`Saved "${nextItem.name}" locally in this browser.`);
+  };
+
+  const saveAsNewDraft = () => {
+    if (workspace.items.length >= SCENARIO_WORKSPACE_MAX_DRAFTS) {
+      setWorkspaceMessage(`Workspace is limited to ${SCENARIO_WORKSPACE_MAX_DRAFTS} drafts.`);
+      return;
+    }
+    const nextItem = createWorkspaceItem({ draft, yaml, validation, source: "manual" });
+    setWorkspace((state) => saveDraftToWorkspace(state, nextItem));
+    setActiveDraftId(nextItem.draftId);
+    setIsModifiedSinceSave(false);
+    setWorkspaceMessage(`Saved "${nextItem.name}" as a new local draft.`);
+  };
+
+  const loadWorkspaceDraft = (item: ScenarioDraftWorkspaceItem) => {
+    setDraft(cloneScenarioDraft(item.draft));
+    setTemplateId("blank");
+    setActiveDraftId(item.draftId);
+    setCopyState("idle");
+    setIsModifiedSinceSave(false);
+    setWorkspaceMessage(`Loaded "${item.name}" from the local workspace.`);
+  };
+
+  const renameDraft = (item: ScenarioDraftWorkspaceItem) => {
+    const nextName = window.prompt("Rename local draft", item.name)?.trim();
+    if (!nextName) {
+      return;
+    }
+    setWorkspace((state) => renameWorkspaceDraft(state, item.draftId, nextName));
+    setWorkspaceMessage(`Renamed local draft to "${nextName}".`);
+  };
+
+  const duplicateDraft = (item: ScenarioDraftWorkspaceItem) => {
+    setWorkspace((state) => duplicateWorkspaceDraft(state, item.draftId));
+    setWorkspaceMessage(`Duplicated "${item.name}" as a local draft copy.`);
+  };
+
+  const deleteDraft = (item: ScenarioDraftWorkspaceItem) => {
+    const confirmed = window.confirm(
+      `Delete "${item.name}" from this browser workspace? This does not affect the runtime scenario registry.`,
+    );
+    if (!confirmed) {
+      return;
+    }
+    setWorkspace((state) => deleteWorkspaceDraft(state, item.draftId));
+    if (activeDraftId === item.draftId) {
+      setActiveDraftId(undefined);
+      setIsModifiedSinceSave(true);
+    }
+    setWorkspaceMessage(`Deleted "${item.name}" from local browser storage.`);
+  };
+
+  const importYamlDraft = (importYaml: string) => {
+    const result = importScenarioYamlToWorkspace(workspace, importYaml, existingIds);
+    setWorkspace(result.state);
+    if (result.item) {
+      loadWorkspaceDraft(result.item);
+      setWorkspaceMessage(
+        result.errors.length
+          ? "Imported YAML as a local draft with validation errors to review."
+          : "Imported YAML as a local browser draft.",
+      );
+    } else {
+      setWorkspaceMessage(result.errors[0] ?? "YAML import failed.");
+    }
   };
 
   const copyYaml = async () => {
@@ -93,22 +219,45 @@ export function ScenarioAuthoringPage() {
 
   return (
     <PageShell data-testid="scenario-authoring-page">
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(360px,0.9fr)]">
+      <section className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)] 2xl:grid-cols-[340px_minmax(0,1fr)_minmax(360px,0.78fr)]">
+        <WorkspacePanel
+          workspace={workspace}
+          activeDraftId={activeDraftId}
+          message={workspaceMessage}
+          onSave={saveCurrentDraft}
+          onSaveAsNew={saveAsNewDraft}
+          onLoad={loadWorkspaceDraft}
+          onRename={renameDraft}
+          onDuplicate={duplicateDraft}
+          onDelete={deleteDraft}
+          onImport={importYamlDraft}
+        />
+
         <PanelShell
           title="Scenario Authoring"
           subtitle="Create, preview, validate, and export simulation-only YAML drafts for synthetic demo scenarios."
-          eyebrow="Draft workspace"
+          eyebrow="Draft editor"
           icon={FileCode2}
           status={
             <StatusBadge
-              tone={validation.valid ? "healthy" : "warning"}
-              value={validation.valid ? "Valid draft" : "Needs review"}
+              tone={validation.valid ? (isModifiedSinceSave ? "warning" : "healthy") : "warning"}
+              value={
+                validation.valid
+                  ? isModifiedSinceSave
+                    ? "Modified draft"
+                    : "Valid draft"
+                  : "Needs review"
+              }
             />
           }
           actions={<SourceBadge source="simulation_only" />}
           testId="scenario-authoring-editor"
         >
-          <SimulationOnlyNotice className="mb-5" badgeLabel="Draft/export only" />
+          <SimulationOnlyNotice className="mb-5" badgeLabel="Local draft/export only" />
+          <InlineInfo className="mb-5">
+            Scenario Workspace stores YAML drafts locally in this browser only. Drafts are not
+            deployed to the simulation runtime and do not control any real equipment.
+          </InlineInfo>
 
           <div className="grid gap-5 lg:grid-cols-[260px_minmax(0,1fr)]">
             <TemplatePicker selectedId={templateId} onSelect={selectTemplate} />
@@ -225,9 +374,9 @@ export function ScenarioAuthoringPage() {
           </div>
         </PanelShell>
 
-        <aside className="space-y-6">
-          <ValidationPanel validation={validation} />
-          <PreviewPanel draft={draft} />
+        <aside className="space-y-6 xl:col-span-2 2xl:col-span-1">
+          <ValidationPanel validation={validation} isModifiedSinceSave={isModifiedSinceSave} />
+          <PreviewPanel draft={draft} activeItem={activeItem} />
           <YamlPanel
             yaml={yaml}
             valid={validation.valid}
@@ -239,6 +388,211 @@ export function ScenarioAuthoringPage() {
         </aside>
       </section>
     </PageShell>
+  );
+}
+
+function WorkspacePanel({
+  workspace,
+  activeDraftId,
+  message,
+  onSave,
+  onSaveAsNew,
+  onLoad,
+  onRename,
+  onDuplicate,
+  onDelete,
+  onImport,
+}: {
+  workspace: ScenarioWorkspaceState;
+  activeDraftId?: string;
+  message: string;
+  onSave: () => void;
+  onSaveAsNew: () => void;
+  onLoad: (item: ScenarioDraftWorkspaceItem) => void;
+  onRename: (item: ScenarioDraftWorkspaceItem) => void;
+  onDuplicate: (item: ScenarioDraftWorkspaceItem) => void;
+  onDelete: (item: ScenarioDraftWorkspaceItem) => void;
+  onImport: (yaml: string) => void;
+}) {
+  const [search, setSearch] = useState("");
+  const [importYaml, setImportYaml] = useState("");
+  const filteredItems = workspace.items.filter((item) =>
+    `${item.name} ${item.scenarioId} ${item.description ?? ""}`
+      .toLowerCase()
+      .includes(search.toLowerCase()),
+  );
+
+  const importCurrentYaml = () => {
+    onImport(importYaml);
+    setImportYaml("");
+  };
+
+  const importFile = async (file: File | undefined) => {
+    if (!file) {
+      return;
+    }
+    if (file.size > SCENARIO_WORKSPACE_MAX_YAML_BYTES) {
+      setImportYaml(`File is larger than ${SCENARIO_WORKSPACE_MAX_YAML_BYTES / 1024} KB.`);
+      return;
+    }
+    const text = await file.text();
+    onImport(text);
+  };
+
+  return (
+    <PanelShell
+      title="Draft Workspace"
+      subtitle="Local browser storage for simulation-only YAML drafts."
+      eyebrow={`${workspace.items.length}/${SCENARIO_WORKSPACE_MAX_DRAFTS} saved`}
+      icon={FolderOpen}
+      status={<StatusBadge tone="simulation" value="Browser-local" />}
+      testId="scenario-workspace-panel"
+    >
+      <InlineInfo>
+        Scenario Workspace stores YAML drafts locally in this browser only. Drafts are not deployed
+        to the simulation runtime and do not control any real equipment.
+      </InlineInfo>
+
+      <div className="mt-4 grid gap-2">
+        <CommandButton onClick={onSave} data-testid="scenario-workspace-save">
+          <Save className="mr-2 h-4 w-4" aria-hidden="true" />
+          Save Draft
+        </CommandButton>
+        <Button variant="outline" onClick={onSaveAsNew}>
+          Save As New Draft
+        </Button>
+      </div>
+
+      <label className="mt-4 block text-sm">
+        <span className="font-medium text-foreground">Search drafts</span>
+        <input
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          className="mt-2 w-full rounded-2xl border border-border/70 bg-background/70 px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary"
+        />
+      </label>
+
+      <div
+        className="mt-4 max-h-[420px] space-y-3 overflow-y-auto pr-1"
+        data-testid="scenario-workspace-list"
+      >
+        {filteredItems.length ? (
+          filteredItems.map((item) => (
+            <WorkspaceListItem
+              key={item.draftId}
+              item={item}
+              active={item.draftId === activeDraftId}
+              onLoad={() => onLoad(item)}
+              onRename={() => onRename(item)}
+              onDuplicate={() => onDuplicate(item)}
+              onDelete={() => onDelete(item)}
+            />
+          ))
+        ) : (
+          <EmptyState
+            title="No saved drafts"
+            message="Save the current editor draft or import YAML to add a browser-local workspace item."
+          />
+        )}
+      </div>
+
+      <Card className="mt-4 bg-surface-subtle/50">
+        <CardHeader>
+          <CardTitle>Import YAML</CardTitle>
+          <CardDescription>
+            Paste or select a .yaml/.yml draft. Import only saves locally.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <textarea
+            value={importYaml}
+            onChange={(event) => setImportYaml(event.target.value)}
+            aria-label="Import scenario YAML"
+            data-testid="scenario-workspace-import-yaml"
+            className="min-h-32 w-full resize-y rounded-2xl border border-border/70 bg-background/70 p-3 font-mono text-xs leading-5 text-foreground outline-none transition focus:border-primary"
+            placeholder="id: imported_demo&#10;name: Imported Demo&#10;..."
+          />
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={importCurrentYaml}
+              disabled={!importYaml.trim()}
+              data-testid="scenario-workspace-import"
+            >
+              <FileInput className="mr-2 h-4 w-4" aria-hidden="true" />
+              Import YAML
+            </Button>
+            <label className="inline-flex min-h-10 cursor-pointer items-center rounded-2xl border border-border/70 px-3 text-sm font-medium text-foreground hover:bg-accent">
+              Import File
+              <input
+                type="file"
+                accept=".yaml,.yml,text/yaml,text/plain"
+                className="sr-only"
+                onChange={(event) => void importFile(event.target.files?.[0])}
+              />
+            </label>
+          </div>
+        </CardContent>
+      </Card>
+
+      <InlineInfo className="mt-4">{message}</InlineInfo>
+    </PanelShell>
+  );
+}
+
+function WorkspaceListItem({
+  item,
+  active,
+  onLoad,
+  onRename,
+  onDuplicate,
+  onDelete,
+}: {
+  item: ScenarioDraftWorkspaceItem;
+  active: boolean;
+  onLoad: () => void;
+  onRename: () => void;
+  onDuplicate: () => void;
+  onDelete: () => void;
+}) {
+  return (
+    <article
+      className={cn(
+        "rounded-2xl border p-3 transition",
+        active ? "border-primary/70 bg-primary/10" : "border-border/70 bg-background/50",
+      )}
+      data-testid="scenario-workspace-item"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold text-foreground">{item.name}</p>
+          <p className="mt-1 truncate text-xs text-muted-foreground">{item.scenarioId}</p>
+        </div>
+        <StatusBadge tone={validationTone(item)} value={validationLabel(item)} />
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <SourceBadge source={item.source} />
+        <StatusBadge tone="neutral" value={formatRelativeTime(item.updatedAt)} />
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <Button size="sm" variant="outline" onClick={onLoad}>
+          Load
+        </Button>
+        <Button size="sm" variant="ghost" onClick={onRename}>
+          <Pencil className="mr-2 h-3.5 w-3.5" aria-hidden="true" />
+          Rename
+        </Button>
+        <Button size="sm" variant="ghost" onClick={onDuplicate}>
+          <Copy className="mr-2 h-3.5 w-3.5" aria-hidden="true" />
+          Duplicate
+        </Button>
+        <Button size="sm" variant="ghost" onClick={onDelete}>
+          <Trash2 className="mr-2 h-3.5 w-3.5" aria-hidden="true" />
+          Delete
+        </Button>
+      </div>
+    </article>
   );
 }
 
@@ -279,22 +633,31 @@ function TemplatePicker({
   );
 }
 
-function ValidationPanel({ validation }: { validation: ReturnType<typeof validateScenarioDraft> }) {
+function ValidationPanel({
+  validation,
+  isModifiedSinceSave,
+}: {
+  validation: ReturnType<typeof validateScenarioDraft>;
+  isModifiedSinceSave: boolean;
+}) {
   return (
     <PanelShell
       title="Validation"
-      subtitle="Local draft checks before copy or download."
+      subtitle="Local draft checks before copy, download, or workspace save."
       icon={ShieldCheck}
       status={
         <StatusBadge
-          tone={validation.valid ? "healthy" : "danger"}
-          value={validation.valid ? "Pass" : "Review"}
+          tone={validation.valid ? (isModifiedSinceSave ? "warning" : "healthy") : "danger"}
+          value={validation.valid ? (isModifiedSinceSave ? "Modified" : "Pass") : "Review"}
         />
       }
       testId="scenario-authoring-validation"
     >
+      {isModifiedSinceSave ? (
+        <ValidationMessage tone="warning" message="Draft has unsaved local workspace changes." />
+      ) : null}
       {validation.errors.length ? (
-        <div className="space-y-2">
+        <div className="mt-2 space-y-2">
           {validation.errors.map((error) => (
             <ValidationMessage key={error} tone="danger" message={error} />
           ))}
@@ -302,7 +665,8 @@ function ValidationPanel({ validation }: { validation: ReturnType<typeof validat
       ) : (
         <EmptyState
           title="No blocking validation errors"
-          message="This draft can be copied or downloaded for developer review."
+          message="This draft can be saved locally, copied, or downloaded for developer review."
+          className="mt-2"
         />
       )}
       {validation.warnings.length ? (
@@ -316,7 +680,13 @@ function ValidationPanel({ validation }: { validation: ReturnType<typeof validat
   );
 }
 
-function PreviewPanel({ draft }: { draft: ScenarioDraft }) {
+function PreviewPanel({
+  draft,
+  activeItem,
+}: {
+  draft: ScenarioDraft;
+  activeItem?: ScenarioDraftWorkspaceItem;
+}) {
   return (
     <PanelShell
       title="Preview"
@@ -327,7 +697,7 @@ function PreviewPanel({ draft }: { draft: ScenarioDraft }) {
         <KpiCard label="Severity" value={draft.severity} status={severityTone(draft.severity)} />
         <KpiCard label="Duration" value={draft.duration} helperText="Synthetic time window" />
         <KpiCard label="Behavior" value={draft.effects.behavior} />
-        <KpiCard label="Mode" value={draft.effects.mode || "NORMAL"} />
+        <KpiCard label="Workspace" value={activeItem ? activeItem.name : "Unsaved draft"} />
       </div>
       <div className="mt-4 rounded-2xl border border-border/70 bg-surface-subtle/60 p-4">
         <p className="text-sm font-medium text-foreground">{draft.name}</p>
@@ -516,14 +886,28 @@ function severityTone(severity: ScenarioSeverity): StatusTone {
   return "neutral";
 }
 
-function cloneDraft(templateId: string): ScenarioDraft {
+function validationTone(item: ScenarioDraftWorkspaceItem): StatusTone {
+  if (item.validation.errors.length) {
+    return "danger";
+  }
+  if (item.validation.warnings.length) {
+    return "warning";
+  }
+  return "healthy";
+}
+
+function validationLabel(item: ScenarioDraftWorkspaceItem): string {
+  if (item.validation.errors.length) {
+    return "Errors";
+  }
+  if (item.validation.warnings.length) {
+    return "Warnings";
+  }
+  return "Valid";
+}
+
+function cloneTemplateDraft(templateId: string): ScenarioDraft {
   const template =
     scenarioTemplates.find((candidate) => candidate.id === templateId) ?? scenarioTemplates[0];
-  return {
-    ...template.draft,
-    tags: [...template.draft.tags],
-    expectedAlarms: [...template.draft.expectedAlarms],
-    reportTags: [...template.draft.reportTags],
-    effects: { ...template.draft.effects },
-  };
+  return cloneScenarioDraft(template.draft);
 }
