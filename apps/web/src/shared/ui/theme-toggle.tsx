@@ -1,35 +1,46 @@
-import { Moon, Sun } from "lucide-react";
-import { useTheme } from "@/app/providers/theme/themeContext";
-import { Button } from "@/shared/ui/button";
+import { Moon, Sun, Waves, type LucideIcon } from "lucide-react";
+import { THEMES, useTheme, type Theme } from "@/app/providers/theme/themeContext";
+import { cn } from "@/shared/lib/cn";
+
+const themeMeta: Record<Theme, { label: string; icon: LucideIcon }> = {
+  dark: { label: "Dark", icon: Moon },
+  light: { label: "Light", icon: Sun },
+  neutral: { label: "Neutral", icon: Waves },
+};
 
 export function ThemeToggle() {
-  const { theme, toggleTheme } = useTheme();
-  const isDark = theme === "dark";
+  const { theme, setTheme } = useTheme();
 
   return (
-    <Button
-      type="button"
-      variant="outline"
-      size="icon"
-      onClick={toggleTheme}
-      aria-label={`Switch to ${isDark ? "light" : "dark"} theme`}
-      title={`Switch to ${isDark ? "light" : "dark"} theme`}
-      className="group relative h-9 w-9 overflow-hidden border-border/80 bg-card/80 p-0 shadow-[0_10px_28px_hsl(var(--foreground)/0.08)] transition-[background-color,border-color,box-shadow,transform] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:scale-[1.015] hover:bg-surface-elevated hover:shadow-panel"
+    <div
+      role="group"
+      aria-label="Theme"
+      className="inline-flex min-w-0 items-center gap-0.5 rounded-md border border-border/80 bg-surface-raised/80 p-0.5 shadow-[0_8px_24px_hsl(var(--foreground)/0.08)]"
     >
-      <span className="absolute inset-1 rounded-full bg-gradient-to-br from-primary/20 via-primary/10 to-warning/10 opacity-80 transition-opacity duration-500 group-hover:opacity-100" />
-      <span className="relative z-10 grid h-full w-full place-items-center">
-        {isDark ? (
-          <Moon
-            className="h-4 w-4 text-primary transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:rotate-[-8deg]"
-            aria-hidden="true"
-          />
-        ) : (
-          <Sun
-            className="h-4 w-4 text-warning transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:rotate-45"
-            aria-hidden="true"
-          />
-        )}
-      </span>
-    </Button>
+      {THEMES.map((themeOption) => {
+        const Icon = themeMeta[themeOption].icon;
+        const selected = theme === themeOption;
+
+        return (
+          <button
+            key={themeOption}
+            type="button"
+            aria-label={`Use ${themeMeta[themeOption].label} theme`}
+            aria-pressed={selected}
+            title={`Use ${themeMeta[themeOption].label} theme`}
+            onClick={() => setTheme(themeOption)}
+            className={cn(
+              "inline-flex h-7 min-w-0 items-center justify-center gap-1 rounded-sm px-2 text-[var(--font-size-xs)] font-semibold text-muted-foreground transition-[background-color,color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+              selected
+                ? "bg-primary text-primary-foreground shadow-[0_6px_16px_hsl(var(--primary)/0.22)]"
+                : "hover:bg-muted hover:text-foreground",
+            )}
+          >
+            <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            <span className="hidden sm:inline">{themeMeta[themeOption].label}</span>
+          </button>
+        );
+      })}
+    </div>
   );
 }

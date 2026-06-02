@@ -21,18 +21,19 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 
 ## What This Project Demonstrates
 
-| Area               | Demonstrated implementation                                                                                                        | Why it matters                                                                                   |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| Industrial HMI     | Dashboard, Process, Alarms, Events, Trends, Reports, Settings                                                                      | Shows operator-style workflows rather than a generic CRUD app.                                   |
-| API gateway        | Go REST gateway, structured errors, demo RBAC enforcement, report aggregation                                                      | Keeps the frontend contract stable and protects write/action endpoints.                          |
-| Simulation engine  | Synthetic process loop, scenarios, `V-101`/`P-101` state machines, `TIC-101` PID                                                   | Provides realistic demo dynamics without real plant connectivity.                                |
-| Command workflow   | Manual/auto/disabled arbitration, command status, event records                                                                    | Demonstrates control authority boundaries in a simulation-only setting.                          |
-| Historian          | Optional PostgreSQL/TimescaleDB persistence, 30-day raw retention metadata, and 1-minute synthetic telemetry aggregates            | Demonstrates time-series storage, downsampling, and fallback behavior.                           |
-| MQTT               | Publish-only synthetic telemetry/events/alarms/status bridge                                                                       | Shows IIoT integration while explicitly avoiding MQTT command ingestion.                         |
-| Reports            | JSON/CSV/PDF simulation summary export with simulation-only template/section options                                               | Useful portfolio/demo artifact, clearly not regulatory reporting.                                |
-| Scenario authoring | Browser-local workspace for simulation-only YAML scenario drafts, preview, frontend/backend validation, import, copy, and download | Helps explain declarative scenarios without backend persistence or runtime deployment semantics. |
-| Observability      | API/simulation `/metrics`, Prometheus, Grafana dashboard provisioning                                                              | Gives local diagnostics for platform health and synthetic process metrics.                       |
-| Quality gates      | Go test/vet/race/coverage, Vitest, Playwright E2E/a11y/visual, smokes, scans                                                       | Shows production-style engineering discipline without production claims.                         |
+| Area                   | Demonstrated implementation                                                                                                        | Why it matters                                                                                   |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Industrial HMI         | Dashboard, Process, Alarms, Events, Trends, Reports, Settings                                                                      | Shows operator-style workflows rather than a generic CRUD app.                                   |
+| API gateway            | Go REST gateway, structured errors, demo RBAC enforcement, report aggregation                                                      | Keeps the frontend contract stable and protects write/action endpoints.                          |
+| Simulation engine      | Synthetic process loop, scenarios, `V-101`/`P-101` state machines, `TIC-101` PID                                                   | Provides realistic demo dynamics without real plant connectivity.                                |
+| Command workflow       | Manual/auto/disabled arbitration, command status, event records                                                                    | Demonstrates control authority boundaries in a simulation-only setting.                          |
+| Historian              | Optional PostgreSQL/TimescaleDB persistence, 30-day raw retention metadata, and 1-minute synthetic telemetry aggregates            | Demonstrates time-series storage, downsampling, and fallback behavior.                           |
+| MQTT                   | Publish-only synthetic telemetry/events/alarms/status bridge                                                                       | Shows IIoT integration while explicitly avoiding MQTT command ingestion.                         |
+| Reports                | JSON/CSV/PDF simulation summary export with simulation-only template/section options                                               | Useful portfolio/demo artifact, clearly not regulatory reporting.                                |
+| Scenario authoring     | Browser-local workspace for simulation-only YAML scenario drafts, preview, frontend/backend validation, import, copy, and download | Helps explain declarative scenarios without backend persistence or runtime deployment semantics. |
+| Frontend visual system | Dark, Light, and Neutral themes with compact industrial HMI density and local preference persistence                               | Gives the demo a stricter control-room feel while keeping the UI simulation-only.                |
+| Observability          | API/simulation `/metrics`, Prometheus, Grafana dashboard provisioning                                                              | Gives local diagnostics for platform health and synthetic process metrics.                       |
+| Quality gates          | Go test/vet/race/coverage, Vitest, Playwright E2E/a11y/visual, smokes, scans                                                       | Shows production-style engineering discipline without production claims.                         |
 
 ## 5-Minute Demo Story
 
@@ -185,11 +186,12 @@ These commands run the generated artifact guard, Go formatting checks, frontend 
 - Demo Auth/RBAC layer with static simulation-only users, a role switcher, `X-Demo-User` header, and backend enforcement for protected write/action endpoints.
 - Simulation-only JSON/CSV/PDF report export through the API gateway and Reports page. These reports are not regulatory, compliance, or production audit reports.
 - Scenario Authoring workspace for simulation-only YAML drafts with template selection, browser-local save/load/rename/duplicate/delete, YAML import, local validation, preview, copy, and download. Drafts persist only in localStorage and do not persist to the backend, deploy, execute, or mutate runtime scenarios.
+- Frontend theme foundation with Dark, Light, and Neutral themes, semantic CSS variable tokens, compact industrial HMI density, and localStorage preference persistence under `smr.ui.theme`.
 - Local demo observability baseline with API/simulation `/metrics`, Prometheus scraping, and Grafana dashboard provisioning.
 - Frontend valve and pump control panels with pending, success, and error states.
 - GitHub Actions CI quality gates for Go API, Go simulation, frontend, Docker Compose config validation, visual regression, smoke tests, race/coverage checks, and dependency/security scans.
 - Expanded Playwright Chromium E2E suite plus a lightweight Chromium/Firefox smoke matrix for Dashboard, Process, Reports, Settings, MQTT status, and historian status. WebKit is deferred until the CI smoke is stable.
-- Playwright visual regression baseline for Dashboard, Process, Alarms, Events, Trends, Reports, and Settings across deterministic themes and responsive widths.
+- Playwright visual regression baseline for Dashboard, Process, Alarms, Events, Trends, Reports, and Settings across deterministic Dark, Light, and Neutral theme coverage plus responsive widths.
 - Local log artifact folder and smoke diagnostic reports under `logs/`.
 - OpenAPI 3.1 contract and JSON Schema reference files under `packages/schemas`, with CI checks for OpenAPI parsing, JSON Schema compilation, generated TypeScript drift, and runtime validation coverage.
 - Generated frontend API schema types committed under `apps/web/src/shared/api/generated`.
@@ -456,6 +458,7 @@ Covered baseline states include:
 
 - Dashboard, Process, Alarms, Events, Trends, Reports, and Settings in desktop dark theme.
 - Dashboard, Process, Reports, and Settings in desktop light theme.
+- Dashboard, Process, and Settings in desktop neutral theme.
 - Dashboard, Process, and Settings across tablet/mobile dark layouts.
 
 Local commands:

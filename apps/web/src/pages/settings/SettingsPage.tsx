@@ -123,7 +123,7 @@ export function SettingsPage() {
                 <div>
                   <p className="text-sm font-medium text-foreground">Theme</p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Persisted in localStorage and initialized from system preference.
+                    Persisted in localStorage with Dark as the default HMI theme.
                   </p>
                 </div>
                 <ThemeToggle />
@@ -133,7 +133,7 @@ export function SettingsPage() {
               </Badge>
             </div>
             <SettingRow label="Unit system" value="SI" />
-            <SettingRow label="Density" value="Comfortable" />
+            <SettingRow label="Density" value="Compact HMI" />
             <SettingRow label="Accessibility mode" value="Default" />
           </CardContent>
         </Card>

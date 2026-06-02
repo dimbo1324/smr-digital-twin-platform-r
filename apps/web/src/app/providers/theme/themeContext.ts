@@ -1,6 +1,8 @@
 import { createContext, useContext } from "react";
 
-export type Theme = "light" | "dark";
+export type Theme = "dark" | "light" | "neutral";
+
+export const THEMES: Theme[] = ["dark", "light", "neutral"];
 
 export interface ThemeContextValue {
   theme: Theme;
@@ -8,7 +10,8 @@ export interface ThemeContextValue {
   toggleTheme: () => void;
 }
 
-export const THEME_STORAGE_KEY = "smr-twin-theme";
+export const THEME_STORAGE_KEY = "smr.ui.theme";
+export const LEGACY_THEME_STORAGE_KEY = "smr-twin-theme";
 
 export const ThemeContext = createContext<ThemeContextValue | null>(null);
 

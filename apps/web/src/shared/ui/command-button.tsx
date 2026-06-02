@@ -21,7 +21,7 @@ export function CommandButton({
       disabled={disabled}
       aria-disabled={disabled}
       title={disabledReason}
-      className={cn("min-h-10 whitespace-nowrap", className)}
+      className={cn("min-h-[var(--app-control-height-md)] whitespace-nowrap", className)}
     >
       {loading ? "Working..." : children}
     </Button>

@@ -1,4 +1,4 @@
-import { screen, within } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ScenarioAuthoringPage } from "@/pages/scenario-authoring/ScenarioAuthoringPage";
@@ -127,27 +127,28 @@ describe("ScenarioAuthoringPage", () => {
 
     renderWithProviders(<ScenarioAuthoringPage />);
 
-    await user.type(
-      screen.getByTestId("scenario-workspace-import-yaml"),
-      [
-        "id: imported_workspace_demo",
-        "name: Imported Workspace Demo",
-        "description: Simulation-only imported demo.",
-        "category: demo",
-        "severity: info",
-        "duration: 5m",
-        "tags:",
-        "  - demo",
-        "reportTags:",
-        "  - TT-101",
-        "safetyNote: Simulation-only local draft. No real plant control.",
-        "enabled: true",
-        "version: 1",
-        "effects:",
-        "  behavior: nominal",
-        "  mode: NORMAL",
-      ].join("\n"),
-    );
+    fireEvent.change(screen.getByTestId("scenario-workspace-import-yaml"), {
+      target: {
+        value: [
+          "id: imported_workspace_demo",
+          "name: Imported Workspace Demo",
+          "description: Simulation-only imported demo.",
+          "category: demo",
+          "severity: info",
+          "duration: 5m",
+          "tags:",
+          "  - demo",
+          "reportTags:",
+          "  - TT-101",
+          "safetyNote: Simulation-only local draft. No real plant control.",
+          "enabled: true",
+          "version: 1",
+          "effects:",
+          "  behavior: nominal",
+          "  mode: NORMAL",
+        ].join("\n"),
+      },
+    });
     await user.click(screen.getByTestId("scenario-workspace-import"));
 
     expect(

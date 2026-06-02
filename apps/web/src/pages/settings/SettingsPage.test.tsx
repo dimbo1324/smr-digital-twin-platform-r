@@ -14,8 +14,10 @@ const settingsMocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/app/providers/theme/themeContext", () => ({
+  THEMES: ["dark", "light", "neutral"],
   useTheme: () => ({
     theme: "light",
+    setTheme: vi.fn(),
     toggleTheme: settingsMocks.toggleTheme,
   }),
 }));

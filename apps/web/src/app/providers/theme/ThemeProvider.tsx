@@ -1,5 +1,15 @@
 import { useCallback, useEffect, useMemo, useState, type PropsWithChildren } from "react";
-import { THEME_STORAGE_KEY, ThemeContext, type Theme } from "@/app/providers/theme/themeContext";
+import {
+  LEGACY_THEME_STORAGE_KEY,
+  THEME_STORAGE_KEY,
+  THEMES,
+  ThemeContext,
+  type Theme,
+} from "@/app/providers/theme/themeContext";
+
+function isTheme(value: string | null): value is Theme {
+  return THEMES.includes(value as Theme);
+}
 
 function getInitialTheme(): Theme {
   if (typeof window === "undefined") {
@@ -7,11 +17,11 @@ function getInitialTheme(): Theme {
   }
 
   const storedTheme = readStoredTheme();
-  if (storedTheme === "light" || storedTheme === "dark") {
+  if (storedTheme) {
     return storedTheme;
   }
 
-  return getSystemTheme();
+  return "dark";
 }
 
 function readStoredTheme(): Theme | null {
@@ -21,7 +31,12 @@ function readStoredTheme(): Theme | null {
 
   try {
     const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-    return storedTheme === "light" || storedTheme === "dark" ? storedTheme : null;
+    if (isTheme(storedTheme)) {
+      return storedTheme;
+    }
+
+    const legacyTheme = window.localStorage.getItem(LEGACY_THEME_STORAGE_KEY);
+    return isTheme(legacyTheme) ? legacyTheme : null;
   } catch {
     return null;
   }
@@ -39,25 +54,14 @@ function persistTheme(theme: Theme) {
   }
 }
 
-function getSystemTheme(): Theme {
-  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
-    return "dark";
-  }
-
-  try {
-    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-  } catch {
-    return "dark";
-  }
-}
-
 function applyTheme(theme: Theme) {
   if (typeof document === "undefined") {
     return;
   }
 
   document.documentElement.classList.toggle("dark", theme === "dark");
-  document.documentElement.style.colorScheme = theme;
+  document.documentElement.dataset.theme = theme;
+  document.documentElement.style.colorScheme = theme === "light" ? "light" : "dark";
 }
 
 export function ThemeProvider({ children }: PropsWithChildren) {
@@ -69,11 +73,16 @@ export function ThemeProvider({ children }: PropsWithChildren) {
   }, [theme]);
 
   const setTheme = useCallback((nextTheme: Theme) => {
-    setThemeState(nextTheme);
+    if (isTheme(nextTheme)) {
+      setThemeState(nextTheme);
+    }
   }, []);
 
   const toggleTheme = useCallback(() => {
-    setThemeState((currentTheme) => (currentTheme === "dark" ? "light" : "dark"));
+    setThemeState((currentTheme) => {
+      const currentIndex = THEMES.indexOf(currentTheme);
+      return THEMES[(currentIndex + 1) % THEMES.length] ?? "dark";
+    });
   }, []);
 
   const value = useMemo(

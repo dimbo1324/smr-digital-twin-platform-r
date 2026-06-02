@@ -24,12 +24,12 @@ export function IconFrame({
   return (
     <div
       className={cn(
-        "grid h-10 w-10 shrink-0 place-items-center rounded-2xl border shadow-[inset_0_1px_0_hsl(var(--foreground)/0.04)]",
+        "grid h-8 w-8 shrink-0 place-items-center rounded-md border shadow-[inset_0_1px_0_hsl(var(--foreground)/0.04)]",
         toneClasses[tone],
         className,
       )}
     >
-      <Icon className="h-5 w-5" aria-hidden="true" />
+      <Icon className="h-4 w-4" aria-hidden="true" />
     </div>
   );
 }

@@ -69,6 +69,8 @@ flowchart LR
 
 The current live transport is still REST polling. Query intervals are set per data type: telemetry is refreshed most frequently, while system status, events, commands, alarm history, assets, and scenarios use slower refresh or cache windows. Mutations do not perform optimistic updates yet; they invalidate related query keys so the UI reflects the API and simulation state after the backend accepts the operation.
 
+The frontend visual foundation uses semantic CSS variable tokens integrated with Tailwind. Dark, Light, and Neutral themes are selected through `data-theme` and persisted locally under `smr.ui.theme`. Shared UI primitives such as buttons, badges, cards, panels, and tables use compact industrial HMI density by default. This is presentation infrastructure only; it does not change API behavior, simulation behavior, or any real control boundary.
+
 Runtime API validation is available in the frontend HTTP client for selected request and response payloads. It is controlled by `VITE_API_RUNTIME_VALIDATION=off|warn|strict`; local development defaults to `warn`, production defaults to `off`, and the CI E2E browser regression suite runs in `strict` mode. This catches contract drift between real JSON payloads and JSON Schema/OpenAPI definitions during development and tests without turning the frontend into a production security gateway.
 
 ## Browser Regression Quality Gate

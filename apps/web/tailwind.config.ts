@@ -14,8 +14,10 @@ const config = {
     extend: {
       colors: {
         border: "hsl(var(--border))",
+        "border-strong": "hsl(var(--border-strong))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
+        "focus-ring": "hsl(var(--focus-ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
@@ -54,10 +56,35 @@ const config = {
           DEFAULT: "hsl(var(--offline))",
           foreground: "hsl(var(--offline-foreground))",
         },
+        disabled: {
+          DEFAULT: "hsl(var(--disabled))",
+          foreground: "hsl(var(--disabled-foreground))",
+        },
         surface: {
           DEFAULT: "hsl(var(--surface))",
+          raised: "hsl(var(--surface-raised))",
           elevated: "hsl(var(--surface-elevated))",
           subtle: "hsl(var(--surface-subtle))",
+        },
+        status: {
+          healthy: "hsl(var(--status-healthy))",
+          warning: "hsl(var(--status-warning))",
+          critical: "hsl(var(--status-critical))",
+          degraded: "hsl(var(--status-degraded))",
+          disabled: "hsl(var(--status-disabled))",
+          connected: "hsl(var(--status-connected))",
+          disconnected: "hsl(var(--status-disconnected))",
+          simulation: "hsl(var(--status-simulation))",
+          fallback: "hsl(var(--status-fallback))",
+        },
+        chart: {
+          temperature: "hsl(var(--chart-temperature))",
+          pressure: "hsl(var(--chart-pressure))",
+          flow: "hsl(var(--chart-flow))",
+          level: "hsl(var(--chart-level))",
+          valve: "hsl(var(--chart-valve))",
+          pid: "hsl(var(--chart-pid))",
+          neutral: "hsl(var(--chart-neutral))",
         },
         muted: {
           DEFAULT: "hsl(var(--muted))",
@@ -73,9 +100,9 @@ const config = {
         },
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        lg: "var(--app-radius-lg)",
+        md: "var(--app-radius-md)",
+        sm: "var(--app-radius-sm)",
       },
       fontFamily: {
         sans: ["Inter", "Segoe UI", "system-ui", "sans-serif"],

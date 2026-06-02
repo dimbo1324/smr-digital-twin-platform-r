@@ -11,9 +11,9 @@ export function SimulationOnlyNotice({
   badgeLabel?: string;
 }) {
   return (
-    <div className={cn("rounded-2xl border border-warning/25 bg-warning/10 p-4", className)}>
+    <div className={cn("rounded-lg border border-warning/25 bg-warning/10 p-3", className)}>
       <StatusBadge tone="simulation" value={badgeLabel} />
-      <p className="mt-3 text-sm leading-6 text-muted-foreground">
+      <p className="mt-2 text-[var(--font-size-sm)] leading-normal text-muted-foreground">
         Synthetic simulator data only. No real plant control, PLC/SCADA connectivity, production
         audit, or regulatory reporting.
       </p>
@@ -33,7 +33,7 @@ export function PermissionDeniedHint({
   return (
     <div
       className={cn(
-        "flex gap-3 rounded-2xl border border-warning/30 bg-warning/10 p-3 text-sm leading-6 text-warning",
+        "flex gap-2 rounded-lg border border-warning/30 bg-warning/10 p-3 text-[var(--font-size-sm)] leading-normal text-warning",
         className,
       )}
       role="status"
@@ -57,7 +57,7 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "rounded-2xl border border-border/70 bg-surface-subtle/60 p-5 text-sm",
+        "rounded-lg border border-border/70 bg-surface-subtle/60 p-4 text-[var(--font-size-sm)]",
         className,
       )}
     >
@@ -68,7 +68,7 @@ export function EmptyState({
         />
         <div>
           <p className="font-medium text-foreground">{title}</p>
-          {message ? <p className="mt-1 leading-6 text-muted-foreground">{message}</p> : null}
+          {message ? <p className="mt-1 leading-normal text-muted-foreground">{message}</p> : null}
         </div>
       </div>
     </div>
@@ -86,14 +86,17 @@ export function DegradedState({
 }) {
   return (
     <div
-      className={cn("rounded-2xl border border-warning/30 bg-warning/10 p-4 text-sm", className)}
+      className={cn(
+        "rounded-lg border border-warning/30 bg-warning/10 p-3 text-[var(--font-size-sm)]",
+        className,
+      )}
       role="status"
     >
       <div className="flex items-start gap-3">
         <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden="true" />
         <div>
           <p className="font-medium text-foreground">{title}</p>
-          <p className="mt-1 leading-6 text-muted-foreground">{message}</p>
+          <p className="mt-1 leading-normal text-muted-foreground">{message}</p>
         </div>
       </div>
     </div>
@@ -104,7 +107,7 @@ export function InlineInfo({ children, className }: { children: ReactNode; class
   return (
     <div
       className={cn(
-        "flex items-start gap-2 rounded-2xl border border-border/70 bg-background/50 p-3 text-xs leading-5 text-muted-foreground",
+        "flex items-start gap-2 rounded-lg border border-border/70 bg-background/50 p-2.5 text-[var(--font-size-xs)] leading-normal text-muted-foreground",
         className,
       )}
     >

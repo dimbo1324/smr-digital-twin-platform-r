@@ -4,17 +4,25 @@ import { cn } from "@/shared/lib/cn";
 export function Table({ className, ...props }: HTMLAttributes<HTMLTableElement>) {
   return (
     <div
-      className="w-full overflow-auto rounded-xl border border-border/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      className="w-full overflow-auto rounded-lg border border-border/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       tabIndex={0}
       aria-label="Scrollable data table"
     >
-      <table className={cn("w-full caption-bottom text-sm", className)} {...props} />
+      <table
+        className={cn("w-full caption-bottom text-[var(--font-size-sm)]", className)}
+        {...props}
+      />
     </div>
   );
 }
 
 export function TableHeader({ className, ...props }: HTMLAttributes<HTMLTableSectionElement>) {
-  return <thead className={cn("border-b border-border/70 bg-muted/40", className)} {...props} />;
+  return (
+    <thead
+      className={cn("sticky top-0 z-10 border-b border-border/80 bg-surface-raised/95", className)}
+      {...props}
+    />
+  );
 }
 
 export function TableBody({ className, ...props }: HTMLAttributes<HTMLTableSectionElement>) {
@@ -34,7 +42,7 @@ export function TableHead({ className, ...props }: ThHTMLAttributes<HTMLTableCel
   return (
     <th
       className={cn(
-        "h-10 px-3 text-left align-middle text-xs font-medium text-muted-foreground",
+        "h-8 px-2.5 text-left align-middle text-[var(--font-size-xs)] font-semibold uppercase tracking-[0.08em] text-muted-foreground",
         className,
       )}
       {...props}
@@ -43,5 +51,5 @@ export function TableHead({ className, ...props }: ThHTMLAttributes<HTMLTableCel
 }
 
 export function TableCell({ className, ...props }: TdHTMLAttributes<HTMLTableCellElement>) {
-  return <td className={cn("px-3 py-3 align-middle", className)} {...props} />;
+  return <td className={cn("px-2.5 py-2 align-middle", className)} {...props} />;
 }

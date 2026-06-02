@@ -27,7 +27,7 @@ export function IntegrationStatusCard({
   return (
     <div
       className={cn(
-        "flex min-w-0 gap-3 rounded-2xl border border-border/70 bg-surface-elevated/65 p-4",
+        "flex min-w-0 gap-2.5 rounded-lg border border-border/80 bg-surface-raised/65 p-[var(--app-card-padding)]",
         className,
       )}
       data-testid={testId}
@@ -46,13 +46,17 @@ export function IntegrationStatusCard({
       ) : null}
       <div className="min-w-0 flex-1">
         <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <p className="min-w-0 truncate text-sm font-medium text-foreground">{title}</p>
+          <p className="min-w-0 truncate text-[var(--font-size-sm)] font-semibold text-foreground">
+            {title}
+          </p>
           <StatusBadge tone={tone} value={status} />
         </div>
         {description ? (
-          <p className="mt-2 text-xs leading-5 text-muted-foreground">{description}</p>
+          <p className="mt-1.5 text-[var(--font-size-xs)] leading-normal text-muted-foreground">
+            {description}
+          </p>
         ) : null}
-        {source ? <SourceBadge source={displayLabel(source)} className="mt-3" /> : null}
+        {source ? <SourceBadge source={displayLabel(source)} className="mt-2" /> : null}
       </div>
     </div>
   );

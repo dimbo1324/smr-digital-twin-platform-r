@@ -29,12 +29,12 @@ export function PanelShell({
 }) {
   return (
     <Card className={cn("overflow-hidden", className)} data-testid={testId}>
-      <CardHeader className="flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <CardHeader className="flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 gap-3">
           {Icon ? <IconFrame icon={Icon} tone="primary" /> : null}
           <div className="min-w-0">
             {eyebrow ? (
-              <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              <p className="mb-1 text-[var(--font-size-xs)] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 {eyebrow}
               </p>
             ) : null}
@@ -42,7 +42,7 @@ export function PanelShell({
             {subtitle ? <CardDescription>{subtitle}</CardDescription> : null}
           </div>
         </div>
-        <div className="flex shrink-0 flex-wrap items-center justify-start gap-2 sm:justify-end">
+        <div className="flex shrink-0 flex-wrap items-center justify-start gap-1.5 sm:justify-end">
           {status}
           {actions}
         </div>

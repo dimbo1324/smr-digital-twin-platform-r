@@ -4,6 +4,7 @@ import {
   commonVisualMasks,
   gotoVisualPage,
   installStableEventsVisualData,
+  installStableReportsVisualData,
   prepareVisualPage,
   setVisualViewport,
   type VisualTheme,
@@ -113,6 +114,31 @@ const desktopLightPages: VisualScenario[] = [
   },
 ];
 
+const desktopNeutralPages: VisualScenario[] = [
+  {
+    route: "/dashboard",
+    pageTestId: "dashboard-page",
+    name: "dashboard",
+    theme: "neutral",
+    viewport: "desktop",
+    maxDiffPixelRatio: 0.07,
+  },
+  {
+    route: "/process",
+    pageTestId: "process-page",
+    name: "process",
+    theme: "neutral",
+    viewport: "desktop",
+  },
+  {
+    route: "/settings",
+    pageTestId: "settings-page",
+    name: "settings",
+    theme: "neutral",
+    viewport: "desktop",
+  },
+];
+
 const responsiveDarkPages: VisualScenario[] = [
   {
     route: "/dashboard",
@@ -152,7 +178,12 @@ const responsiveDarkPages: VisualScenario[] = [
   },
 ];
 
-const visualScenarios = [...desktopDarkPages, ...desktopLightPages, ...responsiveDarkPages];
+const visualScenarios = [
+  ...desktopDarkPages,
+  ...desktopLightPages,
+  ...desktopNeutralPages,
+  ...responsiveDarkPages,
+];
 
 test.describe("visual regression baseline", () => {
   for (const scenario of visualScenarios) {
@@ -180,6 +211,9 @@ async function openVisualScenario(
   await prepareVisualPage(page, { theme: scenario.theme });
   if (scenario.route === "/events") {
     await installStableEventsVisualData(page);
+  }
+  if (scenario.route === "/reports") {
+    await installStableReportsVisualData(page);
   }
   await gotoVisualPage(page, scenario.route, scenario.pageTestId);
 }
