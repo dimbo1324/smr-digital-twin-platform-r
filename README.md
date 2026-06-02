@@ -31,7 +31,7 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 | MQTT                   | Publish-only synthetic telemetry/events/alarms/status bridge                                                                       | Shows IIoT integration while explicitly avoiding MQTT command ingestion.                         |
 | Reports                | JSON/CSV/PDF simulation summary export with simulation-only template/section options                                               | Useful portfolio/demo artifact, clearly not regulatory reporting.                                |
 | Scenario authoring     | Browser-local workspace for simulation-only YAML scenario drafts, preview, frontend/backend validation, import, copy, and download | Helps explain declarative scenarios without backend persistence or runtime deployment semantics. |
-| Frontend visual system | Dark, Light, and Neutral themes with compact industrial HMI density and local preference persistence                               | Gives the demo a stricter control-room feel while keeping the UI simulation-only.                |
+| Frontend visual system | Dark, Light, and Neutral themes, compact HMI density, adaptive shell, collapsible sidebar, and local preference persistence        | Gives the demo a stricter control-room feel while keeping the UI simulation-only.                |
 | Observability          | API/simulation `/metrics`, Prometheus, Grafana dashboard provisioning                                                              | Gives local diagnostics for platform health and synthetic process metrics.                       |
 | Quality gates          | Go test/vet/race/coverage, Vitest, Playwright E2E/a11y/visual, smokes, scans                                                       | Shows production-style engineering discipline without production claims.                         |
 
@@ -160,7 +160,7 @@ These commands run the generated artifact guard, Go formatting checks, frontend 
 ## Implemented Now
 
 - Monorepo structure for `apps`, `services`, `packages`, `infra`, `docs`, and `scripts`.
-- React + TypeScript frontend shell with Dashboard, Process, Alarms, Events, Trends, Reports, and Settings pages.
+- React + TypeScript frontend shell with adaptive desktop sidebar, mobile navigation drawer, compact topbar, and Dashboard, Process, Alarms, Events, Trends, Reports, Scenario Authoring, and Settings pages.
 - Go API service with health, system status, assets, latest telemetry, history, alarm lifecycle, event, command, and scenario proxy endpoints.
 - Go simulation service with deterministic synthetic telemetry, scenarios, active alarm generation, in-memory fallback history, and optional PostgreSQL/TimescaleDB historian writes.
 - Docker Compose stack for `web`, `api`, `simulation`, local TimescaleDB/PostgreSQL, local Eclipse Mosquitto broker, and optional local Prometheus/Grafana observability.
@@ -186,7 +186,7 @@ These commands run the generated artifact guard, Go formatting checks, frontend 
 - Demo Auth/RBAC layer with static simulation-only users, a role switcher, `X-Demo-User` header, and backend enforcement for protected write/action endpoints.
 - Simulation-only JSON/CSV/PDF report export through the API gateway and Reports page. These reports are not regulatory, compliance, or production audit reports.
 - Scenario Authoring workspace for simulation-only YAML drafts with template selection, browser-local save/load/rename/duplicate/delete, YAML import, local validation, preview, copy, and download. Drafts persist only in localStorage and do not persist to the backend, deploy, execute, or mutate runtime scenarios.
-- Frontend theme foundation with Dark, Light, and Neutral themes, semantic CSS variable tokens, compact industrial HMI density, and localStorage preference persistence under `smr.ui.theme`.
+- Frontend theme/layout foundation with Dark, Light, and Neutral themes, semantic CSS variable tokens, compact industrial HMI density, adaptive sidebar persistence under `smr.ui.sidebar`, and theme persistence under `smr.ui.theme`.
 - Local demo observability baseline with API/simulation `/metrics`, Prometheus scraping, and Grafana dashboard provisioning.
 - Frontend valve and pump control panels with pending, success, and error states.
 - GitHub Actions CI quality gates for Go API, Go simulation, frontend, Docker Compose config validation, visual regression, smoke tests, race/coverage checks, and dependency/security scans.
@@ -432,7 +432,7 @@ The expanded suite verifies synthetic simulation workflows only:
 - Settings capability/status copy for MQTT, historian, PID/manual-auto, and safety boundary.
 - Basic degraded integration state rendering via Playwright route mocks.
 - Accessibility baseline checks with axe for serious/critical violations across core pages.
-- Keyboard navigation for skip link, sticky sidebar navigation, and PID/valve inputs.
+- Keyboard navigation for skip link, compact sidebar navigation, mobile drawer escape handling, and PID/valve inputs.
 - Demo RBAC role flows for read-only viewer behavior, operator commands, engineer PID tuning, supervisor alarm acknowledgement, and backend 403 enforcement.
 
 Local commands:
@@ -448,7 +448,7 @@ npm run test:e2e:ui
 
 For local runs, API and simulation should be reachable at `http://127.0.0.1:8080` and `http://127.0.0.1:8081`; the Playwright config starts only the Vite frontend dev server. CI starts the Go backend services before running the browser suite. Full PostgreSQL/TimescaleDB and MQTT broker behavior is covered by the separate historian and MQTT smoke scripts.
 
-The desktop layout keeps the primary sidebar sticky and keyboard-reachable while the page scrolls. On narrower screens the sidebar falls back to the responsive static layout so it does not cover HMI content. The skip link moves keyboard users directly to the main simulation-only workspace.
+The desktop layout uses a compact primary navigation rail that can expand on hover or be explicitly pinned. The sidebar state is browser-local under `smr.ui.sidebar`; it does not affect simulation behavior. On tablet and mobile widths, navigation moves into an accessible drawer opened from the topbar and closed on route navigation or Escape. The skip link moves keyboard users directly to the main simulation-only workspace.
 
 ## Visual Regression Tests
 

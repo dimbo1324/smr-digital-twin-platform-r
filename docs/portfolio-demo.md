@@ -44,7 +44,7 @@ If you need a concise recruiter/interviewer overview, start with the [Recruiter 
 ## UI Talking Points
 
 - Dashboard is a status overview, not a production control room.
-- The HMI supports Dark, Light, and Neutral themes with compact industrial density; the preference is browser-local.
+- The HMI supports Dark, Light, and Neutral themes, compact industrial density, a collapsible desktop navigation rail, and a mobile drawer; these preferences are browser-local and presentation-only.
 - Process controls mutate synthetic `V-101` and `P-101` state only.
 - `TIC-101` PID is educational simulation logic.
 - Alarm acknowledgement only changes synthetic alarm instances.

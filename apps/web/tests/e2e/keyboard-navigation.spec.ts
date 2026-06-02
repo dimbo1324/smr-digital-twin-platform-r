@@ -19,6 +19,8 @@ test("keyboard users can skip to content and navigate primary sidebar", async ({
   await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: /skip to main content/i })).toBeFocused();
   await page.keyboard.press("Tab");
+  await expect(page.getByTestId("sidebar-toggle")).toBeFocused();
+  await page.keyboard.press("Tab");
   await expect(page.getByTestId("nav-dashboard")).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(page.getByTestId("nav-process")).toBeFocused();
