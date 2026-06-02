@@ -37,6 +37,7 @@ func (s *Server) routes() http.Handler {
 	mux.Handle("GET /api/v1/alarms/history", s.handlers.AlarmHistory)
 	mux.Handle("POST /api/v1/alarms/{alarmID}/acknowledge", s.handlers.AcknowledgeAlarm)
 	mux.Handle("GET /api/v1/simulation/scenarios", s.handlers.Scenarios)
+	mux.Handle("POST /api/v1/scenarios/validate", handlerOrNotImplemented(s.handlers.ValidateScenario))
 	mux.Handle("POST /api/v1/simulation/scenarios/{scenarioName}/start", s.handlers.StartScenario)
 	mux.Handle("POST /api/v1/simulation/scenarios/stop", s.handlers.StopScenario)
 	mux.Handle("POST /api/v1/simulation/reset", s.handlers.ResetSimulation)

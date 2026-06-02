@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://smr-twin.local/schemas/scenario-validation-result.schema.json",
+  "title": "ScenarioValidationResult",
+  "type": "object",
+  "properties": {
+    "valid": { "type": "boolean" },
+    "errors": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "warnings": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "scenario": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "severity": { "type": "string" },
+        "duration": { "type": "string" },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "simulationOnly": { "type": "boolean", "const": true },
+    "persistsToBackend": { "type": "boolean", "const": false },
+    "deploysToRuntime": { "type": "boolean", "const": false }
+  },
+  "required": [
+    "valid",
+    "errors",
+    "warnings",
+    "scenario",
+    "simulationOnly",
+    "persistsToBackend",
+    "deploysToRuntime"
+  ],
+  "additionalProperties": false
+}

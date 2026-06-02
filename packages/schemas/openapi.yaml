@@ -402,6 +402,43 @@
               ],
               "default": "json"
             }
+          },
+          {
+            "name": "template",
+            "in": "query",
+            "required": false,
+            "description": "Simulation-only presentation template. Templates change report layout/sections only and are not regulatory formats.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "executive-summary",
+                "engineering-detail",
+                "alarm-and-event-review",
+                "pid-control-review",
+                "historian-trend-summary"
+              ],
+              "default": "engineering-detail"
+            }
+          },
+          {
+            "name": "sections",
+            "in": "query",
+            "required": false,
+            "description": "Comma-separated report sections to include. Safety boundary text remains mandatory in every format.",
+            "schema": {
+              "type": "string",
+              "example": "metadata,systemSummary,pidSummary,trendStatistics"
+            }
+          },
+          {
+            "name": "includeDisclaimers",
+            "in": "query",
+            "required": false,
+            "description": "Controls optional detailed disclaimer text only. Mandatory simulation-only/non-regulatory wording is never removed.",
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
           }
         ],
         "responses": {
@@ -877,6 +914,43 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/v1/scenarios/validate": {
+      "post": {
+        "tags": [
+          "Scenarios"
+        ],
+        "summary": "Validate a simulation-only YAML scenario draft",
+        "description": "Validates YAML content for synthetic demo scenario authoring. The endpoint does not persist drafts, mutate the runtime registry, deploy scenarios, or control any real plant.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScenarioValidationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Validation result for a simulation-only draft.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScenarioValidationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error"
           }
         }
       }
@@ -2827,12 +2901,27 @@
           },
           "alarms": {
             "$ref": "#/components/schemas/ReportAlarmSummary"
+          },
+          "template": {
+            "type": "string"
+          },
+          "sections": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "options": {
+            "$ref": "#/components/schemas/ReportOptions"
           }
         },
         "required": [
           "reportId",
           "generatedAt",
           "timeWindow",
+          "options",
+          "sections",
+          "template",
           "simulationOnly",
           "disclaimer",
           "generatedBy",
@@ -2996,6 +3085,159 @@
             "items": {
               "$ref": "#/components/schemas/DemoUser"
             }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ApiMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ],
+        "additionalProperties": false
+      },
+      "ReportOptions": {
+        "type": "object",
+        "properties": {
+          "template": {
+            "type": "string",
+            "enum": [
+              "executive-summary",
+              "engineering-detail",
+              "alarm-and-event-review",
+              "pid-control-review",
+              "historian-trend-summary"
+            ]
+          },
+          "sections": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "metadata",
+                "safetyDisclaimer",
+                "systemSummary",
+                "processSummary",
+                "pidSummary",
+                "alarmSummary",
+                "eventSummary",
+                "commandSummary",
+                "historianSummary",
+                "mqttSummary",
+                "scenarioSummary",
+                "trendStatistics"
+              ]
+            }
+          },
+          "includeDisclaimers": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "template",
+          "sections",
+          "includeDisclaimers"
+        ],
+        "additionalProperties": false
+      },
+      "ScenarioValidationRequest": {
+        "type": "object",
+        "properties": {
+          "format": {
+            "type": "string",
+            "enum": [
+              "yaml",
+              "yml"
+            ],
+            "default": "yaml"
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 65536
+          }
+        },
+        "required": [
+          "content"
+        ],
+        "additionalProperties": false
+      },
+      "ScenarioValidationSummary": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string"
+          },
+          "duration": {
+            "type": "string"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "ScenarioValidationResult": {
+        "type": "object",
+        "properties": {
+          "valid": {
+            "type": "boolean"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "scenario": {
+            "$ref": "#/components/schemas/ScenarioValidationSummary"
+          },
+          "simulationOnly": {
+            "type": "boolean",
+            "const": true
+          },
+          "persistsToBackend": {
+            "type": "boolean",
+            "const": false
+          },
+          "deploysToRuntime": {
+            "type": "boolean",
+            "const": false
+          }
+        },
+        "required": [
+          "valid",
+          "errors",
+          "warnings",
+          "scenario",
+          "simulationOnly",
+          "persistsToBackend",
+          "deploysToRuntime"
+        ],
+        "additionalProperties": false
+      },
+      "ScenarioValidationResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ScenarioValidationResult"
           },
           "meta": {
             "$ref": "#/components/schemas/ApiMeta"

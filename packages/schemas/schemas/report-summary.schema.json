@@ -4,18 +4,38 @@
   "title": "SimulationReport",
   "type": "object",
   "properties": {
-    "reportId": { "type": "string" },
-    "generatedAt": { "type": "string", "format": "date-time" },
-    "timeWindow": { "type": "string" },
-    "simulationOnly": { "type": "boolean", "const": true },
-    "disclaimer": { "type": "string" },
+    "reportId": {
+      "type": "string"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "timeWindow": {
+      "type": "string"
+    },
+    "simulationOnly": {
+      "type": "boolean",
+      "const": true
+    },
+    "disclaimer": {
+      "type": "string"
+    },
     "generatedBy": {
       "type": "object",
       "properties": {
-        "userId": { "type": "string" },
-        "displayName": { "type": "string" },
-        "role": { "type": "string" },
-        "source": { "type": "string" }
+        "userId": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        }
       },
       "required": ["userId", "displayName", "role", "source"],
       "additionalProperties": false
@@ -23,12 +43,24 @@
     "dataSources": {
       "type": "object",
       "properties": {
-        "latestTelemetry": { "type": "string" },
-        "history": { "type": "string" },
-        "commands": { "type": "string" },
-        "events": { "type": "string" },
-        "alarms": { "type": "string" },
-        "degraded": { "type": "boolean" }
+        "latestTelemetry": {
+          "type": "string"
+        },
+        "history": {
+          "type": "string"
+        },
+        "commands": {
+          "type": "string"
+        },
+        "events": {
+          "type": "string"
+        },
+        "alarms": {
+          "type": "string"
+        },
+        "degraded": {
+          "type": "boolean"
+        }
       },
       "required": ["latestTelemetry", "history", "commands", "events", "alarms", "degraded"],
       "additionalProperties": false
@@ -36,51 +68,167 @@
     "system": {
       "type": "object",
       "properties": {
-        "mode": { "type": "string" },
-        "health": { "type": "string" },
-        "activeScenario": { "type": "string" },
-        "running": { "type": "boolean" }
+        "mode": {
+          "type": "string"
+        },
+        "health": {
+          "type": "string"
+        },
+        "activeScenario": {
+          "type": "string"
+        },
+        "running": {
+          "type": "boolean"
+        }
       },
       "required": ["mode", "health", "activeScenario", "running"],
       "additionalProperties": false
     },
-    "historian": { "type": "object" },
-    "mqtt": { "type": "object" },
-    "control": { "type": "object" },
-    "pid": { "type": "object" },
-    "latestTelemetry": { "type": "object" },
+    "historian": {
+      "type": "object"
+    },
+    "mqtt": {
+      "type": "object"
+    },
+    "control": {
+      "type": "object"
+    },
+    "pid": {
+      "type": "object"
+    },
+    "latestTelemetry": {
+      "type": "object"
+    },
     "telemetryStats": {
       "type": "array",
       "items": {
         "type": "object",
         "properties": {
-          "tag": { "type": "string" },
-          "label": { "type": "string" },
-          "unit": { "type": "string" },
-          "min": { "type": "number" },
-          "max": { "type": "number" },
-          "avg": { "type": "number" },
-          "count": { "type": "integer" },
-          "source": { "type": "string" }
+          "tag": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "min": {
+            "type": "number"
+          },
+          "max": {
+            "type": "number"
+          },
+          "avg": {
+            "type": "number"
+          },
+          "count": {
+            "type": "integer"
+          },
+          "source": {
+            "type": "string"
+          }
         },
         "required": ["tag", "label", "unit", "min", "max", "avg", "count", "source"],
         "additionalProperties": false
       }
     },
-    "commands": { "$ref": "#/$defs/countSummary" },
-    "events": { "$ref": "#/$defs/countSummary" },
+    "commands": {
+      "$ref": "#/$defs/countSummary"
+    },
+    "events": {
+      "$ref": "#/$defs/countSummary"
+    },
     "alarms": {
       "type": "object",
       "properties": {
-        "active": { "type": "integer" },
-        "acknowledged": { "type": "integer" },
-        "cleared": { "type": "integer" },
+        "active": {
+          "type": "integer"
+        },
+        "acknowledged": {
+          "type": "integer"
+        },
+        "cleared": {
+          "type": "integer"
+        },
         "bySeverity": {
           "type": "object",
-          "additionalProperties": { "type": "integer" }
+          "additionalProperties": {
+            "type": "integer"
+          }
         }
       },
       "required": ["active", "acknowledged", "cleared"],
+      "additionalProperties": false
+    },
+    "template": {
+      "type": "string",
+      "enum": [
+        "executive-summary",
+        "engineering-detail",
+        "alarm-and-event-review",
+        "pid-control-review",
+        "historian-trend-summary"
+      ]
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "metadata",
+          "safetyDisclaimer",
+          "systemSummary",
+          "processSummary",
+          "pidSummary",
+          "alarmSummary",
+          "eventSummary",
+          "commandSummary",
+          "historianSummary",
+          "mqttSummary",
+          "scenarioSummary",
+          "trendStatistics"
+        ]
+      }
+    },
+    "options": {
+      "type": "object",
+      "properties": {
+        "template": {
+          "type": "string",
+          "enum": [
+            "executive-summary",
+            "engineering-detail",
+            "alarm-and-event-review",
+            "pid-control-review",
+            "historian-trend-summary"
+          ]
+        },
+        "sections": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "metadata",
+              "safetyDisclaimer",
+              "systemSummary",
+              "processSummary",
+              "pidSummary",
+              "alarmSummary",
+              "eventSummary",
+              "commandSummary",
+              "historianSummary",
+              "mqttSummary",
+              "scenarioSummary",
+              "trendStatistics"
+            ]
+          }
+        },
+        "includeDisclaimers": {
+          "type": "boolean"
+        }
+      },
+      "required": ["template", "sections", "includeDisclaimers"],
       "additionalProperties": false
     }
   },
@@ -88,10 +236,14 @@
     "countSummary": {
       "type": "object",
       "properties": {
-        "total": { "type": "integer" },
+        "total": {
+          "type": "integer"
+        },
         "byType": {
           "type": "object",
-          "additionalProperties": { "type": "integer" }
+          "additionalProperties": {
+            "type": "integer"
+          }
         }
       },
       "required": ["total"],
@@ -102,6 +254,9 @@
     "reportId",
     "generatedAt",
     "timeWindow",
+    "options",
+    "sections",
+    "template",
     "simulationOnly",
     "disclaimer",
     "generatedBy",

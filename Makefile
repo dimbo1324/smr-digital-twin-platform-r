@@ -1,4 +1,4 @@
-.PHONY: help dev dev-up dev-down down status compose-config logs-dir logs-clean historian-smoke historian-smoke-keep mqtt-smoke mqtt-smoke-keep observability-up observability-down observability-smoke observability-smoke-keep load-soak load-soak-short load-soak-keep load-soak-ci demo-assets demo-assets-update test lint format format-check gofmt-check gomod-tidy-check artifact-guard hooks-install repo-check precommit prepush api-dev api-run api-build api-test api-vet simulation-run simulation-build simulation-test simulation-vet web-api-types web-api-types-check web-api-validate-openapi web-api-validate-contract-coverage web-api-validate-schemas web-build web-lint web-typecheck web-format-check
+.PHONY: help dev dev-up dev-down down status compose-config logs-dir logs-clean historian-smoke historian-smoke-keep mqtt-smoke mqtt-smoke-keep observability-up observability-down observability-smoke observability-smoke-keep load-soak load-soak-short load-soak-keep load-soak-ci demo-assets demo-assets-update test lint format format-check gofmt-check gomod-tidy-check openapi-go-types openapi-go-types-check artifact-guard hooks-install repo-check precommit prepush api-dev api-run api-build api-test api-vet simulation-run simulation-build simulation-test simulation-vet web-api-types web-api-types-check web-api-validate-openapi web-api-validate-contract-coverage web-api-validate-schemas web-build web-lint web-typecheck web-format-check
 
 WEB_RUN = docker compose run --rm --no-deps web sh -c
 WEB_INSTALL = npm ci
@@ -31,6 +31,7 @@ help:
 	@echo "  make lint             - run go vet and frontend lint"
 	@echo "  make format-check     - run gofmt and frontend Prettier checks"
 	@echo "  make format           - format Go and frontend files"
+	@echo "  make openapi-go-types-check - verify generated Go OpenAPI baseline is current"
 	@echo "  make repo-check       - run repository hygiene checks"
 	@echo "  make precommit        - run fast local pre-commit checks"
 	@echo "  make prepush          - run heavier local pre-push checks"
@@ -95,16 +96,16 @@ observability-smoke-keep:
 	node scripts/smoke/observability-smoke.mjs --keep-running
 
 load-soak:
-	node scripts/smoke/load-and-soak-baseline.mjs --duration-ms 600000
+	node scripts/smoke/load-and-soak-baseline.mjs --profile baseline-10m
 
 load-soak-short:
-	node scripts/smoke/load-and-soak-baseline.mjs --duration-ms 180000
+	node scripts/smoke/load-and-soak-baseline.mjs --profile quick
 
 load-soak-keep:
-	node scripts/smoke/load-and-soak-baseline.mjs --duration-ms 600000 --keep-running
+	node scripts/smoke/load-and-soak-baseline.mjs --profile baseline-10m --keep-running
 
 load-soak-ci:
-	node scripts/smoke/load-and-soak-baseline.mjs --duration-ms 300000 --warmup-ms 30000 --timeout-ms 540000
+	node scripts/smoke/load-and-soak-baseline.mjs --profile ci
 
 demo-assets:
 	cd apps/web && npm run demo:assets -- --output-dir ../../docs/assets/screenshots
@@ -127,6 +128,12 @@ gofmt-check:
 
 gomod-tidy-check:
 	node scripts/check-go-mod-tidy.mjs
+
+openapi-go-types:
+	node scripts/contracts/generate-go-openapi.mjs
+
+openapi-go-types-check:
+	node scripts/contracts/generate-go-openapi.mjs --check
 
 artifact-guard:
 	node scripts/check-generated-artifacts.mjs

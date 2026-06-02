@@ -14,6 +14,8 @@ test("reports simulation summary flow", async ({ page, request }) => {
 
   await test.step("switch report window and verify downloads are available", async () => {
     await page.getByTestId("reports-window-select").selectOption("15m");
+    await page.getByTestId("reports-template-select").selectOption("pid-control-review");
+    await page.getByTestId("reports-section-trendStatistics").uncheck();
     await expect(page.getByTestId("reports-preview-card")).toContainText(/15m|connected|loading/i);
     await expect(page.getByTestId("reports-download-json")).toBeVisible();
     await expect(page.getByTestId("reports-download-csv")).toBeVisible();
@@ -22,7 +24,7 @@ test("reports simulation summary flow", async ({ page, request }) => {
 
   await test.step("verify backend report endpoints", async () => {
     const jsonResponse = await request.get(
-      `${apiBaseUrl}/api/v1/reports/simulation-summary?window=15m`,
+      `${apiBaseUrl}/api/v1/reports/simulation-summary?window=15m&template=pid-control-review&sections=metadata,pidSummary`,
       {
         headers: { "X-Demo-User": "demo-viewer" },
       },
@@ -30,6 +32,7 @@ test("reports simulation summary flow", async ({ page, request }) => {
     expect(jsonResponse.ok()).toBeTruthy();
     const payload = await jsonResponse.json();
     expect(payload.data.simulationOnly).toBe(true);
+    expect(payload.data.template).toBe("pid-control-review");
     expect(payload.data.disclaimer).toContain("Not a regulatory");
 
     const csvResponse = await request.get(

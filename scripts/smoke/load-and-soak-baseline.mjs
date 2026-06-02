@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { execFile } from "node:child_process";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { setTimeout as sleep } from "node:timers/promises";
@@ -16,6 +17,7 @@ const DEFAULTS = {
   apiUrl: "http://127.0.0.1:8080",
   commandRateMs: 5_000,
   durationMs: 600_000,
+  dryRun: false,
   grafanaUrl: "http://127.0.0.1:3000",
   intervalMs: 5_000,
   keepRunning: false,
@@ -24,13 +26,28 @@ const DEFAULTS = {
   maxApiP95Ms: 1_000,
   maxErrorRate: 0.02,
   maxGoroutineGrowthRatio: 2.0,
+  maxHistorianQueueDepth: 500,
+  maxHistorianWriteFailuresDelta: 0,
   maxMemoryGrowthRatio: 2.0,
+  maxMqttPublishFailuresDelta: 0,
   noBuild: false,
+  printProfile: false,
+  profile: "baseline-10m",
+  profileFile: null,
   projectName: "smr-twin-load-soak",
   prometheusUrl: "http://127.0.0.1:9090",
+  prometheusQueryRateMs: 10_000,
+  requireAggregateHistory: true,
+  requireGrafanaHealth: true,
+  requirePrometheusTargets: true,
+  requireRawHistory: true,
+  requiredReportExports: 1,
+  requiredSuccessfulCommands: 1,
+  requiredSuccessfulScenarios: 1,
   reportRateMs: 60_000,
   scenarioRateMs: 60_000,
   simulationUrl: "http://127.0.0.1:8081",
+  thresholdsFile: null,
   timeoutMs: 900_000,
   warmupMs: 60_000,
 };
@@ -113,6 +130,9 @@ main()
     process.exitCode = 1;
   })
   .finally(async () => {
+    if (options.dryRun) {
+      return;
+    }
     if (!options.keepRunning) {
       await cleanup();
     } else {
@@ -124,6 +144,14 @@ main()
   });
 
 async function main() {
+  if (options.printProfile || options.dryRun) {
+    console.log(JSON.stringify(resolvedProfilePayload(), null, 2));
+  }
+  if (options.dryRun) {
+    log("Dry run complete; Docker Compose stack was not started.");
+    return;
+  }
+
   if (options.localArtifacts) {
     artifactRun = await createArtifactRunDir({
       type: "smoke",
@@ -158,67 +186,133 @@ async function main() {
 
 function parseArgs(args) {
   const parsed = { ...DEFAULTS };
+  const overrides = new Set();
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
     switch (arg) {
       case "--api-url":
+        overrides.add("apiUrl");
         parsed.apiUrl = trimTrailingSlash(requireValue(args, ++index, arg));
         break;
       case "--command-rate-ms":
+        overrides.add("commandRateMs");
         parsed.commandRateMs = parsePositiveInt(requireValue(args, ++index, arg), arg);
         break;
       case "--duration-ms":
+        overrides.add("durationMs");
         parsed.durationMs = parsePositiveInt(requireValue(args, ++index, arg), arg);
         break;
+      case "--dry-run":
+        overrides.add("dryRun");
+        parsed.dryRun = true;
+        break;
       case "--grafana-url":
+        overrides.add("grafanaUrl");
         parsed.grafanaUrl = trimTrailingSlash(requireValue(args, ++index, arg));
         break;
       case "--interval-ms":
+        overrides.add("intervalMs");
         parsed.intervalMs = parsePositiveInt(requireValue(args, ++index, arg), arg);
         break;
       case "--keep-running":
+        overrides.add("keepRunning");
         parsed.keepRunning = true;
         break;
       case "--log-dir":
+        overrides.add("logDir");
         parsed.logDir = requireValue(args, ++index, arg);
         break;
       case "--max-api-p95-ms":
+        overrides.add("maxApiP95Ms");
         parsed.maxApiP95Ms = parsePositiveNumber(requireValue(args, ++index, arg), arg);
         break;
       case "--max-error-rate":
+        overrides.add("maxErrorRate");
         parsed.maxErrorRate = parseNonNegativeNumber(requireValue(args, ++index, arg), arg);
         break;
       case "--max-goroutine-growth-ratio":
+        overrides.add("maxGoroutineGrowthRatio");
         parsed.maxGoroutineGrowthRatio = parsePositiveNumber(requireValue(args, ++index, arg), arg);
         break;
+      case "--max-historian-queue-depth":
+        overrides.add("maxHistorianQueueDepth");
+        parsed.maxHistorianQueueDepth = parseNonNegativeNumber(requireValue(args, ++index, arg), arg);
+        break;
+      case "--max-historian-write-failures-delta":
+        overrides.add("maxHistorianWriteFailuresDelta");
+        parsed.maxHistorianWriteFailuresDelta = parseNonNegativeNumber(requireValue(args, ++index, arg), arg);
+        break;
       case "--max-memory-growth-ratio":
+        overrides.add("maxMemoryGrowthRatio");
         parsed.maxMemoryGrowthRatio = parsePositiveNumber(requireValue(args, ++index, arg), arg);
         break;
+      case "--max-mqtt-publish-failures-delta":
+        overrides.add("maxMqttPublishFailuresDelta");
+        parsed.maxMqttPublishFailuresDelta = parseNonNegativeNumber(requireValue(args, ++index, arg), arg);
+        break;
       case "--no-build":
+        overrides.add("noBuild");
         parsed.noBuild = true;
         break;
       case "--no-local-artifacts":
+        overrides.add("localArtifacts");
         parsed.localArtifacts = false;
         break;
+      case "--print-profile":
+        overrides.add("printProfile");
+        parsed.printProfile = true;
+        break;
+      case "--profile":
+        parsed.profile = requireValue(args, ++index, arg);
+        break;
+      case "--profile-file":
+        parsed.profileFile = requireValue(args, ++index, arg);
+        break;
       case "--project-name":
+        overrides.add("projectName");
         parsed.projectName = requireValue(args, ++index, arg);
         break;
       case "--prometheus-url":
+        overrides.add("prometheusUrl");
         parsed.prometheusUrl = trimTrailingSlash(requireValue(args, ++index, arg));
         break;
+      case "--prometheus-query-rate-ms":
+        overrides.add("prometheusQueryRateMs");
+        parsed.prometheusQueryRateMs = parsePositiveInt(requireValue(args, ++index, arg), arg);
+        break;
+      case "--required-report-exports":
+        overrides.add("requiredReportExports");
+        parsed.requiredReportExports = parseNonNegativeInt(requireValue(args, ++index, arg), arg);
+        break;
+      case "--required-successful-commands":
+        overrides.add("requiredSuccessfulCommands");
+        parsed.requiredSuccessfulCommands = parseNonNegativeInt(requireValue(args, ++index, arg), arg);
+        break;
+      case "--required-successful-scenarios":
+        overrides.add("requiredSuccessfulScenarios");
+        parsed.requiredSuccessfulScenarios = parseNonNegativeInt(requireValue(args, ++index, arg), arg);
+        break;
       case "--report-rate-ms":
+        overrides.add("reportRateMs");
         parsed.reportRateMs = parsePositiveInt(requireValue(args, ++index, arg), arg);
         break;
       case "--scenario-rate-ms":
+        overrides.add("scenarioRateMs");
         parsed.scenarioRateMs = parsePositiveInt(requireValue(args, ++index, arg), arg);
         break;
       case "--simulation-url":
+        overrides.add("simulationUrl");
         parsed.simulationUrl = trimTrailingSlash(requireValue(args, ++index, arg));
         break;
+      case "--thresholds-file":
+        parsed.thresholdsFile = requireValue(args, ++index, arg);
+        break;
       case "--timeout-ms":
+        overrides.add("timeoutMs");
         parsed.timeoutMs = parsePositiveInt(requireValue(args, ++index, arg), arg);
         break;
       case "--warmup-ms":
+        overrides.add("warmupMs");
         parsed.warmupMs = parseNonNegativeInt(requireValue(args, ++index, arg), arg);
         break;
       case "--help":
@@ -230,10 +324,11 @@ function parseArgs(args) {
         throw new Error(`Unknown argument: ${arg}`);
     }
   }
-  if (parsed.timeoutMs <= parsed.durationMs + parsed.warmupMs) {
-    parsed.timeoutMs = parsed.durationMs + parsed.warmupMs + 120_000;
+  const profiled = applyProfileOptions(parsed, overrides);
+  if (profiled.timeoutMs <= profiled.durationMs + profiled.warmupMs) {
+    profiled.timeoutMs = profiled.durationMs + profiled.warmupMs + 120_000;
   }
-  return parsed;
+  return profiled;
 }
 
 function printHelp() {
@@ -244,6 +339,12 @@ Usage:
 
 Options:
   --help                              Show this help.
+  --profile <name>                    Load profile from scripts/smoke/load-profiles/<name>.json.
+                                      Default: ${DEFAULTS.profile}
+  --profile-file <path>               Load profile JSON from an explicit path.
+  --thresholds-file <path>            Overlay threshold JSON values.
+  --print-profile                     Print the resolved profile and thresholds.
+  --dry-run                           Resolve options and exit without starting Docker Compose.
   --keep-running                      Leave the compose stack running for debugging.
   --no-build                          Run docker compose up -d without --build.
   --project-name <name>               Compose project name. Default: ${DEFAULTS.projectName}
@@ -264,12 +365,72 @@ Options:
   --max-api-p95-ms <ms>               Max API p95 latency. Default: ${DEFAULTS.maxApiP95Ms}
   --max-goroutine-growth-ratio <n>    Max API/simulation goroutine growth. Default: ${DEFAULTS.maxGoroutineGrowthRatio}
   --max-memory-growth-ratio <n>       Max API/simulation memory growth. Default: ${DEFAULTS.maxMemoryGrowthRatio}
+  --max-historian-queue-depth <n>     Max final historian queue depth. Default: ${DEFAULTS.maxHistorianQueueDepth}
+  --max-historian-write-failures-delta <n>
+                                      Max historian write failure increase. Default: ${DEFAULTS.maxHistorianWriteFailuresDelta}
+  --max-mqtt-publish-failures-delta <n>
+                                      Max MQTT publish failure increase. Default: ${DEFAULTS.maxMqttPublishFailuresDelta}
+  --required-successful-commands <n>  Required accepted command count. Default: ${DEFAULTS.requiredSuccessfulCommands}
+  --required-successful-scenarios <n> Required started scenario count. Default: ${DEFAULTS.requiredSuccessfulScenarios}
+  --required-report-exports <n>       Required JSON/CSV/PDF success count each. Default: ${DEFAULTS.requiredReportExports}
+  --prometheus-query-rate-ms <ms>     Prometheus query loop rate. Default: ${DEFAULTS.prometheusQueryRateMs}
 
 Scope:
   Load-and-soak checks apply only to the synthetic simulation platform. They do
   not validate real plant control, safety-critical behavior, production
   monitoring, or regulatory performance.
 `);
+}
+
+function applyProfileOptions(parsed, overrides) {
+  const profileOptions = readProfileOptions(parsed);
+  const merged = { ...parsed };
+  for (const [key, value] of Object.entries(profileOptions)) {
+    if (!overrides.has(key) && key in DEFAULTS) {
+      merged[key] = normalizeOptionValue(key, value);
+    }
+  }
+  merged.apiUrl = trimTrailingSlash(merged.apiUrl);
+  merged.simulationUrl = trimTrailingSlash(merged.simulationUrl);
+  merged.prometheusUrl = trimTrailingSlash(merged.prometheusUrl);
+  merged.grafanaUrl = trimTrailingSlash(merged.grafanaUrl);
+  return merged;
+}
+
+function readProfileOptions(parsed) {
+  const optionsFromFiles = {};
+  const profilePath = parsed.profileFile
+    ? path.resolve(parsed.profileFile)
+    : path.resolve("scripts", "smoke", "load-profiles", `${parsed.profile}.json`);
+  Object.assign(optionsFromFiles, readJsonFile(profilePath, `load profile "${parsed.profile}"`));
+  if (parsed.thresholdsFile) {
+    Object.assign(
+      optionsFromFiles,
+      readJsonFile(path.resolve(parsed.thresholdsFile), "thresholds file"),
+    );
+  }
+  return optionsFromFiles;
+}
+
+function readJsonFile(filePath, label) {
+  try {
+    return JSON.parse(readFileSync(filePath, "utf8"));
+  } catch (error) {
+    throw new Error(`Unable to read ${label} at ${filePath}: ${error.message}`);
+  }
+}
+
+function normalizeOptionValue(key, value) {
+  if (typeof DEFAULTS[key] === "boolean") {
+    return Boolean(value);
+  }
+  if (typeof DEFAULTS[key] === "number") {
+    if (!Number.isFinite(Number(value))) {
+      throw new Error(`${key} in load profile must be numeric`);
+    }
+    return Number(value);
+  }
+  return value;
 }
 
 async function preflight() {
@@ -387,7 +548,7 @@ async function runWorkload() {
     }
     if (now >= nextPrometheusAt) {
       tasks.push(captureMetricSample());
-      nextPrometheusAt = now + Math.max(options.intervalMs, 10_000);
+      nextPrometheusAt = now + Math.max(options.intervalMs, options.prometheusQueryRateMs);
     }
 
     tasks.push(runReadLoop());
@@ -555,8 +716,12 @@ async function validateFinalState() {
   log("Validating final service and threshold state.");
   await waitForOk(`${options.apiUrl}/health`, "API health after soak");
   await waitForOk(`${options.simulationUrl}/health`, "simulation health after soak");
-  await waitForPrometheusTargets();
-  await waitForGrafanaHealth();
+  if (options.requirePrometheusTargets) {
+    await waitForPrometheusTargets();
+  }
+  if (options.requireGrafanaHealth) {
+    await waitForGrafanaHealth();
+  }
 
   const historianStatus = await timedApiJson("GET", "/api/v1/historian/status");
   const historianData = unwrapData(historianStatus.json);
@@ -578,10 +743,10 @@ async function validateFinalState() {
     "GET",
     "/api/v1/telemetry/history?window=1h&resolution=1m",
   );
-  if (extractItems(rawHistory.json).length < 1) {
+  if (options.requireRawHistory && extractItems(rawHistory.json).length < 1) {
     throw new Error("Raw telemetry history was empty after soak.");
   }
-  if (extractItems(aggregateHistory.json).length < 1) {
+  if (options.requireAggregateHistory && extractItems(aggregateHistory.json).length < 1) {
     throw new Error("1m aggregate telemetry history was empty after soak.");
   }
 
@@ -616,24 +781,58 @@ function buildThresholdSummary() {
   });
   checks.push({
     actual: state.commandStats.accepted,
-    limit: 1,
+    limit: options.requiredSuccessfulCommands,
     message: `${state.commandStats.accepted} accepted command(s)`,
     name: "command_success",
-    status: state.commandStats.accepted >= 1 ? "passed" : "failed",
+    status:
+      state.commandStats.accepted >= options.requiredSuccessfulCommands ? "passed" : "failed",
   });
   checks.push({
     actual: state.scenarioStats.started,
-    limit: 1,
+    limit: options.requiredSuccessfulScenarios,
     message: `${state.scenarioStats.started} scenario start(s)`,
     name: "scenario_success",
-    status: state.scenarioStats.started >= 1 ? "passed" : "failed",
+    status:
+      state.scenarioStats.started >= options.requiredSuccessfulScenarios ? "passed" : "failed",
   });
+  for (const format of ["json", "csv", "pdf"]) {
+    checks.push({
+      actual: state.reportStats[format].success,
+      limit: options.requiredReportExports,
+      message: `${state.reportStats[format].success} ${format.toUpperCase()} report export(s)`,
+      name: `report_${format}_success`,
+      status:
+        state.reportStats[format].success >= options.requiredReportExports ? "passed" : "failed",
+    });
+  }
   checks.push(deltaCheck("simulationTicks", baseline, final, 1, "simulation_ticks_increased"));
   checks.push(deltaCheck("mqttPublished", baseline, final, 1, "mqtt_publish_increased"));
   checks.push(
-    nonIncreaseCheck("historianWriteFailures", baseline, final, 0, "historian_write_failures"),
+    nonIncreaseCheck(
+      "historianWriteFailures",
+      baseline,
+      final,
+      options.maxHistorianWriteFailuresDelta,
+      "historian_write_failures",
+    ),
   );
-  checks.push(nonIncreaseCheck("mqttFailures", baseline, final, 0, "mqtt_publish_failures"));
+  checks.push(
+    nonIncreaseCheck(
+      "mqttFailures",
+      baseline,
+      final,
+      options.maxMqttPublishFailuresDelta,
+      "mqtt_publish_failures",
+    ),
+  );
+  checks.push(
+    maxValueCheck(
+      "historianQueueDepth",
+      final,
+      options.maxHistorianQueueDepth,
+      "historian_queue_depth_final",
+    ),
+  );
   checks.push(
     ratioCheck(
       "apiGoroutines",
@@ -675,6 +874,27 @@ function buildThresholdSummary() {
     checks,
     errorRate: errorRate(),
     latency: latencies,
+    profile: options.profile,
+  };
+}
+
+function maxValueCheck(metric, metrics, limit, name) {
+  const value = metricValue(metrics, metric);
+  if (value === null) {
+    return {
+      actual: null,
+      limit,
+      message: `${metric} unavailable; optional check skipped`,
+      name,
+      status: "skipped",
+    };
+  }
+  return {
+    actual: value,
+    limit,
+    message: `${metric} ${value} <= ${limit}`,
+    name,
+    status: value <= limit ? "passed" : "failed",
   };
 }
 
@@ -834,6 +1054,8 @@ async function writeArtifacts(status) {
     ["scenarios-summary.json", state.scenarioStats],
     ["reports-summary.json", state.reportStats],
     ["prometheus-query-results.json", state.prometheusQueries],
+    ["resolved-profile.json", resolvedProfilePayload()],
+    ["threshold-results.json", state.artifacts.thresholdSummary ?? {}],
     ["debug.json", debugPayload(status)],
   ];
   for (const [fileName, payload] of files) {
@@ -1205,12 +1427,7 @@ function summaryPayload(status) {
       "Load-and-soak checks apply only to the synthetic simulation platform. They do not validate real plant control, safety-critical behavior, production monitoring, or regulatory performance.",
     scenarioStats: state.scenarioStats,
     status,
-    thresholds: {
-      maxApiP95Ms: options.maxApiP95Ms,
-      maxErrorRate: options.maxErrorRate,
-      maxGoroutineGrowthRatio: options.maxGoroutineGrowthRatio,
-      maxMemoryGrowthRatio: options.maxMemoryGrowthRatio,
-    },
+    thresholds: thresholdOptionsPayload(),
     thresholdSummary: state.artifacts.thresholdSummary ?? null,
   };
 }
@@ -1221,6 +1438,7 @@ function summaryMarkdown(status) {
     `Status: ${status}`,
     `Generated at: ${new Date().toISOString()}`,
     `Project: ${options.projectName}`,
+    `Profile: ${options.profile}`,
     `Duration: ${options.durationMs} ms`,
     `Warmup: ${options.warmupMs} ms`,
     `Total API requests: ${totalRequestCount()}`,
@@ -1246,6 +1464,7 @@ function debugPayload(status) {
     lastResponses: state.lastResponses,
     metricSamples: state.metricSamples.slice(-20),
     reportStats: state.reportStats,
+    resolvedProfile: resolvedProfilePayload(),
     scenarioStats: state.scenarioStats,
     status,
     urls: {
@@ -1254,6 +1473,51 @@ function debugPayload(status) {
       prometheus: options.prometheusUrl,
       simulation: options.simulationUrl,
     },
+  };
+}
+
+function resolvedProfilePayload() {
+  return {
+    options: {
+      apiUrl: options.apiUrl,
+      commandRateMs: options.commandRateMs,
+      durationMs: options.durationMs,
+      grafanaUrl: options.grafanaUrl,
+      intervalMs: options.intervalMs,
+      keepRunning: options.keepRunning,
+      noBuild: options.noBuild,
+      profile: options.profile,
+      profileFile: options.profileFile,
+      projectName: options.projectName,
+      prometheusQueryRateMs: options.prometheusQueryRateMs,
+      prometheusUrl: options.prometheusUrl,
+      reportRateMs: options.reportRateMs,
+      scenarioRateMs: options.scenarioRateMs,
+      simulationUrl: options.simulationUrl,
+      thresholdsFile: options.thresholdsFile,
+      timeoutMs: options.timeoutMs,
+      warmupMs: options.warmupMs,
+    },
+    thresholds: thresholdOptionsPayload(),
+  };
+}
+
+function thresholdOptionsPayload() {
+  return {
+    maxApiP95Ms: options.maxApiP95Ms,
+    maxErrorRate: options.maxErrorRate,
+    maxGoroutineGrowthRatio: options.maxGoroutineGrowthRatio,
+    maxHistorianQueueDepth: options.maxHistorianQueueDepth,
+    maxHistorianWriteFailuresDelta: options.maxHistorianWriteFailuresDelta,
+    maxMemoryGrowthRatio: options.maxMemoryGrowthRatio,
+    maxMqttPublishFailuresDelta: options.maxMqttPublishFailuresDelta,
+    requireAggregateHistory: options.requireAggregateHistory,
+    requireGrafanaHealth: options.requireGrafanaHealth,
+    requirePrometheusTargets: options.requirePrometheusTargets,
+    requireRawHistory: options.requireRawHistory,
+    requiredReportExports: options.requiredReportExports,
+    requiredSuccessfulCommands: options.requiredSuccessfulCommands,
+    requiredSuccessfulScenarios: options.requiredSuccessfulScenarios,
   };
 }
 
@@ -1325,12 +1589,14 @@ function printEnvironmentSummary() {
   log("Environment summary:");
   log(`- Node.js: ${process.version}`);
   log(`- Project: ${options.projectName}`);
+  log(`- Profile: ${options.profile}`);
   log(`- Duration: ${options.durationMs} ms`);
   log(`- Warmup: ${options.warmupMs} ms`);
   log(`- Interval: ${options.intervalMs} ms`);
   log(`- Command rate: ${options.commandRateMs} ms`);
   log(`- Scenario rate: ${options.scenarioRateMs} ms`);
   log(`- Report rate: ${options.reportRateMs} ms`);
+  log(`- Prometheus query rate: ${options.prometheusQueryRateMs} ms`);
   log(`- API: ${options.apiUrl}`);
   log(`- Simulation: ${options.simulationUrl}`);
   log(`- Prometheus: ${options.prometheusUrl}`);

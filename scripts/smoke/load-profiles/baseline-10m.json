@@ -1,0 +1,19 @@
+{
+  "durationMs": 600000,
+  "warmupMs": 60000,
+  "timeoutMs": 900000,
+  "commandRateMs": 5000,
+  "scenarioRateMs": 60000,
+  "reportRateMs": 60000,
+  "prometheusQueryRateMs": 10000,
+  "maxErrorRate": 0.02,
+  "maxApiP95Ms": 1000,
+  "maxGoroutineGrowthRatio": 2.0,
+  "maxMemoryGrowthRatio": 2.0,
+  "maxHistorianQueueDepth": 500,
+  "maxHistorianWriteFailuresDelta": 0,
+  "maxMqttPublishFailuresDelta": 0,
+  "requiredSuccessfulCommands": 12,
+  "requiredSuccessfulScenarios": 3,
+  "requiredReportExports": 3
+}

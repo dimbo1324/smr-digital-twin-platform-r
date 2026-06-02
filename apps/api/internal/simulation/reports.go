@@ -22,6 +22,37 @@ var allowedReportWindows = map[string]bool{
 	"24h": true,
 }
 
+var allowedReportTemplates = map[string]bool{
+	"executive-summary":       true,
+	"engineering-detail":      true,
+	"alarm-and-event-review":  true,
+	"pid-control-review":      true,
+	"historian-trend-summary": true,
+}
+
+var defaultReportSections = []string{
+	"metadata",
+	"safetyDisclaimer",
+	"systemSummary",
+	"processSummary",
+	"pidSummary",
+	"alarmSummary",
+	"eventSummary",
+	"commandSummary",
+	"historianSummary",
+	"mqttSummary",
+	"scenarioSummary",
+	"trendStatistics",
+}
+
+var allowedReportSections = func() map[string]bool {
+	sections := make(map[string]bool, len(defaultReportSections))
+	for _, section := range defaultReportSections {
+		sections[section] = true
+	}
+	return sections
+}()
+
 func (g *Gateway) SimulationReport(w http.ResponseWriter, r *http.Request) {
 	window := normalizeReportWindow(r.URL.Query().Get("window"))
 	format := strings.ToLower(r.URL.Query().Get("format"))
@@ -32,14 +63,18 @@ func (g *Gateway) SimulationReport(w http.ResponseWriter, r *http.Request) {
 		httpapi.WriteError(w, r, http.StatusBadRequest, "INVALID_REPORT_FORMAT", "format must be json, csv, or pdf")
 		return
 	}
+	options, ok := parseReportOptions(w, r)
+	if !ok {
+		return
+	}
 
-	report, err := g.buildSimulationReport(r, window)
+	report, err := g.buildSimulationReport(r, window, options)
 	if err != nil {
 		g.writeSimulationCommandError(w, r, err)
 		return
 	}
 	if format == "csv" {
-		payload, err := simulationReportCSV(report)
+		payload, err := simulationReportCSV(report, options)
 		if err != nil {
 			httpapi.WriteError(w, r, http.StatusInternalServerError, "REPORT_CSV_FAILED", "Failed to render report CSV")
 			return
@@ -51,7 +86,7 @@ func (g *Gateway) SimulationReport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if format == "pdf" {
-		payload, err := simulationReportPDF(report)
+		payload, err := simulationReportPDF(report, options)
 		if err != nil {
 			httpapi.WriteError(w, r, http.StatusInternalServerError, "REPORT_PDF_FAILED", "Failed to render report PDF")
 			return
@@ -64,6 +99,50 @@ func (g *Gateway) SimulationReport(w http.ResponseWriter, r *http.Request) {
 	}
 
 	httpapi.WriteData(w, r, http.StatusOK, report, httpapi.MetaOptions{Source: report.DataSources.LatestTelemetry, Degraded: report.DataSources.Degraded})
+}
+
+func parseReportOptions(w http.ResponseWriter, r *http.Request) (ReportOptions, bool) {
+	template := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("template")))
+	if template == "" {
+		template = "engineering-detail"
+	}
+	if !allowedReportTemplates[template] {
+		httpapi.WriteError(w, r, http.StatusBadRequest, "INVALID_REPORT_TEMPLATE", "unsupported report template")
+		return ReportOptions{}, false
+	}
+
+	sections := append([]string(nil), defaultReportSections...)
+	if rawSections := strings.TrimSpace(r.URL.Query().Get("sections")); rawSections != "" {
+		sections = []string{}
+		seen := map[string]bool{}
+		for _, raw := range strings.Split(rawSections, ",") {
+			section := strings.TrimSpace(raw)
+			if section == "" {
+				continue
+			}
+			if !allowedReportSections[section] {
+				httpapi.WriteError(w, r, http.StatusBadRequest, "INVALID_REPORT_SECTION", "unsupported report section")
+				return ReportOptions{}, false
+			}
+			if !seen[section] {
+				sections = append(sections, section)
+				seen[section] = true
+			}
+		}
+		if len(sections) == 0 {
+			httpapi.WriteError(w, r, http.StatusBadRequest, "INVALID_REPORT_SECTION", "sections must include at least one supported section")
+			return ReportOptions{}, false
+		}
+	}
+
+	includeDisclaimers := true
+	if raw := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("includeDisclaimers"))); raw == "false" {
+		// Keep the mandatory simulation-only boundary in all formats. This flag only
+		// allows future detailed disclaimer text to be reduced, never removed.
+		includeDisclaimers = false
+	}
+
+	return ReportOptions{Template: template, Sections: sections, IncludeDisclaimers: includeDisclaimers}, true
 }
 
 func normalizeReportWindow(window string) string {
@@ -86,7 +165,7 @@ func safeReportFilename(reportID string) string {
 	return builder.String()
 }
 
-func (g *Gateway) buildSimulationReport(r *http.Request, window string) (SimulationReport, error) {
+func (g *Gateway) buildSimulationReport(r *http.Request, window string, options ReportOptions) (SimulationReport, error) {
 	ctx := r.Context()
 	now := time.Now().UTC()
 	session := auth.FromRequest(r)
@@ -158,6 +237,9 @@ func (g *Gateway) buildSimulationReport(r *http.Request, window string) (Simulat
 		ReportID:       fmt.Sprintf("sim-report-%s", now.Format("20060102T150405Z")),
 		GeneratedAt:    now,
 		TimeWindow:     window,
+		Template:       options.Template,
+		Sections:       append([]string(nil), options.Sections...),
+		Options:        options,
 		SimulationOnly: true,
 		Disclaimer:     reportDisclaimer,
 		GeneratedBy: ReportUser{
@@ -173,11 +255,27 @@ func (g *Gateway) buildSimulationReport(r *http.Request, window string) (Simulat
 		Control:         control,
 		PID:             pid,
 		LatestTelemetry: latest,
-		TelemetryStats:  telemetryStats(history.Values, historySource),
+		TelemetryStats:  telemetryStatsForOptions(history.Values, historySource, options),
 		Commands:        commandSummary(commands),
 		Events:          eventSummary(events),
 		Alarms:          alarmSummary(activeAlarms, alarmHistory),
 	}, nil
+}
+
+func reportHasSection(options ReportOptions, section string) bool {
+	for _, candidate := range options.Sections {
+		if candidate == section {
+			return true
+		}
+	}
+	return false
+}
+
+func telemetryStatsForOptions(history []TelemetrySnapshot, source string, options ReportOptions) []ReportTelemetryStats {
+	if !reportHasSection(options, "trendStatistics") {
+		return []ReportTelemetryStats{}
+	}
+	return telemetryStats(history, source)
 }
 
 func sourceForError(err error) string {
@@ -280,47 +378,77 @@ func alarmSummary(activeAlarms []Alarm, history []Alarm) ReportAlarmSummary {
 	return summary
 }
 
-func simulationReportCSV(report SimulationReport) ([]byte, error) {
+func simulationReportCSV(report SimulationReport, options ReportOptions) ([]byte, error) {
 	buffer := &bytes.Buffer{}
 	writer := csv.NewWriter(buffer)
 	if err := writer.Write([]string{"section", "key", "value", "unit", "source"}); err != nil {
 		return nil, err
 	}
-	rows := [][]string{
-		{"report", "reportId", report.ReportID, "", "api"},
-		{"report", "generatedAt", report.GeneratedAt.Format(time.RFC3339), "", "api"},
-		{"report", "timeWindow", report.TimeWindow, "", "api"},
-		{"report", "simulationOnly", strconv.FormatBool(report.SimulationOnly), "", "api"},
-		{"report", "disclaimer", report.Disclaimer, "", "api"},
-		{"user", "displayName", report.GeneratedBy.DisplayName, "", report.GeneratedBy.Source},
-		{"user", "role", report.GeneratedBy.Role, "", report.GeneratedBy.Source},
-		{"system", "mode", report.System.Mode, "", "simulation"},
-		{"system", "health", report.System.Health, "", "simulation"},
-		{"system", "activeScenario", report.System.ActiveScenario, "", "simulation"},
-		{"historian", "status", report.Historian.Status, "", report.DataSources.History},
-		{"mqtt", "status", report.MQTT.Status, "", "simulation"},
-		{"control", "mode", report.Control.Mode, "", "simulation"},
-		{"pid", "status", report.PID.Status, "", "simulation"},
-		{"commands", "total", strconv.Itoa(report.Commands.Total), "", report.DataSources.Commands},
-		{"events", "total", strconv.Itoa(report.Events.Total), "", report.DataSources.Events},
-		{"alarms", "active", strconv.Itoa(report.Alarms.Active), "", report.DataSources.Alarms},
-		{"alarms", "acknowledged", strconv.Itoa(report.Alarms.Acknowledged), "", report.DataSources.Alarms},
-		{"alarms", "cleared", strconv.Itoa(report.Alarms.Cleared), "", report.DataSources.Alarms},
+	rows := [][]string{}
+	if reportHasSection(options, "metadata") {
+		rows = append(rows,
+			[]string{"report", "reportId", report.ReportID, "", "api"},
+			[]string{"report", "generatedAt", report.GeneratedAt.Format(time.RFC3339), "", "api"},
+			[]string{"report", "timeWindow", report.TimeWindow, "", "api"},
+			[]string{"report", "template", report.Template, "", "api"},
+			[]string{"report", "simulationOnly", strconv.FormatBool(report.SimulationOnly), "", "api"},
+			[]string{"user", "displayName", report.GeneratedBy.DisplayName, "", report.GeneratedBy.Source},
+			[]string{"user", "role", report.GeneratedBy.Role, "", report.GeneratedBy.Source},
+		)
+	}
+	if reportHasSection(options, "safetyDisclaimer") {
+		rows = append(rows, []string{"report", "disclaimer", report.Disclaimer, "", "api"})
+	}
+	if reportHasSection(options, "systemSummary") {
+		rows = append(rows,
+			[]string{"system", "mode", report.System.Mode, "", "simulation"},
+			[]string{"system", "health", report.System.Health, "", "simulation"},
+		)
+	}
+	if reportHasSection(options, "scenarioSummary") {
+		rows = append(rows, []string{"system", "activeScenario", report.System.ActiveScenario, "", "simulation"})
+	}
+	if reportHasSection(options, "historianSummary") {
+		rows = append(rows, []string{"historian", "status", report.Historian.Status, "", report.DataSources.History})
+	}
+	if reportHasSection(options, "mqttSummary") {
+		rows = append(rows, []string{"mqtt", "status", report.MQTT.Status, "", "simulation"})
+	}
+	if reportHasSection(options, "pidSummary") {
+		rows = append(rows,
+			[]string{"control", "mode", report.Control.Mode, "", "simulation"},
+			[]string{"pid", "status", report.PID.Status, "", "simulation"},
+		)
+	}
+	if reportHasSection(options, "commandSummary") {
+		rows = append(rows, []string{"commands", "total", strconv.Itoa(report.Commands.Total), "", report.DataSources.Commands})
+	}
+	if reportHasSection(options, "eventSummary") {
+		rows = append(rows, []string{"events", "total", strconv.Itoa(report.Events.Total), "", report.DataSources.Events})
+	}
+	if reportHasSection(options, "alarmSummary") {
+		rows = append(rows,
+			[]string{"alarms", "active", strconv.Itoa(report.Alarms.Active), "", report.DataSources.Alarms},
+			[]string{"alarms", "acknowledged", strconv.Itoa(report.Alarms.Acknowledged), "", report.DataSources.Alarms},
+			[]string{"alarms", "cleared", strconv.Itoa(report.Alarms.Cleared), "", report.DataSources.Alarms},
+		)
 	}
 	for _, row := range rows {
 		if err := writer.Write(row); err != nil {
 			return nil, err
 		}
 	}
-	for _, stat := range report.TelemetryStats {
-		if err := writer.Write([]string{"telemetry", stat.Tag + ".avg", fmt.Sprintf("%.2f", stat.Avg), stat.Unit, stat.Source}); err != nil {
-			return nil, err
-		}
-		if err := writer.Write([]string{"telemetry", stat.Tag + ".min", fmt.Sprintf("%.2f", stat.Min), stat.Unit, stat.Source}); err != nil {
-			return nil, err
-		}
-		if err := writer.Write([]string{"telemetry", stat.Tag + ".max", fmt.Sprintf("%.2f", stat.Max), stat.Unit, stat.Source}); err != nil {
-			return nil, err
+	if reportHasSection(options, "trendStatistics") {
+		for _, stat := range report.TelemetryStats {
+			if err := writer.Write([]string{"telemetry", stat.Tag + ".avg", fmt.Sprintf("%.2f", stat.Avg), stat.Unit, stat.Source}); err != nil {
+				return nil, err
+			}
+			if err := writer.Write([]string{"telemetry", stat.Tag + ".min", fmt.Sprintf("%.2f", stat.Min), stat.Unit, stat.Source}); err != nil {
+				return nil, err
+			}
+			if err := writer.Write([]string{"telemetry", stat.Tag + ".max", fmt.Sprintf("%.2f", stat.Max), stat.Unit, stat.Source}); err != nil {
+				return nil, err
+			}
 		}
 	}
 	writer.Flush()

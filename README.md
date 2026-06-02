@@ -21,18 +21,18 @@ Tank -> Pump -> Control Valve -> Heat Exchanger -> Sensors -> PID Controller -> 
 
 ## What This Project Demonstrates
 
-| Area               | Demonstrated implementation                                                                                             | Why it matters                                                                                   |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| Industrial HMI     | Dashboard, Process, Alarms, Events, Trends, Reports, Settings                                                           | Shows operator-style workflows rather than a generic CRUD app.                                   |
-| API gateway        | Go REST gateway, structured errors, demo RBAC enforcement, report aggregation                                           | Keeps the frontend contract stable and protects write/action endpoints.                          |
-| Simulation engine  | Synthetic process loop, scenarios, `V-101`/`P-101` state machines, `TIC-101` PID                                        | Provides realistic demo dynamics without real plant connectivity.                                |
-| Command workflow   | Manual/auto/disabled arbitration, command status, event records                                                         | Demonstrates control authority boundaries in a simulation-only setting.                          |
-| Historian          | Optional PostgreSQL/TimescaleDB persistence, 30-day raw retention metadata, and 1-minute synthetic telemetry aggregates | Demonstrates time-series storage, downsampling, and fallback behavior.                           |
-| MQTT               | Publish-only synthetic telemetry/events/alarms/status bridge                                                            | Shows IIoT integration while explicitly avoiding MQTT command ingestion.                         |
-| Reports            | JSON/CSV/PDF simulation summary export                                                                                  | Useful portfolio/demo artifact, clearly not regulatory reporting.                                |
-| Scenario authoring | Browser-local workspace for simulation-only YAML scenario drafts, preview, validation, import, copy, and download       | Helps explain declarative scenarios without backend persistence or runtime deployment semantics. |
-| Observability      | API/simulation `/metrics`, Prometheus, Grafana dashboard provisioning                                                   | Gives local diagnostics for platform health and synthetic process metrics.                       |
-| Quality gates      | Go test/vet/race/coverage, Vitest, Playwright E2E/a11y/visual, smokes, scans                                            | Shows production-style engineering discipline without production claims.                         |
+| Area               | Demonstrated implementation                                                                                                        | Why it matters                                                                                   |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Industrial HMI     | Dashboard, Process, Alarms, Events, Trends, Reports, Settings                                                                      | Shows operator-style workflows rather than a generic CRUD app.                                   |
+| API gateway        | Go REST gateway, structured errors, demo RBAC enforcement, report aggregation                                                      | Keeps the frontend contract stable and protects write/action endpoints.                          |
+| Simulation engine  | Synthetic process loop, scenarios, `V-101`/`P-101` state machines, `TIC-101` PID                                                   | Provides realistic demo dynamics without real plant connectivity.                                |
+| Command workflow   | Manual/auto/disabled arbitration, command status, event records                                                                    | Demonstrates control authority boundaries in a simulation-only setting.                          |
+| Historian          | Optional PostgreSQL/TimescaleDB persistence, 30-day raw retention metadata, and 1-minute synthetic telemetry aggregates            | Demonstrates time-series storage, downsampling, and fallback behavior.                           |
+| MQTT               | Publish-only synthetic telemetry/events/alarms/status bridge                                                                       | Shows IIoT integration while explicitly avoiding MQTT command ingestion.                         |
+| Reports            | JSON/CSV/PDF simulation summary export with simulation-only template/section options                                               | Useful portfolio/demo artifact, clearly not regulatory reporting.                                |
+| Scenario authoring | Browser-local workspace for simulation-only YAML scenario drafts, preview, frontend/backend validation, import, copy, and download | Helps explain declarative scenarios without backend persistence or runtime deployment semantics. |
+| Observability      | API/simulation `/metrics`, Prometheus, Grafana dashboard provisioning                                                              | Gives local diagnostics for platform health and synthetic process metrics.                       |
+| Quality gates      | Go test/vet/race/coverage, Vitest, Playwright E2E/a11y/visual, smokes, scans                                                       | Shows production-style engineering discipline without production claims.                         |
 
 ## 5-Minute Demo Story
 
@@ -206,16 +206,14 @@ These commands run the generated artifact guard, Go formatting checks, frontend 
 - **Process UI**: process-loop values are bound to live API telemetry when available. Valve and pump controls call simulation-only command endpoints; `TIC-101` mode controls whether direct valve commands are allowed.
 - **Scenario controls**: predefined synthetic scenarios are loaded from validated YAML configuration and can be started/stopped through the API.
 - **Assets**: API exposes current simulation assets and fallback process-loop assets. Persistent asset registry is planned.
-- **API contract layer**: OpenAPI, JSON Schema references, generated TypeScript types, runtime validation mappings, and CI drift checks exist for core DTOs. Go server code generation is not implemented yet.
-- **Report export**: JSON, CSV, and PDF simulation summaries are implemented for demo use. Excel export and regulatory reporting are not implemented.
+- **API contract layer**: OpenAPI, JSON Schema references, generated TypeScript types, generated Go OpenAPI DTO/client baseline, runtime validation mappings, and CI drift checks exist for core DTOs. Go server stubs and Go runtime validation from JSON Schema are not implemented yet.
+- **Report export**: JSON, CSV, and PDF simulation summaries are implemented for demo use, with template/section customization that changes presentation only. Excel export and regulatory reporting are not implemented.
 - **Observability**: local Prometheus/Grafana demo stack and service metrics are implemented. Production logging/tracing/alerting is not implemented.
 
 ## Recommended Next Milestones
 
-- `feat/report-template-customization`: simulation-only report layout/template options, still non-regulatory.
-- `refactor/openapi-generated-go-client`: reduce Go/API contract drift without changing public behavior.
-- `docs/recruiter-case-study-page`: concise portfolio narrative and screenshots for review.
 - `test/load-profile-thresholds-hardening`: tune synthetic load profile thresholds from repeated CI runs.
+- `docs/recruiter-case-study-page`: concise portfolio narrative and screenshots for review.
 
 ## Not Implemented Yet
 
@@ -514,9 +512,10 @@ The Reports page and API gateway can export a synthetic simulation summary as JS
 curl "http://localhost:8080/api/v1/reports/simulation-summary?window=1h"
 curl "http://localhost:8080/api/v1/reports/simulation-summary?window=1h&format=csv"
 curl "http://localhost:8080/api/v1/reports/simulation-summary?window=1h&format=pdf"
+curl "http://localhost:8080/api/v1/reports/simulation-summary?window=1h&template=pid-control-review&sections=metadata,pidSummary,trendStatistics"
 ```
 
-Supported windows are `15m`, `1h`, `6h`, and `24h`. The report includes the current demo user, system/historian/MQTT/control/PID status, latest telemetry, simple telemetry min/max/average summaries, and command/event/alarm counts from existing simulation APIs. PDF output is a simple human-readable simulation summary generated by the API gateway without external rendering services. It is explicitly simulation-only and is not a regulatory report, production audit export, or nuclear compliance artifact.
+Supported windows are `15m`, `1h`, `6h`, and `24h`. Supported templates are `executive-summary`, `engineering-detail`, `alarm-and-event-review`, `pid-control-review`, and `historian-trend-summary`. Template and `sections` options only control report presentation; mandatory simulation-only and non-regulatory wording is never removed. The report includes the current demo user, system/historian/MQTT/control/PID status, latest telemetry, simple telemetry min/max/average summaries, and command/event/alarm counts from existing simulation APIs. PDF output is a simple human-readable simulation summary generated by the API gateway without external rendering services. It is explicitly simulation-only and is not a regulatory report, production audit export, or nuclear compliance artifact.
 
 ## Local Observability
 
@@ -566,7 +565,7 @@ Run the 10-minute default baseline:
 
 ```bash
 make load-soak
-node scripts/smoke/load-and-soak-baseline.mjs --duration-ms 600000
+node scripts/smoke/load-and-soak-baseline.mjs --profile baseline-10m
 ```
 
 Keep the stack running for inspection:
@@ -575,7 +574,7 @@ Keep the stack running for inspection:
 make load-soak-keep
 ```
 
-GitHub Actions runs a shorter blocking soak and also provides a manual `Long Load and Soak` workflow for 10-30 minute runs. Artifacts are written under `logs/smoke/<timestamp>_load-and-soak-baseline/`, including latency, error, command, scenario, report, metric, Compose, and debug summaries.
+GitHub Actions runs the `ci` load profile as a shorter blocking soak. Local profiles live under `scripts/smoke/load-profiles/` (`quick`, `ci`, `baseline-10m`, and `extended-30m`) and can be printed with `node scripts/smoke/load-and-soak-baseline.mjs --profile ci --dry-run --print-profile`. Artifacts are written under `logs/smoke/<timestamp>_load-and-soak-baseline/`, including latency, error, command, scenario, report, metric, resolved profile, threshold result, Compose, and debug summaries.
 
 Load-and-soak checks apply only to the synthetic simulation platform. They do not validate real plant control, safety-critical behavior, production monitoring, production load capacity, or regulatory performance.
 
@@ -623,6 +622,7 @@ make logs-clean
 node scripts/smoke/mqtt-bridge-smoke.mjs
 node scripts/smoke/observability-smoke.mjs
 node scripts/smoke/load-and-soak-baseline.mjs --duration-ms 180000
+node scripts/smoke/load-and-soak-baseline.mjs --profile quick
 make observability-smoke
 make load-soak-short
 ```
@@ -684,6 +684,13 @@ npm run api:validate-contract-coverage
 ```
 
 This contract layer is documentation and frontend type source for the current API gateway. CI fails if generated TypeScript types drift from `packages/schemas/openapi.yaml`, if JSON Schema files fail to compile, or if the explicit runtime validation coverage list loses a core API payload. Frontend dev/test runtime validation is implemented for selected request and response payloads. Generated Go server stubs and Go runtime validation from JSON Schema are not implemented yet.
+
+A lightweight generated Go OpenAPI baseline also lives under `apps/api/internal/openapi/generated`. It provides DTO/client-helper compile coverage for contract drift reduction, not a generated Go server implementation:
+
+```bash
+node scripts/contracts/generate-go-openapi.mjs
+node scripts/contracts/generate-go-openapi.mjs --check
+```
 
 Contract workflow:
 
@@ -795,6 +802,9 @@ curl "http://localhost:8080/api/v1/events/recent?limit=50"
 curl "http://localhost:8080/api/v1/reports/simulation-summary?window=1h"
 curl "http://localhost:8080/api/v1/reports/simulation-summary?window=1h&format=csv"
 curl "http://localhost:8080/api/v1/reports/simulation-summary?window=1h&format=pdf"
+curl -X POST http://localhost:8080/api/v1/scenarios/validate \
+  -H "Content-Type: application/json" \
+  -d '{"format":"yaml","content":"id: demo\nname: Demo\ncategory: demo\ndescription: Simulation-only draft.\nseverity: info\nduration: 5m\ntags: []\nexpectedAlarms: []\nreportTags: []\nsafetyNote: Simulation-only draft. No real plant control.\nenabled: true\nversion: 1\neffects:\n  behavior: nominal\n  mode: NORMAL\n"}'
 curl http://localhost:8080/api/v1/simulation/scenarios
 curl -X POST http://localhost:8080/api/v1/simulation/scenarios/high_temperature/start
 curl -X POST http://localhost:8080/api/v1/simulation/scenarios/stop
@@ -847,7 +857,7 @@ curl "http://localhost:8081/api/v1/simulation/events/recent?limit=50"
 - Frontend uses route-level code splitting; deeper vendor/chart chunk tuning can be added later if needed.
 - Dashboard data is live for the local simulator, but it still uses REST polling and synthetic simulation sources.
 - Runtime validation is dev/test focused and currently lives in the frontend HTTP client; Go runtime validation from JSON Schema is not implemented yet.
-- Go server/client code generation is not implemented yet; Go DTOs are still kept aligned with OpenAPI manually plus CI contract checks.
+- Generated Go OpenAPI DTO/client-helper baseline exists for drift reduction, but generated Go server stubs and Go runtime validation from JSON Schema are not implemented yet.
 - The simulation is synthetic and intentionally not a real reactor physics model.
 
 ## Roadmap
@@ -860,7 +870,7 @@ curl "http://localhost:8081/api/v1/simulation/events/recent?limit=50"
 6. Add publish-only MQTT bridge for simulated telemetry and integration smoke coverage.
 7. Add optional longer-range aggregate resolutions if they remain clearly simulation-only.
 8. Add optional local draft workspace refinements for Scenario Authoring while preserving no runtime deployment from the UI.
-9. Add report template customization only if it remains clearly simulation-only and non-regulatory.
+9. Tune load profile thresholds from repeated CI runs while keeping the soak baseline clearly simulation-only and non-production.
 
 ## Documentation
 

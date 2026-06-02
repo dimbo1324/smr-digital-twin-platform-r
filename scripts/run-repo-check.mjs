@@ -6,12 +6,14 @@ const mode = process.argv[2] ?? "repo";
 const commands = {
   precommit: [
     ["node", ["scripts/check-generated-artifacts.mjs"]],
+    ["node", ["scripts/contracts/generate-go-openapi.mjs", "--check"]],
     ["node", ["scripts/check-gofmt.mjs"]],
     ["npm", ["run", "format:check"], "apps/web"],
     ["npm", ["run", "lint"], "apps/web"],
   ],
   repo: [
     ["node", ["scripts/check-generated-artifacts.mjs"]],
+    ["node", ["scripts/contracts/generate-go-openapi.mjs", "--check"]],
     ["node", ["scripts/check-gofmt.mjs"]],
     ["node", ["scripts/check-go-mod-tidy.mjs"]],
     ["npm", ["run", "format:check"], "apps/web"],

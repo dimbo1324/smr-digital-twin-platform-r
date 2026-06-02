@@ -21,8 +21,8 @@ If you need a concise recruiter/interviewer overview, start with the [Recruiter 
 3. Switch to `Demo Supervisor` or `Demo Admin` and change `TIC-101` to `AUTO`. Explain that PID now owns `V-101.POS`, so direct valve commands are rejected by arbitration.
 4. Trigger a synthetic scenario and show Alarms plus Events. Acknowledge an alarm and watch lifecycle/event records update.
 5. Open Trends and explain persistent historian vs in-memory fallback source labels.
-6. Open Reports and export JSON/CSV/PDF. State clearly that these are simulation summaries, not regulatory reports.
-7. Open Scenario Authoring, select a synthetic template, save it in the browser-local workspace, import/export YAML, and state clearly that the UI creates local drafts only; it does not deploy scenarios or control equipment.
+6. Open Reports, choose a simulation-only template/section set, and export JSON/CSV/PDF. State clearly that templates are presentation layouts, not regulatory report formats.
+7. Open Scenario Authoring, select a synthetic template, validate the YAML draft locally and through the backend validation endpoint, save it in the browser-local workspace, import/export YAML, and state clearly that the UI creates local drafts only; it does not persist to the backend, deploy scenarios, or control equipment.
 8. Show Prometheus/Grafana if the observability profile is running.
 9. Mention MQTT topics are publish-only synthetic data and do not accept commands.
 10. Finish with GitHub Actions: API, simulation, web, E2E, accessibility, keyboard, visual regression, historian smoke, MQTT smoke, observability smoke, short load-and-soak baseline, race/coverage, and dependency scans.
@@ -48,9 +48,9 @@ If you need a concise recruiter/interviewer overview, start with the [Recruiter 
 - `TIC-101` PID is educational simulation logic.
 - Alarm acknowledgement only changes synthetic alarm instances.
 - Trends show historian data when available and clearly labelled fallback when not.
-- Reports are JSON/CSV/PDF summaries for demo and portfolio review only.
+- Reports are JSON/CSV/PDF summaries for demo and portfolio review only. Template customization changes presentation only and does not create regulatory, safety, compliance, or production audit formats.
 - Settings communicates implemented capabilities and non-production boundaries.
-- Scenario Authoring creates browser-local YAML drafts for synthetic demo scenarios; it does not save to the backend, mutate the runtime registry, deploy to equipment, or create operating procedures.
+- Scenario Authoring creates browser-local YAML drafts for synthetic demo scenarios; backend validation checks YAML content only and does not save to the backend, mutate the runtime registry, deploy to equipment, or create operating procedures.
 
 ## Screenshot References
 
@@ -68,7 +68,7 @@ Final demo screenshots are committed under `docs/assets/screenshots/`:
 - `apps/api` is the frontend boundary and enforces protected write/action permissions.
 - `apps/simulation` owns process state, command arbitration, alarms, events, historian writes, MQTT publishing, and metrics.
 - `apps/web` uses generated TypeScript contract types, runtime validation, TanStack Query hooks, and tested UI components.
-- `packages/schemas` keeps OpenAPI and JSON Schema references aligned with frontend generated types.
+- `packages/schemas` keeps OpenAPI and JSON Schema references aligned with frontend generated types and the lightweight generated Go OpenAPI baseline.
 - `apps/simulation/config/scenarios` keeps synthetic scenario definitions declarative and validated.
 - `apps/web/src/pages/scenario-authoring` demonstrates safe draft generation, browser-local workspace persistence, YAML import/export, local validation, and source-controlled review.
 - `scripts/smoke` verifies full-stack persistence, MQTT publishing, and local/demo observability using Docker Compose.
@@ -116,7 +116,8 @@ npm run test:visual
 node scripts/smoke/historian-db-smoke.mjs --timeout-ms 300000 --history-wait-ms 90000
 node scripts/smoke/mqtt-bridge-smoke.mjs --timeout-ms 300000
 node scripts/smoke/observability-smoke.mjs --timeout-ms 300000
-node scripts/smoke/load-and-soak-baseline.mjs --duration-ms 180000
+node scripts/smoke/load-and-soak-baseline.mjs --profile quick
+node scripts/smoke/load-and-soak-baseline.mjs --profile ci --dry-run --print-profile
 ```
 
 ## What To Show In GitHub

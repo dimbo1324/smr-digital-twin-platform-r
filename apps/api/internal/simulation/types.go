@@ -24,6 +24,9 @@ type SimulationReport struct {
 	ReportID        string                 `json:"reportId"`
 	GeneratedAt     time.Time              `json:"generatedAt"`
 	TimeWindow      string                 `json:"timeWindow"`
+	Template        string                 `json:"template"`
+	Sections        []string               `json:"sections"`
+	Options         ReportOptions          `json:"options"`
 	SimulationOnly  bool                   `json:"simulationOnly"`
 	Disclaimer      string                 `json:"disclaimer"`
 	GeneratedBy     ReportUser             `json:"generatedBy"`
@@ -38,6 +41,36 @@ type SimulationReport struct {
 	Commands        ReportCountSummary     `json:"commands"`
 	Events          ReportCountSummary     `json:"events"`
 	Alarms          ReportAlarmSummary     `json:"alarms"`
+}
+
+type ReportOptions struct {
+	Template           string   `json:"template"`
+	Sections           []string `json:"sections"`
+	IncludeDisclaimers bool     `json:"includeDisclaimers"`
+}
+
+type ScenarioValidationRequest struct {
+	Format  string `json:"format"`
+	Content string `json:"content"`
+}
+
+type ScenarioValidationResult struct {
+	Valid             bool                      `json:"valid"`
+	Errors            []string                  `json:"errors"`
+	Warnings          []string                  `json:"warnings"`
+	Scenario          ScenarioValidationSummary `json:"scenario"`
+	SimulationOnly    bool                      `json:"simulationOnly"`
+	PersistsToBackend bool                      `json:"persistsToBackend"`
+	DeploysToRuntime  bool                      `json:"deploysToRuntime"`
+}
+
+type ScenarioValidationSummary struct {
+	ID       string   `json:"id,omitempty"`
+	Name     string   `json:"name,omitempty"`
+	Category string   `json:"category,omitempty"`
+	Severity string   `json:"severity,omitempty"`
+	Duration string   `json:"duration,omitempty"`
+	Tags     []string `json:"tags,omitempty"`
 }
 
 type ReportUser struct {

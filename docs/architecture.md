@@ -28,7 +28,9 @@ The current contract layer is machine-readable but intentionally lightweight:
 ```mermaid
 flowchart LR
     OpenAPI["packages/schemas/openapi.yaml"] --> Generator["apps/web npm run api:types"]
+    OpenAPI --> GoGenerator["scripts/contracts/generate-go-openapi.mjs"]
     Generator --> TSTypes["apps/web/src/shared/api/generated/schema.ts"]
+    GoGenerator --> GoGenerated["apps/api/internal/openapi/generated"]
     TSTypes --> FrontendAPI["Frontend API/entity type aliases"]
     GoAPI["apps/api handlers and DTOs"] -. kept aligned manually .-> OpenAPI
     SimulationDTOs["apps/simulation DTOs"] -. proxied by API .-> OpenAPI
@@ -36,7 +38,7 @@ flowchart LR
 
 `packages/schemas/openapi.yaml` documents implemented REST endpoints only. The frontend generated types reduce drift for core DTOs such as `Asset`, `TelemetryPoint`, `Command`, `AlarmInstance`, `Event`, `SystemStatus`, `Scenario`, and API envelopes.
 
-CI now checks contract health in four layers: generated TypeScript output must be clean after `npm run api:types`, the OpenAPI document must parse, JSON Schema reference files must compile, and an explicit runtime-validation coverage script must still include the core API payloads. This is not an OpenAPI-first backend rewrite. Go server stubs, generated Go clients, and Go runtime validation from JSON Schema are not implemented yet. Frontend dev/test runtime validation is implemented in the typed HTTP client for selected request and response payloads. The API gateway remains the runtime contract boundary for the frontend.
+CI now checks contract health in five layers: generated TypeScript output must be clean after `npm run api:types`, the generated Go OpenAPI DTO/client baseline must be current, the OpenAPI document must parse, JSON Schema reference files must compile, and an explicit runtime-validation coverage script must still include the core API payloads. This is not an OpenAPI-first backend rewrite. Go server stubs and Go runtime validation from JSON Schema are not implemented yet. Frontend dev/test runtime validation is implemented in the typed HTTP client for selected request and response payloads. The API gateway remains the runtime contract boundary for the frontend.
 
 The practical edit/check loop is:
 
@@ -113,7 +115,7 @@ This stack is for local demo diagnostics only. Grafana uses local demo credentia
 
 ## Load and Soak Baseline
 
-The load-and-soak baseline extends the smoke-test layer from "can the stack start?" to "can the synthetic platform keep operating under sustained demo activity?" It runs the full Docker Compose stack with the observability profile, then loops through simulation-only commands, YAML scenarios, telemetry history reads, report exports, Prometheus metric queries, and Grafana health checks.
+The load-and-soak baseline extends the smoke-test layer from "can the stack start?" to "can the synthetic platform keep operating under sustained demo activity?" It runs the full Docker Compose stack with the observability profile, then loops through simulation-only commands, YAML scenarios, telemetry history reads, report exports, Prometheus metric queries, and Grafana health checks. Profiles under `scripts/smoke/load-profiles/` define quick, CI, 10-minute baseline, and extended 30-minute threshold sets.
 
 ```mermaid
 flowchart LR
@@ -326,7 +328,7 @@ The API gateway aggregates existing simulation APIs into a read-only simulation 
 - `GET /api/v1/reports/simulation-summary?window=1h&format=csv`
 - `GET /api/v1/reports/simulation-summary?window=1h&format=pdf`
 
-JSON reports include a `simulationOnly: true` envelope, generation metadata, current demo user, system/historian/MQTT/control/PID status, latest telemetry, simple telemetry min/max/average summaries, and command/event/alarm counts. CSV uses a compact `section,key,value,unit,source` format for demo export workflows. PDF uses a simple API-generated human-readable summary for portfolio/demo review.
+JSON reports include a `simulationOnly: true` envelope, generation metadata, current demo user, system/historian/MQTT/control/PID status, latest telemetry, simple telemetry min/max/average summaries, and command/event/alarm counts. Template and section options customize presentation only; mandatory simulation-only/non-regulatory wording remains present. CSV uses a compact `section,key,value,unit,source` format for demo export workflows. PDF uses a simple API-generated human-readable summary for portfolio/demo review.
 
 Reports use existing synthetic data sources only. They are not regulatory reports, production audit exports, nuclear compliance artifacts, or evidence of real plant operation.
 

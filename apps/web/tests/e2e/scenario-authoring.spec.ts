@@ -38,6 +38,9 @@ test("scenario authoring creates and validates a YAML draft without deployment",
   await expect(page.getByTestId("scenario-authoring-validation")).toContainText(
     "No blocking validation errors",
   );
+  await page.getByTestId("scenario-authoring-backend-validate").click();
+  await expect(page.getByTestId("scenario-authoring-validation")).toContainText(/Backend pass/i);
+  await expect(page.getByTestId("scenario-authoring-validation")).toContainText(/No persistence/i);
 
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: /Download YAML/i }).click();

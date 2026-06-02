@@ -454,6 +454,9 @@ export interface components {
       "commands": components["schemas"]["ReportCountSummary"];
       "events": components["schemas"]["ReportCountSummary"];
       "alarms": components["schemas"]["ReportAlarmSummary"];
+      "template": string;
+      "sections": string[];
+      "options": components["schemas"]["ReportOptions"];
     };
     "SimulationReportResponse": {
       "data": components["schemas"]["SimulationReport"];
@@ -484,6 +487,36 @@ export interface components {
     };
     "DemoUsersResponse": {
       "data": components["schemas"]["DemoUser"][];
+      "meta": components["schemas"]["ApiMeta"];
+    };
+    "ReportOptions": {
+      "template": "executive-summary" | "engineering-detail" | "alarm-and-event-review" | "pid-control-review" | "historian-trend-summary";
+      "sections": ("metadata" | "safetyDisclaimer" | "systemSummary" | "processSummary" | "pidSummary" | "alarmSummary" | "eventSummary" | "commandSummary" | "historianSummary" | "mqttSummary" | "scenarioSummary" | "trendStatistics")[];
+      "includeDisclaimers": boolean;
+    };
+    "ScenarioValidationRequest": {
+      "format"?: "yaml" | "yml";
+      "content": string;
+    };
+    "ScenarioValidationSummary": {
+      "id"?: string;
+      "name"?: string;
+      "category"?: string;
+      "severity"?: string;
+      "duration"?: string;
+      "tags"?: string[];
+    };
+    "ScenarioValidationResult": {
+      "valid": boolean;
+      "errors": string[];
+      "warnings": string[];
+      "scenario": components["schemas"]["ScenarioValidationSummary"];
+      "simulationOnly": boolean;
+      "persistsToBackend": boolean;
+      "deploysToRuntime": boolean;
+    };
+    "ScenarioValidationResponse": {
+      "data": components["schemas"]["ScenarioValidationResult"];
       "meta": components["schemas"]["ApiMeta"];
     };
   };

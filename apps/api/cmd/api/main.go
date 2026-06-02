@@ -53,6 +53,7 @@ func main() {
 		AlarmHistory:     http.HandlerFunc(gateway.AlarmHistory),
 		AcknowledgeAlarm: http.HandlerFunc(gateway.AcknowledgeAlarm),
 		Scenarios:        http.HandlerFunc(gateway.Scenarios),
+		ValidateScenario: http.HandlerFunc(gateway.ValidateScenarioDraft),
 		StartScenario:    http.HandlerFunc(gateway.StartScenario),
 		StopScenario:     http.HandlerFunc(gateway.StopScenario),
 		ResetSimulation:  http.HandlerFunc(gateway.Reset),

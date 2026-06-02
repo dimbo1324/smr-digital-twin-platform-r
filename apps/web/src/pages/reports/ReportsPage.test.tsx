@@ -1,4 +1,5 @@
 import { screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { ReportsPage } from "@/pages/reports/ReportsPage";
 import { renderWithProviders } from "@/test/render";
@@ -31,6 +32,13 @@ describe("ReportsPage", () => {
         reportId: "sim-report-test",
         generatedAt: "2026-05-27T07:00:00Z",
         timeWindow: "1h",
+        template: "engineering-detail",
+        sections: ["metadata", "safetyDisclaimer", "trendStatistics"],
+        options: {
+          template: "engineering-detail",
+          sections: ["metadata", "safetyDisclaimer", "trendStatistics"],
+          includeDisclaimers: true,
+        },
         simulationOnly: true,
         disclaimer: "Simulation-only report. Not a regulatory report.",
         generatedBy: {
@@ -81,10 +89,36 @@ describe("ReportsPage", () => {
     expect(screen.getByTestId("reports-page")).toBeInTheDocument();
     expect(screen.getByText(/Not regulatory reporting/i)).toBeInTheDocument();
     expect(screen.getByTestId("reports-window-select")).toHaveValue("1h");
+    expect(screen.getByTestId("reports-template-select")).toHaveValue("engineering-detail");
     expect(screen.getByTestId("reports-download-json")).toBeInTheDocument();
     expect(screen.getByTestId("reports-download-csv")).toBeInTheDocument();
     expect(screen.getByTestId("reports-download-pdf")).toBeInTheDocument();
     expect(screen.getByTestId("reports-preview-card")).toHaveTextContent("sim-report-test");
     expect(screen.getByText(/TT-101/)).toBeInTheDocument();
+  });
+
+  it("passes template and selected sections to the report download helper", async () => {
+    const user = userEvent.setup();
+    reportMocks.downloadSimulationReport.mockResolvedValue(undefined);
+    reportMocks.useSimulationReport.mockReturnValue({
+      state: "connected",
+      refresh: vi.fn(),
+      report: undefined,
+    });
+
+    renderWithProviders(<ReportsPage />);
+
+    await user.selectOptions(screen.getByTestId("reports-template-select"), "pid-control-review");
+    await user.click(screen.getByTestId("reports-section-trendStatistics"));
+    await user.click(screen.getByTestId("reports-download-pdf"));
+
+    expect(reportMocks.downloadSimulationReport).toHaveBeenCalledWith(
+      "1h",
+      "pdf",
+      expect.objectContaining({
+        template: "pid-control-review",
+        sections: expect.not.arrayContaining(["trendStatistics"]),
+      }),
+    );
   });
 });

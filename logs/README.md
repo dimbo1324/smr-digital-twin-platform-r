@@ -22,13 +22,14 @@ Useful commands:
 node scripts/smoke/historian-db-smoke.mjs
 node scripts/smoke/mqtt-bridge-smoke.mjs
 node scripts/smoke/observability-smoke.mjs
-node scripts/smoke/load-and-soak-baseline.mjs --duration-ms 180000
+node scripts/smoke/load-and-soak-baseline.mjs --profile quick
+node scripts/smoke/load-and-soak-baseline.mjs --profile ci --dry-run --print-profile
 node scripts/logs/clean-logs.mjs
 ```
 
 The observability smoke writes artifacts under `logs/smoke/<timestamp>_observability-smoke/`, including Compose status/logs, API and simulation metrics samples, Prometheus target/query responses, Grafana health, and a summary. These files are generated diagnostics and must not be committed.
 
-The load-and-soak baseline writes artifacts under `logs/smoke/<timestamp>_load-and-soak-baseline/`, including latency summaries, error summaries, baseline/final metric snapshots, metric samples, command/scenario/report summaries, Prometheus query results, Compose status/logs, API and simulation metrics samples, and debug context. It validates only sustained synthetic demo activity and must not be treated as production load evidence.
+The load-and-soak baseline writes artifacts under `logs/smoke/<timestamp>_load-and-soak-baseline/`, including latency summaries, error summaries, baseline/final metric snapshots, metric samples, command/scenario/report summaries, Prometheus query results, resolved profile/threshold results, Compose status/logs, API and simulation metrics samples, and debug context. It validates only sustained synthetic demo activity and must not be treated as production load evidence.
 
 The historian DB smoke writes artifacts under `logs/smoke/<timestamp>_historian-db-smoke/`, including raw telemetry history, 1-minute aggregate telemetry history, command/event persistence checks, Compose status/logs, and a summary. These files describe synthetic simulation data only and must not be committed.
 

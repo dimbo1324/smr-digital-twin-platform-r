@@ -27,6 +27,7 @@ type Handlers struct {
 	AlarmHistory     http.Handler
 	AcknowledgeAlarm http.Handler
 	Scenarios        http.Handler
+	ValidateScenario http.Handler
 	StartScenario    http.Handler
 	StopScenario     http.Handler
 	ResetSimulation  http.Handler

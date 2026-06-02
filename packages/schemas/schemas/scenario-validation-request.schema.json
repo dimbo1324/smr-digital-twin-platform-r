@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://smr-twin.local/schemas/scenario-validation-request.schema.json",
+  "title": "ScenarioValidationRequest",
+  "type": "object",
+  "properties": {
+    "format": {
+      "type": "string",
+      "enum": ["yaml", "yml"],
+      "default": "yaml"
+    },
+    "content": {
+      "type": "string",
+      "maxLength": 65536
+    }
+  },
+  "required": ["content"],
+  "additionalProperties": false
+}

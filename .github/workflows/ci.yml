@@ -55,6 +55,9 @@ jobs:
       - name: Run generated artifact guard
         run: node scripts/check-generated-artifacts.mjs
 
+      - name: Verify generated OpenAPI Go baseline
+        run: node scripts/contracts/generate-go-openapi.mjs --check
+
       - name: Run gofmt check
         run: node scripts/check-gofmt.mjs
 
@@ -530,7 +533,7 @@ jobs:
           docker compose version
 
       - name: Run short load-and-soak baseline
-        run: node scripts/smoke/load-and-soak-baseline.mjs --duration-ms 180000 --warmup-ms 30000 --timeout-ms 420000
+        run: node scripts/smoke/load-and-soak-baseline.mjs --profile ci
 
       - name: Upload load-and-soak logs
         if: always()

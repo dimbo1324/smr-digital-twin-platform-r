@@ -42,7 +42,7 @@ export const queryKeys = {
     status: ["scenarios", "status"] as const,
   },
   reports: {
-    simulationSummary: (windowValue: string) =>
-      ["reports", "simulation-summary", windowValue] as const,
+    simulationSummary: (windowValue: string, options?: unknown) =>
+      ["reports", "simulation-summary", windowValue, options] as const,
   },
 };

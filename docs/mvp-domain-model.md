@@ -12,7 +12,7 @@ Core API DTOs are also represented in the machine-readable contract layer:
 - `packages/schemas/schemas/*.schema.json`
 - `apps/web/src/shared/api/generated/schema.ts`
 
-The generated frontend types are used for core API shapes such as `Asset`, `TelemetryPoint`, telemetry history responses, `Command`, `AlarmInstance`, `Event`, `SystemStatus`, `Scenario`, and response metadata. Runtime schema validation is implemented in the frontend HTTP client for selected dev/test API boundaries, and CI checks OpenAPI parsing, JSON Schema compilation, generated TypeScript drift, and runtime validation coverage. Generated Go server code and Go runtime validation from JSON Schema are not implemented yet.
+The generated frontend types are used for core API shapes such as `Asset`, `TelemetryPoint`, telemetry history responses, `Command`, `AlarmInstance`, `Event`, `SystemStatus`, `Scenario`, and response metadata. A lightweight generated Go OpenAPI DTO/client-helper baseline now provides additional compile-time drift reduction. Runtime schema validation is implemented in the frontend HTTP client for selected dev/test API boundaries, and CI checks OpenAPI parsing, JSON Schema compilation, generated TypeScript drift, generated Go baseline drift, and runtime validation coverage. Generated Go server code and Go runtime validation from JSON Schema are not implemented yet.
 
 The MQTT bridge exposes synthetic simulation data through publish-only JSON envelopes. MQTT status is part of the API contract, but MQTT command ingestion is intentionally not implemented.
 

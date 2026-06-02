@@ -12,6 +12,10 @@ import {
   ShieldCheck,
   Trash2,
 } from "lucide-react";
+import {
+  validateScenarioYaml,
+  type ScenarioValidationResult as BackendScenarioValidationResult,
+} from "@/entities/scenarios/api/scenarioValidationApi";
 import { useScenarios } from "@/entities/scenarios/api/useScenarios";
 import {
   listInputValue,
@@ -77,6 +81,11 @@ export function ScenarioAuthoringPage() {
     () => workspace.activeDraftId,
   );
   const [isModifiedSinceSave, setIsModifiedSinceSave] = useState(false);
+  const [backendValidation, setBackendValidation] =
+    useState<BackendScenarioValidationResult | null>(null);
+  const [backendValidationState, setBackendValidationState] = useState<
+    "idle" | "validating" | "failed"
+  >("idle");
   const [workspaceMessage, setWorkspaceMessage] = useState(
     "Scenario Workspace stores YAML drafts locally in this browser only.",
   );
@@ -98,12 +107,16 @@ export function ScenarioAuthoringPage() {
     setDraft(cloneTemplateDraft(nextTemplateId));
     setCopyState("idle");
     setIsModifiedSinceSave(true);
+    setBackendValidation(null);
+    setBackendValidationState("idle");
     setWorkspaceMessage("Template loaded into the editor. Save it to keep it in this browser.");
   };
 
   const updateDraft = <Key extends keyof ScenarioDraft>(key: Key, value: ScenarioDraft[Key]) => {
     setDraft((current) => ({ ...current, [key]: value }));
     setIsModifiedSinceSave(true);
+    setBackendValidation(null);
+    setBackendValidationState("idle");
   };
 
   const updateEffect = (key: keyof ScenarioDraft["effects"], value: string) => {
@@ -120,6 +133,20 @@ export function ScenarioAuthoringPage() {
       },
     }));
     setIsModifiedSinceSave(true);
+    setBackendValidation(null);
+    setBackendValidationState("idle");
+  };
+
+  const validateWithBackend = async () => {
+    setBackendValidationState("validating");
+    try {
+      const result = await validateScenarioYaml(yaml);
+      setBackendValidation(result);
+      setBackendValidationState("idle");
+    } catch {
+      setBackendValidation(null);
+      setBackendValidationState("failed");
+    }
   };
 
   const saveCurrentDraft = () => {
@@ -375,7 +402,13 @@ export function ScenarioAuthoringPage() {
         </PanelShell>
 
         <aside className="space-y-6 xl:col-span-2 2xl:col-span-1">
-          <ValidationPanel validation={validation} isModifiedSinceSave={isModifiedSinceSave} />
+          <ValidationPanel
+            validation={validation}
+            isModifiedSinceSave={isModifiedSinceSave}
+            backendValidation={backendValidation}
+            backendValidationState={backendValidationState}
+            onValidateBackend={() => void validateWithBackend()}
+          />
           <PreviewPanel draft={draft} activeItem={activeItem} />
           <YamlPanel
             yaml={yaml}
@@ -636,9 +669,15 @@ function TemplatePicker({
 function ValidationPanel({
   validation,
   isModifiedSinceSave,
+  backendValidation,
+  backendValidationState,
+  onValidateBackend,
 }: {
   validation: ReturnType<typeof validateScenarioDraft>;
   isModifiedSinceSave: boolean;
+  backendValidation: BackendScenarioValidationResult | null;
+  backendValidationState: "idle" | "validating" | "failed";
+  onValidateBackend: () => void;
 }) {
   return (
     <PanelShell
@@ -653,6 +692,21 @@ function ValidationPanel({
       }
       testId="scenario-authoring-validation"
     >
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-muted-foreground">
+          Backend validation checks YAML only. It does not persist drafts, deploy scenarios, or
+          control any real plant.
+        </p>
+        <CommandButton
+          size="sm"
+          variant="outline"
+          disabled={backendValidationState === "validating"}
+          onClick={onValidateBackend}
+          data-testid="scenario-authoring-backend-validate"
+        >
+          {backendValidationState === "validating" ? "Validating..." : "Validate YAML"}
+        </CommandButton>
+      </div>
       {isModifiedSinceSave ? (
         <ValidationMessage tone="warning" message="Draft has unsaved local workspace changes." />
       ) : null}
@@ -672,6 +726,35 @@ function ValidationPanel({
       {validation.warnings.length ? (
         <div className="mt-3 space-y-2">
           {validation.warnings.map((warning) => (
+            <ValidationMessage key={warning} tone="warning" message={warning} />
+          ))}
+        </div>
+      ) : null}
+      {backendValidationState === "failed" ? (
+        <ValidationMessage
+          tone="warning"
+          message="Backend validator was unavailable. Local draft validation is still shown."
+        />
+      ) : null}
+      {backendValidation ? (
+        <div className="mt-3 rounded-2xl border border-border/70 bg-surface-subtle/60 p-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusBadge
+              tone={backendValidation.valid ? "healthy" : "danger"}
+              value={backendValidation.valid ? "Backend pass" : "Backend review"}
+            />
+            <StatusBadge tone="simulation" value="No persistence" />
+            <StatusBadge tone="simulation" value="No runtime deploy" />
+          </div>
+          <p className="mt-2 text-xs leading-5 text-muted-foreground">
+            Server result: {backendValidation.errors.length} error(s),{" "}
+            {backendValidation.warnings.length} warning(s). Scenario draft id:{" "}
+            {backendValidation.scenario.id || "not parsed"}.
+          </p>
+          {backendValidation.errors.map((error) => (
+            <ValidationMessage key={error} tone="danger" message={error} />
+          ))}
+          {backendValidation.warnings.map((warning) => (
             <ValidationMessage key={warning} tone="warning" message={warning} />
           ))}
         </div>

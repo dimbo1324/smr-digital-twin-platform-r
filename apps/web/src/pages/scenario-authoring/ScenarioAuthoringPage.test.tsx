@@ -6,16 +6,22 @@ import { renderWithProviders } from "@/test/render";
 
 const scenarioMocks = vi.hoisted(() => ({
   useScenarios: vi.fn(),
+  validateScenarioYaml: vi.fn(),
 }));
 
 vi.mock("@/entities/scenarios/api/useScenarios", () => ({
   useScenarios: scenarioMocks.useScenarios,
 }));
 
+vi.mock("@/entities/scenarios/api/scenarioValidationApi", () => ({
+  validateScenarioYaml: scenarioMocks.validateScenarioYaml,
+}));
+
 describe("ScenarioAuthoringPage", () => {
   beforeEach(() => {
     window.localStorage.clear();
-    vi.restoreAllMocks();
+    scenarioMocks.useScenarios.mockReset();
+    scenarioMocks.validateScenarioYaml.mockReset();
   });
 
   it("renders a simulation-only YAML draft workspace", () => {
@@ -149,6 +155,35 @@ describe("ScenarioAuthoringPage", () => {
     ).toBeInTheDocument();
     expect(yamlValue()).toContain("id: imported_workspace_demo");
     expect(screen.getByRole("button", { name: /Download YAML/i })).toBeEnabled();
+  });
+
+  it("runs backend YAML validation without persisting or deploying drafts", async () => {
+    const user = userEvent.setup();
+    scenarioMocks.useScenarios.mockReturnValue({
+      scenarios: [],
+      state: "connected",
+      refresh: vi.fn(),
+    });
+    scenarioMocks.validateScenarioYaml.mockResolvedValue({
+      valid: true,
+      errors: [],
+      warnings: [],
+      scenario: { id: "custom_high_temperature", name: "Custom High Temperature" },
+      simulationOnly: true,
+      persistsToBackend: false,
+      deploysToRuntime: false,
+    });
+
+    renderWithProviders(<ScenarioAuthoringPage />);
+
+    await user.click(screen.getByTestId("scenario-authoring-backend-validate"));
+
+    expect(scenarioMocks.validateScenarioYaml).toHaveBeenCalledWith(
+      expect.stringContaining("id: custom_high_temperature"),
+    );
+    expect(screen.getByText(/Backend pass/i)).toBeInTheDocument();
+    expect(screen.getByText(/No persistence/i)).toBeInTheDocument();
+    expect(screen.getByText(/No runtime deploy/i)).toBeInTheDocument();
   });
 });
 

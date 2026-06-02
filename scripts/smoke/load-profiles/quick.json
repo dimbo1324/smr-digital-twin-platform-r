@@ -1,0 +1,14 @@
+{
+  "durationMs": 60000,
+  "warmupMs": 10000,
+  "timeoutMs": 240000,
+  "commandRateMs": 5000,
+  "scenarioRateMs": 30000,
+  "reportRateMs": 30000,
+  "prometheusQueryRateMs": 10000,
+  "maxErrorRate": 0.05,
+  "maxApiP95Ms": 1500,
+  "requiredSuccessfulCommands": 1,
+  "requiredSuccessfulScenarios": 1,
+  "requiredReportExports": 1
+}

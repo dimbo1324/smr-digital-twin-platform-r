@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   downloadSimulationReport,
   type ReportFormat,
+  type ReportOptions,
+  type ReportSection,
+  type ReportTemplate,
   type ReportWindow,
 } from "@/entities/reports/api/reportsApi";
 import { useSimulationReport } from "@/entities/reports/api/useSimulationReport";
@@ -14,20 +17,59 @@ import { PanelShell } from "@/shared/ui/panel-shell";
 import { StatusBadge } from "@/shared/ui/status-badge";
 
 const reportWindows: ReportWindow[] = ["15m", "1h", "6h", "24h"];
+const reportTemplates: { value: ReportTemplate; label: string }[] = [
+  { value: "executive-summary", label: "Executive summary" },
+  { value: "engineering-detail", label: "Engineering detail" },
+  { value: "alarm-and-event-review", label: "Alarm/event review" },
+  { value: "pid-control-review", label: "PID/control review" },
+  { value: "historian-trend-summary", label: "Historian trend summary" },
+];
+const reportSections: { value: ReportSection; label: string }[] = [
+  { value: "metadata", label: "Metadata" },
+  { value: "safetyDisclaimer", label: "Safety boundary" },
+  { value: "systemSummary", label: "System" },
+  { value: "processSummary", label: "Process" },
+  { value: "pidSummary", label: "PID/control" },
+  { value: "alarmSummary", label: "Alarms" },
+  { value: "eventSummary", label: "Events" },
+  { value: "commandSummary", label: "Commands" },
+  { value: "historianSummary", label: "Historian" },
+  { value: "mqttSummary", label: "MQTT" },
+  { value: "scenarioSummary", label: "Scenario" },
+  { value: "trendStatistics", label: "Trend statistics" },
+];
+const defaultReportSections = reportSections.map((section) => section.value);
 
 export function ReportsPage() {
   const [windowValue, setWindowValue] = useState<ReportWindow>("1h");
+  const [template, setTemplate] = useState<ReportTemplate>("engineering-detail");
+  const [sections, setSections] = useState<ReportSection[]>(defaultReportSections);
+  const [includeDisclaimers, setIncludeDisclaimers] = useState(true);
   const [downloadError, setDownloadError] = useState<string | null>(null);
-  const reportQuery = useSimulationReport(windowValue);
+  const reportOptions: ReportOptions = useMemo(
+    () => ({ template, sections, includeDisclaimers }),
+    [includeDisclaimers, sections, template],
+  );
+  const reportQuery = useSimulationReport(windowValue, reportOptions);
   const report = reportQuery.report;
 
   const handleDownload = async (format: ReportFormat) => {
     setDownloadError(null);
     try {
-      await downloadSimulationReport(windowValue, format);
+      await downloadSimulationReport(windowValue, format, reportOptions);
     } catch (error) {
       setDownloadError(error instanceof Error ? error.message : "Report download failed");
     }
+  };
+
+  const toggleSection = (section: ReportSection) => {
+    setSections((current) => {
+      if (current.includes(section)) {
+        const next = current.filter((item) => item !== section);
+        return next.length ? next : current;
+      }
+      return [...current, section];
+    });
   };
 
   return (
@@ -56,6 +98,60 @@ export function ReportsPage() {
                 ))}
               </select>
             </label>
+
+            <label className="block space-y-2">
+              <span className="text-sm font-medium text-foreground">Template</span>
+              <select
+                className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                value={template}
+                onChange={(event) => setTemplate(event.target.value as ReportTemplate)}
+                data-testid="reports-template-select"
+              >
+                {reportTemplates.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <div className="rounded-2xl border border-border/70 bg-surface-subtle/60 p-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-sm font-medium text-foreground">Sections</p>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setSections(defaultReportSections)}
+                >
+                  Reset
+                </Button>
+              </div>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                {reportSections.map((section) => (
+                  <label key={section.value} className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={sections.includes(section.value)}
+                      onChange={() => toggleSection(section.value)}
+                      data-testid={`reports-section-${section.value}`}
+                    />
+                    <span>{section.label}</span>
+                  </label>
+                ))}
+              </div>
+              <label className="mt-4 flex items-start gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={includeDisclaimers}
+                  onChange={(event) => setIncludeDisclaimers(event.target.checked)}
+                />
+                <span>
+                  Include detailed disclaimer text. Mandatory simulation-only and non-regulatory
+                  wording remains in every export.
+                </span>
+              </label>
+            </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
               <Button
@@ -133,6 +229,8 @@ export function ReportsPage() {
                 <div className="grid gap-3 md:grid-cols-2">
                   <ReportMetric label="Report ID" value={report.reportId} mask />
                   <ReportMetric label="Window" value={report.timeWindow} />
+                  <ReportMetric label="Template" value={report.template} />
+                  <ReportMetric label="Sections" value={String(report.sections.length)} />
                   <ReportMetric
                     label="Generated by"
                     value={`${report.generatedBy.displayName} / ${report.generatedBy.role}`}

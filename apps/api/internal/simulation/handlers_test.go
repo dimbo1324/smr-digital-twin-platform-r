@@ -660,6 +660,31 @@ func TestSimulationReportJSONIncludesDisclaimerAndSummaries(t *testing.T) {
 	if len(data["telemetryStats"].([]any)) == 0 {
 		t.Fatal("expected telemetry stats in report")
 	}
+	if data["template"] != "engineering-detail" {
+		t.Fatalf("expected default engineering-detail template, got %v", data["template"])
+	}
+}
+
+func TestSimulationReportSupportsTemplatesAndSections(t *testing.T) {
+	server := fakeSimulationServer()
+	defer server.Close()
+	gateway := newTestGateway(server.URL, true)
+
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/api/v1/reports/simulation-summary?window=1h&template=executive-summary&sections=metadata,pidSummary", nil)
+	gateway.SimulationReport(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", recorder.Code, recorder.Body.String())
+	}
+	payload := decodeMap(t, recorder.Body.Bytes())
+	data := payload["data"].(map[string]any)
+	if data["template"] != "executive-summary" {
+		t.Fatalf("expected executive template, got %v", data["template"])
+	}
+	if len(data["telemetryStats"].([]any)) != 0 {
+		t.Fatal("expected trend statistics to be omitted when trendStatistics section is not selected")
+	}
 }
 
 func TestSimulationReportCSVReturnsDownload(t *testing.T) {
@@ -723,7 +748,11 @@ func TestSimulationReportPDFEscapesLongAndNonASCIIText(t *testing.T) {
 		PID:            PIDStatus{Status: "Manual"},
 	}
 
-	payload, err := simulationReportPDF(report)
+	payload, err := simulationReportPDF(report, ReportOptions{
+		Template:           "engineering-detail",
+		Sections:           defaultReportSections,
+		IncludeDisclaimers: true,
+	})
 	if err != nil {
 		t.Fatalf("render pdf: %v", err)
 	}
@@ -749,6 +778,85 @@ func TestSimulationReportRejectsInvalidFormat(t *testing.T) {
 
 	if recorder.Code != http.StatusBadRequest {
 		t.Fatalf("expected status 400, got %d", recorder.Code)
+	}
+}
+
+func TestSimulationReportRejectsInvalidTemplate(t *testing.T) {
+	server := fakeSimulationServer()
+	defer server.Close()
+	gateway := newTestGateway(server.URL, true)
+
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/api/v1/reports/simulation-summary?template=regulatory", nil)
+	gateway.SimulationReport(recorder, request)
+
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("expected status 400, got %d", recorder.Code)
+	}
+}
+
+func TestValidateScenarioDraftReturnsBackendValidation(t *testing.T) {
+	server := fakeSimulationServer()
+	defer server.Close()
+	gateway := newTestGateway(server.URL, true)
+
+	body := []byte(`{"format":"yaml","content":"id: high-temperature\nname: High Temperature\ncategory: thermal\ndescription: Synthetic validation draft.\nseverity: warning\nduration: 5m\ntags:\n  - demo\nexpectedAlarms:\n  - HIGH_TEMPERATURE\nreportTags:\n  - TT-101\nsafetyNote: Simulation-only synthetic scenario draft. No real plant control.\nenabled: true\nversion: 1\neffects:\n  behavior: nominal\n  mode: WARNING\n  targetPowerPct: 76\n"}`)
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodPost, "/api/v1/scenarios/validate", bytes.NewReader(body))
+	gateway.ValidateScenarioDraft(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", recorder.Code, recorder.Body.String())
+	}
+	payload := decodeMap(t, recorder.Body.Bytes())
+	data := payload["data"].(map[string]any)
+	if data["valid"] != true {
+		t.Fatalf("expected valid draft, got %v", data)
+	}
+	if data["persistsToBackend"] != false || data["deploysToRuntime"] != false {
+		t.Fatalf("validation endpoint must not persist or deploy drafts: %v", data)
+	}
+}
+
+func TestValidateScenarioDraftReportsErrorsAndWarnings(t *testing.T) {
+	server := fakeSimulationServer()
+	defer server.Close()
+	gateway := newTestGateway(server.URL, true)
+
+	body := []byte(`{"format":"yaml","content":"id: normal\nname: Broken\ncategory: demo\ndescription: Broken draft.\nseverity: emergency\nduration: nope\ntags: []\nexpectedAlarms: []\nreportTags: []\nsafetyNote: draft only\nenabled: true\nversion: 0\neffects:\n  behavior: unsupported\n  mode: NORMAL\n"}`)
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodPost, "/api/v1/scenarios/validate", bytes.NewReader(body))
+	gateway.ValidateScenarioDraft(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", recorder.Code, recorder.Body.String())
+	}
+	payload := decodeMap(t, recorder.Body.Bytes())
+	data := payload["data"].(map[string]any)
+	if data["valid"] != false {
+		t.Fatalf("expected invalid draft, got %v", data)
+	}
+	if len(data["errors"].([]any)) == 0 {
+		t.Fatal("expected validation errors")
+	}
+	if len(data["warnings"].([]any)) == 0 {
+		t.Fatal("expected validation warnings")
+	}
+}
+
+func TestValidateScenarioDraftRejectsOversizedContent(t *testing.T) {
+	gateway := newTestGateway("http://127.0.0.1:1", true)
+
+	body, err := json.Marshal(ScenarioValidationRequest{Format: "yaml", Content: strings.Repeat("x", maxScenarioValidationContentBytes+1)})
+	if err != nil {
+		t.Fatalf("marshal request: %v", err)
+	}
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodPost, "/api/v1/scenarios/validate", bytes.NewReader(body))
+	gateway.ValidateScenarioDraft(recorder, request)
+
+	if recorder.Code != http.StatusRequestEntityTooLarge {
+		t.Fatalf("expected status 413, got %d", recorder.Code)
 	}
 }
 
@@ -818,6 +926,8 @@ func fakeSimulationServer() *httptest.Server {
 		case r.URL.Path == "/api/v1/simulation/alarms/missing/acknowledge":
 			w.WriteHeader(http.StatusNotFound)
 			_, _ = w.Write([]byte(`{"error":{"code":"ALARM_NOT_FOUND","message":"Alarm was not found"},"meta":{"timestamp":"2026-05-12T12:01:00Z","source":"simulation","simulationOnly":true}}`))
+		case r.URL.Path == "/api/v1/simulation/scenarios":
+			_, _ = w.Write([]byte(`{"data":[{"name":"normal","description":"Normal operation","enabled":true},{"name":"high-temperature","description":"High temperature","enabled":true}],"meta":{"timestamp":"2026-05-12T12:00:00Z","source":"simulation","simulationOnly":true,"count":2}}`))
 		case r.URL.Path == "/api/v1/simulation/scenarios/trip/start":
 			_, _ = w.Write([]byte(`{"data":{"running":true,"mode":"TRIP","health":"TRIP","activeScenario":"trip","tickMs":1000,"historySize":3600,"snapshotCount":1,"lastSimulationTimestamp":"2026-05-12T12:00:00Z","simulationOnly":true},"meta":{"timestamp":"2026-05-12T12:00:00Z","source":"simulation","simulationOnly":true}}`))
 		case r.URL.Path == "/api/v1/simulation/commands":
