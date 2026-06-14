@@ -312,7 +312,7 @@ jobs:
 
       - name: Upload Playwright report
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report
           path: apps/web/playwright-report/
@@ -327,7 +327,7 @@ jobs:
 
       - name: Upload backend service logs
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: e2e-service-logs
           path: e2e-logs/
@@ -408,7 +408,7 @@ jobs:
 
       - name: Upload visual Playwright report
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: visual-playwright-report
           path: apps/web/playwright-report/
@@ -416,7 +416,7 @@ jobs:
 
       - name: Upload visual test results
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: visual-test-results
           path: apps/web/test-results/
@@ -431,7 +431,7 @@ jobs:
 
       - name: Upload visual backend service logs
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: visual-service-logs
           path: visual-logs/
@@ -467,7 +467,7 @@ jobs:
 
       - name: Upload historian smoke logs
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: historian-smoke-logs
           path: |
@@ -503,7 +503,7 @@ jobs:
 
       - name: Upload observability smoke logs
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: observability-smoke-logs
           path: logs/smoke/
@@ -537,7 +537,7 @@ jobs:
 
       - name: Upload load-and-soak logs
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: load-soak-logs
           path: logs/smoke/
@@ -567,7 +567,7 @@ jobs:
 
       - name: Upload MQTT smoke logs
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: mqtt-smoke-logs
           path: logs/smoke/
